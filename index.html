@@ -116,10 +116,11 @@ button {
 
 .app-title {
   margin: 0;
-  font-family: "Cormorant Garamond", serif;
-  font-size: 56px;
-  line-height: .95;
-  letter-spacing: .8px;
+  font-family: "Caveat", cursive;
+  font-weight: 700;
+  font-size: 72px;
+  line-height: .9;
+  letter-spacing: .5px;
   color: var(--ink);
 }
 
@@ -1834,6 +1835,28 @@ function load(key, fallback) {
   }
 }
 
+// Like load(), but tells the caller whether the raw value existed and failed
+// to parse, vs. genuinely never having been set. This matters for anything
+// we must never silently wipe (the journal entries, above all).
+function loadSafe(key, fallback) {
+  let raw = null;
+  try {
+    raw = localStorage.getItem(key);
+  } catch (e) {
+    return { value: fallback, hadRawValue: false, parseFailed: false };
+  }
+
+  if (!raw) {
+    return { value: fallback, hadRawValue: false, parseFailed: false };
+  }
+
+  try {
+    return { value: JSON.parse(raw), hadRawValue: true, parseFailed: false };
+  } catch (e) {
+    return { value: fallback, hadRawValue: true, parseFailed: true, raw: raw };
+  }
+}
+
 function save(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
@@ -1851,17 +1874,35 @@ function makeDefaultPacking() {
   }));
 }
 
-let entries = load(KEYS.entries, null);
-if (!entries) {
-  const old = load(KEYS.oldEntries, []);
-  entries = Array.isArray(old) ? old.map(migrateEntry) : [];
-  save(KEYS.entries, entries);
-}
-
 let custom = load(KEYS.custom, {});
 let packing = load(KEYS.packing, makeDefaultPacking());
 let travel = load(KEYS.travel, []);
 let settings = load(KEYS.settings, { currentRoute: "Camino Francés" });
+
+let entries;
+let entriesLoadWarning = null;
+{
+  const result = loadSafe(KEYS.entries, null);
+
+  if (result.value !== null) {
+    // Normal case: the current-version key loaded and parsed fine.
+    entries = result.value;
+  } else if (result.hadRawValue && result.parseFailed) {
+    // The key existed but the JSON was corrupted somehow. DO NOT overwrite
+    // it with an empty array — that would permanently destroy the user's
+    // journal. Keep the app usable with an empty in-memory list, but never
+    // persist over the original key until the user takes a recovery action,
+    // and warn them loudly so they know to restore from a backup.
+    entries = [];
+    entriesLoadWarning = true;
+  } else {
+    // The current-version key never existed at all. Try migrating the old
+    // v1 key if present; otherwise this is genuinely a fresh install.
+    const old = load(KEYS.oldEntries, []);
+    entries = Array.isArray(old) ? old.map(migrateEntry) : [];
+    save(KEYS.entries, entries);
+  }
+}
 
 function migrateEntry(e) {
   return {
@@ -3538,11 +3579,35 @@ document.addEventListener("visibilitychange", () => {
 });
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+    navigator.serviceWorker.register("./service-worker.js").then(reg => {
+      // Ask the browser to check for a newer service-worker.js right away,
+      // instead of waiting for its own (sometimes infrequent) update timer.
+      reg.update().catch(() => {});
+    }).catch(() => {});
+
+    // If a different/newer service worker takes control while this page is
+    // open, the page that's currently loaded may be running stale code.
+    // Reload once so the user is always running the current version.
+    let hasReloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (hasReloaded) return;
+      hasReloaded = true;
+      window.location.reload();
+    });
   });
 }
 
 setView(state.view, { replace: true });
+
+if (entriesLoadWarning) {
+  setTimeout(() => {
+    alert(
+      "Your journal data could not be read from this browser (it may be damaged). " +
+      "To avoid losing anything, nothing has been deleted or overwritten yet.\n\n" +
+      "Please use Trip Tools → Restore Backup to recover your entries from your most recent backup file."
+    );
+  }, 200);
+}
 </script>
 </body>
 </html>
