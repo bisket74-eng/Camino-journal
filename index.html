@@ -1112,6 +1112,149 @@ button {
     box-shadow: none;
   }
 }
+  /* ---- PATCH: cleaner menu backup buttons ---- */
+.menu button#backupMenuBtn,
+.menu button#restoreMenuBtn {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+  background: rgba(255,255,255,.35);
+}
+
+/* ---- PATCH: better distance picker ---- */
+.distance-box {
+  grid-template-columns: minmax(0, 1fr) max-content;
+}
+
+.unit-toggle {
+  width: max-content;
+  justify-self: start;
+}
+
+.distance-input {
+  -moz-appearance: textfield;
+}
+
+.distance-input::-webkit-outer-spin-button,
+.distance-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.spin {
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* ---- PATCH: person photo button ---- */
+.person-photo-btn {
+  border: 1px dashed rgba(79,104,79,.42);
+  background: rgba(79,104,79,.08);
+  color: var(--green);
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+}
+
+.person-tag .person-photo {
+  cursor: pointer;
+}
+
+/* ---- PATCH: prettier print pages ---- */
+.print-page {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255,255,255,.75), transparent 26%),
+    linear-gradient(180deg, #fffaf0, #f3e4c9);
+}
+
+.print-title {
+  color: #3a2a1d;
+  text-shadow: 0 1px 0 rgba(255,255,255,.7);
+}
+
+.print-kicker {
+  color: var(--red);
+}
+
+.scrap-tape {
+  position: absolute;
+  width: 84px;
+  height: 24px;
+  background: rgba(235,213,157,.72);
+  box-shadow: 0 1px 4px rgba(0,0,0,.12);
+  transform: rotate(-8deg);
+  z-index: 3;
+}
+
+.memory-card {
+  border: 1px solid rgba(185,139,59,.34);
+  background: rgba(255,255,255,.45);
+  padding: 16px;
+  margin: 18px 0;
+}
+
+.memory-card-title {
+  font-family: "Courier Prime", monospace;
+  color: var(--blue);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.blank-photo {
+  min-height: 220px;
+  border: 2px dashed rgba(185,139,59,.35);
+  background:
+    linear-gradient(135deg, rgba(185,139,59,.10), rgba(153,58,48,.06)),
+    rgba(255,255,255,.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 30px;
+  color: rgba(45,36,29,.45);
+  text-align: center;
+  padding: 20px;
+}
+
+.layout-scrapbook .print-title {
+  transform: rotate(-1deg);
+}
+
+.layout-diary .print-title {
+  font-size: 54px;
+  color: var(--red);
+}
+
+.layout-postcard .print-page-mark,
+.layout-log .print-page-mark,
+.layout-photo .print-page-mark,
+.layout-diary .print-page-mark,
+.layout-scrapbook .print-page-mark {
+  position: absolute;
+  right: 42px;
+  top: 36px;
+  font-family: "Courier Prime", monospace;
+  color: rgba(47,73,110,.25);
+  border: 2px solid rgba(47,73,110,.18);
+  border-radius: 50%;
+  width: 92px;
+  height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(10deg);
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.15;
+}
 </style>
 </head>
 
@@ -1123,20 +1266,20 @@ button {
   <h1 class="app-title">Camino Journal</h1>
   <div class="app-subtitle">a daily record of the way</div>
 
-  <div class="header-actions">
-    <div class="menu-wrap">
-      <button class="btn" id="tripMenuBtn">🧭 Trip Tools</button>
-      <div class="menu hidden" id="tripMenu">
-        <button data-view="settings">⚙️ Trip Settings</button>
-        <button data-view="packing">🎒 Packing List</button>
-        <button data-view="travel">✈️ Travel Log</button>
-        <button data-view="printBook">🖨️ Export Book</button>
-      </div>
+ <div class="header-actions">
+  <div class="menu-wrap">
+    <button class="btn" id="tripMenuBtn">🧭 Trip Tools</button>
+    <div class="menu hidden" id="tripMenu">
+      <button data-view="settings">⚙️ Trip Settings</button>
+      <button data-view="packing">🎒 Packing List</button>
+      <button data-view="travel">✈️ Travel Log</button>
+      <button data-view="printBook">🖨️ Export Book</button>
+      <button id="backupMenuBtn">⬇️ Backup Journal</button>
+      <button id="restoreMenuBtn">⬆️ Restore Backup</button>
     </div>
-    <button class="btn" id="backupBtn">⬇️ Backup</button>
-    <button class="btn" id="restoreBtn">⬆️ Restore</button>
-    <input type="file" id="restoreInput" accept="application/json" class="hidden" />
   </div>
+  <input type="file" id="restoreInput" accept="application/json" class="hidden" />
+</div>
 </header>
 
 <div id="app"></div>
@@ -1466,6 +1609,20 @@ function routeOptionsHtml(selected) {
 function datalistHtml(id, options) {
   return `<datalist id="${id}">${options.map(o => `<option value="${escapeHtml(o)}"></option>`).join("")}</datalist>`;
 }
+ function selectOptions(options, current, placeholder) {
+  const safeOptions = options || [];
+  const currentIsCustom = current && !safeOptions.includes(current);
+
+  return `
+    <option value="">${escapeHtml(placeholder || "Select…")}</option>
+    ${safeOptions.map(opt => `
+      <option value="${escapeHtml(opt)}" ${opt === current ? "selected" : ""}>
+        ${escapeHtml(opt)}
+      </option>
+    `).join("")}
+    <option value="__custom__" ${currentIsCustom ? "selected" : ""}>Type my own…</option>
+  `;
+} 
 
 function choiceButtons(options, selected, field, multi) {
   selected = selected || [];
@@ -1712,8 +1869,11 @@ function editEntry(entry) {
 
 function renderForm() {
   const d = state.draft;
-  const townListId = "town-list";
-  const albergueListId = "albergue-list";
+  const townOptions = getTownOptions(d.route);
+  const albergueOptions = getAlbergueOptions(d.town);
+
+  const townIsCustom = d.town && !townOptions.includes(d.town);
+  const albergueIsCustom = d.albergue && !albergueOptions.includes(d.albergue);
 
   app().innerHTML = `
     <main class="main">
@@ -1735,14 +1895,18 @@ function renderForm() {
 
         <div class="field">
           <label class="field-label">Tonight’s Stop</label>
-          <input class="input" id="townInput" list="${townListId}" placeholder="Where did you land tonight?" value="${escapeHtml(d.town)}">
-          ${datalistHtml(townListId, getTownOptions(d.route))}
+          <select class="select" id="townSelect">
+            ${selectOptions(townOptions, d.town, "Choose tonight’s town / city")}
+          </select>
+          <input class="input ${townIsCustom ? "" : "hidden"}" id="townCustomInput" style="margin-top:8px;" placeholder="Type tonight’s town / city" value="${townIsCustom ? escapeHtml(d.town) : ""}">
         </div>
 
         <div class="field">
           <label class="field-label">Tonight’s Albergue</label>
-          <input class="input" id="albergueInput" list="${albergueListId}" placeholder="Where are you staying tonight?" value="${escapeHtml(d.albergue)}">
-          ${datalistHtml(albergueListId, getAlbergueOptions(d.town))}
+          <select class="select" id="albergueSelect">
+            ${selectOptions(albergueOptions, d.albergue, d.town ? "Choose tonight’s albergue / lodging" : "Choose a town first")}
+          </select>
+          <input class="input ${albergueIsCustom ? "" : "hidden"}" id="albergueCustomInput" style="margin-top:8px;" placeholder="Type tonight’s albergue / lodging" value="${albergueIsCustom ? escapeHtml(d.albergue) : ""}">
         </div>
 
         <div class="field">
@@ -1781,12 +1945,23 @@ function renderForm() {
             <input class="input" id="personInput" placeholder="Name, then press Add">
             <button class="btn" id="addPersonBtn">＋</button>
           </div>
+
           <div class="person-tags">
             ${d.people.map(p => `
               <span class="person-tag">
-                ${p.photo ? `<img class="person-photo" src="${p.photo}" alt="">` : ""}
+                ${
+                  p.photo
+                    ? `<img class="person-photo light-img" src="${p.photo}" alt="">`
+                    : `<button type="button" class="person-photo-btn" data-person-photo="${p.id}">📷</button>`
+                }
                 ${escapeHtml(p.name)}
+                ${
+                  p.photo
+                    ? `<button type="button" class="person-photo-btn" data-person-photo="${p.id}" title="Change photo">📷</button>`
+                    : ""
+                }
                 <button type="button" data-remove-person="${p.id}">✕</button>
+                <input type="file" accept="image/*" class="hidden" data-person-file="${p.id}">
               </span>
             `).join("")}
           </div>
@@ -1883,11 +2058,28 @@ function renderStopsHtml() {
 
 function saveDraftFromInputs() {
   const d = state.draft;
+
   d.date = document.getElementById("dateInput")?.value || d.date;
-  d.town = document.getElementById("townInput")?.value.trim() || "";
-  d.albergue = document.getElementById("albergueInput")?.value.trim() || "";
   d.distanceValue = document.getElementById("distanceInput")?.value || "";
   d.notes = document.getElementById("notesInput")?.value || "";
+
+  const townSelect = document.getElementById("townSelect");
+  const townCustom = document.getElementById("townCustomInput");
+
+  if (townSelect) {
+    d.town = townSelect.value === "__custom__"
+      ? (townCustom?.value || "").trim()
+      : townSelect.value.trim();
+  }
+
+  const albergueSelect = document.getElementById("albergueSelect");
+  const albergueCustom = document.getElementById("albergueCustomInput");
+
+  if (albergueSelect) {
+    d.albergue = albergueSelect.value === "__custom__"
+      ? (albergueCustom?.value || "").trim()
+      : albergueSelect.value.trim();
+  }
 
   addCustomTown(d.route, d.town);
   addCustomAlbergue(d.town, d.albergue);
@@ -1895,6 +2087,18 @@ function saveDraftFromInputs() {
 
 function bindForm() {
   const d = state.draft;
+  let holdTimer = null;
+
+  function startHold(delta) {
+    bumpDistance(delta);
+    clearInterval(holdTimer);
+    holdTimer = setInterval(() => bumpDistance(delta), 70);
+  }
+
+  function stopHold() {
+    clearInterval(holdTimer);
+    holdTimer = null;
+  }
 
   document.getElementById("cancelFormBtn").onclick = () => {
     state.draft = null;
@@ -1906,17 +2110,43 @@ function bindForm() {
     render();
   };
 
-  document.getElementById("townInput").oninput = e => {
-    d.town = e.target.value;
-  };
-
-  document.getElementById("albergueInput").oninput = e => {
-    d.albergue = e.target.value;
-  };
-
   document.getElementById("dateInput").oninput = e => {
     d.date = e.target.value;
   };
+
+  document.getElementById("townSelect").onchange = e => {
+    if (e.target.value === "__custom__") {
+      d.town = "";
+      d.albergue = "";
+    } else {
+      d.town = e.target.value;
+      d.albergue = "";
+    }
+    renderForm();
+  };
+
+  const townCustom = document.getElementById("townCustomInput");
+  if (townCustom) {
+    townCustom.oninput = e => {
+      d.town = e.target.value;
+    };
+  }
+
+  document.getElementById("albergueSelect").onchange = e => {
+    if (e.target.value === "__custom__") {
+      d.albergue = "";
+    } else {
+      d.albergue = e.target.value;
+    }
+    renderForm();
+  };
+
+  const albergueCustom = document.getElementById("albergueCustomInput");
+  if (albergueCustom) {
+    albergueCustom.oninput = e => {
+      d.albergue = e.target.value;
+    };
+  }
 
   document.getElementById("distanceInput").oninput = e => {
     d.distanceValue = e.target.value;
@@ -1926,8 +2156,18 @@ function bindForm() {
     d.notes = e.target.value;
   };
 
-  document.getElementById("distanceMinus").onclick = () => bumpDistance(-0.1);
-  document.getElementById("distancePlus").onclick = () => bumpDistance(0.1);
+  const minus = document.getElementById("distanceMinus");
+  const plus = document.getElementById("distancePlus");
+
+  minus.onpointerdown = () => startHold(-0.1);
+  plus.onpointerdown = () => startHold(0.1);
+
+  minus.onpointerup = stopHold;
+  plus.onpointerup = stopHold;
+  minus.onpointerleave = stopHold;
+  plus.onpointerleave = stopHold;
+  minus.onpointercancel = stopHold;
+  plus.onpointercancel = stopHold;
 
   document.querySelectorAll("[data-unit]").forEach(btn => {
     btn.onclick = () => {
@@ -1972,6 +2212,31 @@ function bindForm() {
     };
   });
 
+  document.querySelectorAll("[data-person-photo]").forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.personPhoto;
+      const fileInput = document.querySelector(`[data-person-file="${CSS.escape(id)}"]`);
+      if (fileInput) fileInput.click();
+    };
+  });
+
+  document.querySelectorAll("[data-person-file]").forEach(input => {
+    input.onchange = e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const id = input.dataset.personFile;
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        d.people = d.people.map(p => p.id === id ? { ...p, photo: reader.result } : p);
+        renderForm();
+      };
+
+      reader.readAsDataURL(file);
+    };
+  });
+
   document.getElementById("addPhotoBtn").onclick = () => document.getElementById("photoInput").click();
   document.getElementById("photoInput").onchange = e => handlePhotos(e.target.files);
 
@@ -1986,6 +2251,11 @@ function bindForm() {
 
   document.getElementById("saveEntryBtn").onclick = () => {
     saveDraftFromInputs();
+
+    if (!d.town || !d.town.trim()) {
+      alert("Choose or type tonight’s town / city before saving.");
+      return;
+    }
 
     settings.currentRoute = d.route;
     persistSettings();
@@ -2008,11 +2278,13 @@ function bumpDistance(delta) {
   const d = state.draft;
   let n = parseFloat(d.distanceValue || "0");
   if (isNaN(n)) n = 0;
+
   n = Math.max(0, Math.round((n + delta) * 10) / 10);
   d.distanceValue = n.toFixed(1);
-  renderForm();
-}
 
+  const input = document.getElementById("distanceInput");
+  if (input) input.value = d.distanceValue;
+}
 function addPerson() {
   const input = document.getElementById("personInput");
   const name = input.value.trim();
@@ -2442,12 +2714,15 @@ function printablePage(entry, layout) {
   const p2 = photos[1];
   const p3 = photos[2];
   const p4 = photos[3];
+
   const people = (entry.people || []).map(p => p.name).join(", ");
   const stops = entry.stops || [];
+  const title = entry.town || "Camino Memory";
 
   const header = `
+    <div class="print-page-mark">CAMINO<br>JOURNAL</div>
     <div class="print-kicker">${escapeHtml(entry.route || "Camino Journal")}</div>
-    <div class="print-title">${escapeHtml(entry.town || "Tonight’s Stop")}</div>
+    <div class="print-title">${escapeHtml(title)}</div>
     <div class="print-meta">
       ${escapeHtml(formatDate(entry.date))}
       ${entry.albergue ? " · Tonight at " + escapeHtml(entry.albergue) : ""}
@@ -2456,22 +2731,45 @@ function printablePage(entry, layout) {
   `;
 
   const stopBits = stops.length
-    ? `<div class="print-stop-list">${stops.slice(0, 6).map(s => `<span class="print-stop">${escapeHtml(s.type)}: ${escapeHtml(s.name)}</span>`).join("")}</div>`
+    ? `<div class="print-stop-list">${stops.slice(0, 6).map(s => `<span class="print-stop">${escapeHtml(s.type)}: ${escapeHtml(s.name || "Stop")}</span>`).join("")}</div>`
     : "";
 
-  const peopleBit = people ? `<div class="print-people">People met: ${escapeHtml(people)}</div>` : "";
+  const peopleBit = people
+    ? `<div class="print-people">People met along the way: ${escapeHtml(people)}</div>`
+    : "";
+
+  const notes = entry.notes || "A day on the Camino worth remembering.";
 
   if (layout === 1) {
     return `
       <section class="print-page layout-scrapbook">
         ${header}
+
         <div class="collage">
-          ${p1 ? `<div class="polaroid p1"><img src="${p1}"></div>` : ""}
-          ${p2 ? `<div class="polaroid p2"><img src="${p2}"></div>` : ""}
-          ${p3 ? `<div class="polaroid p3"><img src="${p3}"></div>` : ""}
+          ${
+            p1
+              ? `<div class="scrap-tape" style="left:12%;top:4px;"></div><div class="polaroid p1"><img src="${p1}"></div>`
+              : `<div class="blank-photo" style="position:absolute;left:4%;top:10px;width:44%;height:245px;transform:rotate(-5deg);">photo memory</div>`
+          }
+          ${
+            p2
+              ? `<div class="scrap-tape" style="right:15%;top:28px;transform:rotate(7deg);"></div><div class="polaroid p2"><img src="${p2}"></div>`
+              : `<div class="blank-photo" style="position:absolute;right:5%;top:35px;width:44%;height:245px;transform:rotate(4deg);">the road</div>`
+          }
+          ${
+            p3
+              ? `<div class="polaroid p3"><img src="${p3}"></div>`
+              : `<div class="blank-photo" style="position:absolute;left:28%;bottom:0;width:44%;height:245px;transform:rotate(1deg);">small moments</div>`
+          }
         </div>
+
         ${stopBits}
-        <div class="print-notes">${escapeHtml(entry.notes || "A quiet day on the Camino.")}</div>
+
+        <div class="memory-card">
+          <div class="memory-card-title">Field Notes</div>
+          <div class="print-notes">${escapeHtml(notes)}</div>
+        </div>
+
         ${peopleBit}
       </section>
     `;
@@ -2481,15 +2779,39 @@ function printablePage(entry, layout) {
     return `
       <section class="print-page layout-log">
         ${header}
+
         <div class="log-grid">
-          <div class="log-box"><div class="log-label">Tonight’s Albergue</div><div class="log-value">${escapeHtml(entry.albergue || "—")}</div></div>
-          <div class="log-box"><div class="log-label">Distance</div><div class="log-value">${escapeHtml(distanceText(entry) || "—")}</div></div>
-          <div class="log-box"><div class="log-label">Weather</div><div class="log-value">${escapeHtml((entry.weather || []).join(", ") || "—")}</div></div>
-          <div class="log-box"><div class="log-label">Feeling</div><div class="log-value">${escapeHtml((entry.feelings || []).join(", ") || "—")}</div></div>
+          <div class="log-box">
+            <div class="log-label">Tonight’s Albergue</div>
+            <div class="log-value">${escapeHtml(entry.albergue || "—")}</div>
+          </div>
+          <div class="log-box">
+            <div class="log-label">Distance</div>
+            <div class="log-value">${escapeHtml(distanceText(entry) || "—")}</div>
+          </div>
+          <div class="log-box">
+            <div class="log-label">Weather</div>
+            <div class="log-value">${escapeHtml((entry.weather || []).join(", ") || "—")}</div>
+          </div>
+          <div class="log-box">
+            <div class="log-label">Feeling</div>
+            <div class="log-value">${escapeHtml((entry.feelings || []).join(", ") || "—")}</div>
+          </div>
         </div>
-        ${p1 ? `<img class="print-photo" src="${p1}" style="width:100%;height:260px;">` : ""}
+
+        ${
+          p1
+            ? `<img class="print-photo" src="${p1}" style="width:100%;height:275px;">`
+            : `<div class="blank-photo">today’s image</div>`
+        }
+
         ${stopBits}
-        <div class="print-notes">${escapeHtml(entry.notes || "")}</div>
+
+        <div class="memory-card">
+          <div class="memory-card-title">Journal Entry</div>
+          <div class="print-notes">${escapeHtml(notes)}</div>
+        </div>
+
         ${peopleBit}
       </section>
     `;
@@ -2499,9 +2821,26 @@ function printablePage(entry, layout) {
     return `
       <section class="print-page layout-photo">
         ${header}
-        ${p1 ? `<img class="print-photo hero-photo" src="${p1}">` : ""}
-        <div class="print-notes">${escapeHtml(entry.notes || "")}</div>
-        ${(p2 || p3 || p4) ? `<div class="mini-row">${[p2,p3,p4].filter(Boolean).map(src => `<img class="print-photo" src="${src}">`).join("")}</div>` : ""}
+
+        ${
+          p1
+            ? `<img class="print-photo hero-photo" src="${p1}">`
+            : `<div class="blank-photo" style="height:430px;margin:22px 0;">Camino photo</div>`
+        }
+
+        <div class="memory-card">
+          <div class="memory-card-title">What I Remember</div>
+          <div class="print-notes">${escapeHtml(notes)}</div>
+        </div>
+
+        <div class="mini-row">
+          ${
+            [p2, p3, p4].filter(Boolean).length
+              ? [p2, p3, p4].filter(Boolean).map(src => `<img class="print-photo" src="${src}">`).join("")
+              : `<div class="blank-photo">café</div><div class="blank-photo">people</div><div class="blank-photo">view</div>`
+          }
+        </div>
+
         ${stopBits}
         ${peopleBit}
       </section>
@@ -2512,13 +2851,22 @@ function printablePage(entry, layout) {
     return `
       <section class="print-page layout-diary">
         ${header}
+
         <div class="diary-panel">
-          <div class="print-notes">${escapeHtml(entry.notes || "")}</div>
+          <div class="memory-card-title">Dear Camino</div>
+          <div class="print-notes">${escapeHtml(notes)}</div>
         </div>
+
         ${stopBits}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:20px;">
-          ${photos.slice(0,4).map(src => `<img class="print-photo" src="${src}" style="width:100%;height:190px;">`).join("")}
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:24px;">
+          ${
+            photos.slice(0,4).length
+              ? photos.slice(0,4).map(src => `<img class="print-photo" src="${src}" style="width:100%;height:190px;">`).join("")
+              : `<div class="blank-photo">morning</div><div class="blank-photo">midday</div><div class="blank-photo">evening</div><div class="blank-photo">tonight</div>`
+          }
         </div>
+
         ${peopleBit}
       </section>
     `;
@@ -2527,14 +2875,30 @@ function printablePage(entry, layout) {
   return `
     <section class="print-page layout-postcard">
       ${header}
+
       <div class="photo-area">
-        ${p1 ? `<img class="print-photo" src="${p1}" style="width:100%;">` : `<div></div>`}
+        ${
+          p1
+            ? `<img class="print-photo" src="${p1}" style="width:100%;">`
+            : `<div class="blank-photo">postcard image</div>`
+        }
+
         <div class="side-photos">
-          ${[p2,p3].filter(Boolean).map(src => `<img class="print-photo" src="${src}" style="width:100%;">`).join("")}
+          ${
+            [p2, p3].filter(Boolean).length
+              ? [p2, p3].filter(Boolean).map(src => `<img class="print-photo" src="${src}" style="width:100%;">`).join("")
+              : `<div class="blank-photo" style="min-height:155px;">stamp</div><div class="blank-photo" style="min-height:155px;">memory</div>`
+          }
         </div>
       </div>
+
       ${stopBits}
-      <div class="print-notes">${escapeHtml(entry.notes || "")}</div>
+
+      <div class="memory-card">
+        <div class="memory-card-title">Postcard From The Way</div>
+        <div class="print-notes">${escapeHtml(notes)}</div>
+      </div>
+
       ${peopleBit}
     </section>
   `;
@@ -2628,9 +2992,9 @@ document.querySelectorAll("#tripMenu [data-view]").forEach(btn => {
   btn.onclick = () => setView(btn.dataset.view);
 });
 
-document.getElementById("backupBtn").onclick = backupData;
-document.getElementById("restoreBtn").onclick = () => document.getElementById("restoreInput").click();
-
+document.getElementById("backupMenuBtn").onclick = backupData;
+document.getElementById("restoreMenuBtn").onclick = () => document.getElementById("restoreInput").click();
+  
 document.getElementById("restoreInput").onchange = e => {
   if (e.target.files && e.target.files[0]) restoreData(e.target.files[0]);
   e.target.value = "";
