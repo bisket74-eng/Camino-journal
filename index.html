@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Camino Journal</title>
 
 <meta name="description" content="A daily Camino journal, travel log, scrapbook, and printable book." />
@@ -46,7 +46,7 @@ body {
   min-height: 100vh;
   color: var(--ink);
   font-family: "Libre Franklin", system-ui, sans-serif;
-  font-size: 16px;
+  font-size: 17px;
   background:
     radial-gradient(circle at 18% 4%, rgba(255,255,255,.55), transparent 32%),
     radial-gradient(circle at 85% 70%, rgba(153,58,48,.08), transparent 34%),
@@ -117,7 +117,7 @@ button {
 .app-title {
   margin: 0;
   font-family: "Cormorant Garamond", serif;
-  font-size: 42px;
+  font-size: 56px;
   line-height: .95;
   letter-spacing: .8px;
   color: var(--ink);
@@ -127,7 +127,7 @@ button {
   margin-top: 8px;
   color: var(--blue);
   font-family: "Courier Prime", monospace;
-  font-size: 12px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 2.4px;
 }
@@ -203,7 +203,7 @@ button {
 }
 
 .route-meta {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--muted);
   margin-top: 4px;
 }
@@ -277,7 +277,7 @@ button {
 .entry-meta {
   font-family: "Courier Prime", monospace;
   color: var(--blue);
-  font-size: 12px;
+  font-size: 14px;
   margin-top: 5px;
 }
 
@@ -351,7 +351,7 @@ button {
   gap: 7px;
   font-family: "Courier Prime", monospace;
   color: var(--blue);
-  font-size: 13px;
+  font-size: 15px;
   letter-spacing: 1.2px;
   text-transform: uppercase;
   font-weight: 700;
@@ -497,7 +497,7 @@ button {
 .detail-meta {
   color: var(--blue);
   font-family: "Courier Prime", monospace;
-  font-size: 13px;
+  font-size: 15px;
   margin-bottom: 14px;
 }
 
@@ -513,7 +513,7 @@ button {
   border: 1px solid rgba(47,73,110,.18);
   color: var(--blue);
   padding: 5px 9px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -590,15 +590,36 @@ button {
   min-width: 120px;
 }
 
+.delete-link-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 18px;
+  padding: 10px;
+  background: none;
+  border: none;
+  color: var(--red);
+  opacity: .7;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.delete-link-btn:hover,
+.delete-link-btn:active {
+  opacity: 1;
+  text-decoration: underline;
+}
+
 .postmark {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   flex-shrink: 0;
 }
 
 .detail-postmark {
-  width: 98px;
-  height: 98px;
+  width: 124px;
+  height: 124px;
 }
 
 .postmark svg {
@@ -609,26 +630,26 @@ button {
 .pm-ring {
   fill: none;
   stroke: var(--blue);
-  stroke-width: 1.8;
+  stroke-width: 2.4;
 }
 
 .pm-inner {
   fill: none;
   stroke: var(--blue);
-  stroke-width: 1.35;
+  stroke-width: 1.8;
 }
 
 .pm-text {
   font-family: "Courier Prime", monospace;
-  font-size: 10.6px;
-  letter-spacing: .85px;
+  font-size: 13px;
+  letter-spacing: 1px;
   fill: var(--blue);
   font-weight: 700;
 }
 
 .pm-day {
   font-family: "Courier Prime", monospace;
-  font-size: 28px;
+  font-size: 34px;
   fill: var(--red);
   font-weight: 700;
 }
@@ -636,8 +657,8 @@ button {
 .pm-month,
 .pm-year {
   font-family: "Courier Prime", monospace;
-  font-size: 11px;
-  letter-spacing: 1px;
+  font-size: 13px;
+  letter-spacing: 1.2px;
   fill: var(--blue);
   font-weight: 700;
 }
@@ -664,7 +685,7 @@ button {
 
 .stop-meta {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
   margin-top: 2px;
 }
 
@@ -705,7 +726,7 @@ button {
   color: var(--green);
   padding: 5px 9px;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -735,7 +756,7 @@ button {
   border-radius: 22px;
   z-index: 80;
   box-shadow: 0 8px 20px rgba(0,0,0,.24);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .toast.error {
@@ -878,7 +899,7 @@ button {
 
 .travel-meta {
   color: var(--blue);
-  font-size: 13px;
+  font-size: 15px;
   margin-top: 4px;
 }
 
@@ -1123,7 +1144,7 @@ button {
   /* ---- PATCH: cleaner menu backup buttons ---- */
 .menu button#backupMenuBtn,
 .menu button#restoreMenuBtn {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--muted);
   font-weight: 600;
   background: rgba(255,255,255,.35);
@@ -1155,19 +1176,44 @@ button {
 }
 
 /* ---- PATCH: person photo button ---- */
-.person-photo-btn {
-  border: 1px dashed rgba(79,104,79,.42);
-  background: rgba(79,104,79,.08);
+.person-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.person-input-with-icon {
+  padding-right: 46px;
+}
+
+.person-photo-inline-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
   color: var(--green);
-  border-radius: 50%;
-  width: 25px;
-  height: 25px;
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 19px;
   padding: 0;
+  border-radius: 50%;
+}
+
+.person-photo-inline-btn:active {
+  background: rgba(79,104,79,.12);
+}
+
+.person-photo-inline-btn .person-photo {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .person-tag .person-photo {
@@ -1550,7 +1596,7 @@ button {
   margin-top: 6px;
   font-family: "Courier Prime", monospace;
   color: var(--blue);
-  font-size: 13px;
+  font-size: 15px;
   letter-spacing: 1.6px;
   text-transform: uppercase;
 } 
@@ -2155,18 +2201,18 @@ function postmark(entry, big) {
 
   return `
     <div class="postmark ${big ? "detail-postmark" : ""}">
-      <svg viewBox="0 0 140 140">
+      <svg viewBox="0 0 160 160">
         <defs>
-          <path id="${id}" d="M 70,70 m -57,0 a 57,57 0 1,1 114,0 a 57,57 0 1,1 -114,0"></path>
+          <path id="${id}" d="M 80,140 a 60,60 0 1,1 0,-120 a 60,60 0 1,1 0,120"></path>
         </defs>
-        <circle cx="70" cy="70" r="65" class="pm-ring"></circle>
-        <circle cx="70" cy="70" r="47" class="pm-inner"></circle>
-        <text class="pm-text">
-          <textPath href="#${id}" startOffset="3%">${escapeHtml(text)}</textPath>
+        <circle cx="80" cy="80" r="72" class="pm-ring"></circle>
+        <circle cx="80" cy="80" r="50" class="pm-inner"></circle>
+        <text class="pm-text" text-anchor="middle" dominant-baseline="middle">
+          <textPath href="#${id}" startOffset="50%">${escapeHtml(text)}</textPath>
         </text>
-        <text x="70" y="65" text-anchor="middle" class="pm-day">${day}</text>
-        <text x="70" y="84" text-anchor="middle" class="pm-month">${month}</text>
-        <text x="70" y="99" text-anchor="middle" class="pm-year">${year}</text>
+        <text x="80" y="74" text-anchor="middle" class="pm-day">${day}</text>
+        <text x="80" y="95" text-anchor="middle" class="pm-month">${month}</text>
+        <text x="80" y="112" text-anchor="middle" class="pm-year">${year}</text>
       </svg>
     </div>
   `;
@@ -2444,14 +2490,16 @@ function renderForm() {
         <div class="field">
           <label class="field-label">People I Met</label>
           <div class="person-row">
-            <input class="input" id="personInput" placeholder="Name, then press Add">
-            <button type="button" class="person-photo-btn" id="personPhotoBtn" title="${state.pendingPersonPhoto ? "Change photo" : "Add a photo"}">
-              ${
-                state.pendingPersonPhoto
-                  ? `<img class="person-photo" src="${state.pendingPersonPhoto}" alt="">`
-                  : "📷"
-              }
-            </button>
+            <div class="person-input-wrap">
+              <input class="input person-input-with-icon" id="personInput" placeholder="Name, then press Add">
+              <button type="button" class="person-photo-inline-btn" id="personPhotoBtn" title="${state.pendingPersonPhoto ? "Change photo" : "Add a photo"}">
+                ${
+                  state.pendingPersonPhoto
+                    ? `<img class="person-photo" src="${state.pendingPersonPhoto}" alt="">`
+                    : "📷"
+                }
+              </button>
+            </div>
             <button class="btn" id="addPersonBtn">＋</button>
           </div>
           <input type="file" accept="image/*" class="hidden" id="personPhotoInput">
@@ -3111,9 +3159,10 @@ function renderTravelForm() {
         </div>
 
         <div class="action-row">
-          <button class="btn btn-red" id="saveTravelBtn">Save</button>
-          <button class="btn btn-danger" id="deleteTravelBtn">Delete</button>
+          <button class="btn btn-red" id="saveTravelBtn" style="flex: 1;">Save</button>
         </div>
+
+        <button type="button" class="delete-link-btn" id="deleteTravelBtn">🗑 Delete this travel leg</button>
       </div>
     </main>
   `;
@@ -3142,6 +3191,7 @@ function renderTravelForm() {
   };
 
   document.getElementById("deleteTravelBtn").onclick = () => {
+    if (!confirm("Delete this travel leg?")) return;
     travel = travel.filter(x => x.id !== t.id);
     persistTravel();
     state.travelDraft = null;
