@@ -1665,6 +1665,7 @@ body {
       <button data-view="printBook">🖨️ Export Book</button>
       <button id="backupMenuBtn">⬇️ Backup Journal</button>
       <button id="restoreMenuBtn">⬆️ Restore Backup</button>
+      <button id="storageDebugBtn">🔍 Storage Debug Info</button>
     </div>
   </div>
   <input type="file" id="restoreInput" accept="application/json" class="hidden" />
@@ -3564,6 +3565,52 @@ document.querySelectorAll("#tripMenu [data-view]").forEach(btn => {
 
 document.getElementById("backupMenuBtn").onclick = backupData;
 document.getElementById("restoreMenuBtn").onclick = () => document.getElementById("restoreInput").click();
+
+document.getElementById("storageDebugBtn").onclick = () => {
+  function describe(key) {
+    let raw;
+    try {
+      raw = localStorage.getItem(key);
+    } catch (e) {
+      return key + ": ERROR reading (" + e.message + ")";
+    }
+    if (raw === null) return key + ": (key does not exist)";
+    let count = "";
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) count = " — " + parsed.length + " item(s)";
+    } catch (e) {
+      return key + ": EXISTS but FAILED TO PARSE (" + raw.length + " chars) — first 80 chars: " + raw.slice(0, 80);
+    }
+    return key + ": EXISTS, " + raw.length + " chars" + count;
+  }
+
+  let storageType = "unknown";
+  let storageAvailable = false;
+  try {
+    storageAvailable = !!window.localStorage;
+    storageType = window.localStorage === window.sessionStorage ? "sessionStorage(!)" : "localStorage";
+  } catch (e) {
+    storageType = "BLOCKED: " + e.message;
+  }
+
+  const report = [
+    "Origin: " + window.location.origin,
+    "Path: " + window.location.pathname,
+    "Storage type available: " + storageType,
+    "",
+    describe(KEYS.entries),
+    describe(KEYS.oldEntries),
+    describe(KEYS.custom),
+    describe(KEYS.packing),
+    describe(KEYS.travel),
+    describe(KEYS.settings),
+    "",
+    "In-memory entries right now: " + entries.length + " item(s)"
+  ].join("\n");
+
+  alert(report);
+};
   
 document.getElementById("restoreInput").onchange = e => {
   if (e.target.files && e.target.files[0]) restoreData(e.target.files[0]);
@@ -3582,18 +3629,11 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./service-worker.js").then(reg => {
       // Ask the browser to check for a newer service-worker.js right away,
       // instead of waiting for its own (sometimes infrequent) update timer.
+      // This does NOT force a reload — it only makes sure the NEXT normal
+      // load picks up the latest version, so it can never interrupt the
+      // user mid-entry.
       reg.update().catch(() => {});
     }).catch(() => {});
-
-    // If a different/newer service worker takes control while this page is
-    // open, the page that's currently loaded may be running stale code.
-    // Reload once so the user is always running the current version.
-    let hasReloaded = false;
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (hasReloaded) return;
-      hasReloaded = true;
-      window.location.reload();
-    });
   });
 }
 
