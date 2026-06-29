@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<title>Camino Journal</title>
+<meta name="description" content="A daily journal for walking the Camino de Santiago." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦪</text></svg>" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/lucide@0.383.0/dist/umd/lucide.min.js"></script>
+
+<style>
+  :root {
+    --kraft: #e8dcc3;
+    --kraft-dark: #d8c8a3;
+    --ink: #2b2420;
+    --postal-red: #a3342a;
+    --postal-blue: #2c4870;
+    --stamp-green: #4a6650;
+    --paper: #f6efdc;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Libre Franklin', sans-serif;
+    background: var(--kraft);
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(255,255,255,0.25), transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(0,0,0,0.04), transparent 50%);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  #root { min-height: 100vh; position: relative; padding-bottom: 40px; }
+
+  .cj-loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .loading-stamp { font-family: 'Courier Prime', monospace; letter-spacing: 1px; color: var(--postal-blue); }
+
+  .airmail-border {
+    height: 10px;
+    width: 100%;
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--postal-red) 0px, var(--postal-red) 10px,
+      var(--paper) 10px, var(--paper) 14px,
+      var(--postal-blue) 14px, var(--postal-blue) 24px,
+      var(--paper) 24px, var(--paper) 28px
+    );
+  }
+
+  .cj-header {
+    text-align: center;
+    padding: 22px 16px 18px;
+    border-bottom: 2px solid rgba(43,36,32,0.15);
+    background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent);
+  }
+  .header-mark { font-size: 22px; color: var(--postal-red); margin-bottom: 2px; }
+  .cj-header h1 {
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: 1px;
+    margin: 0;
+    color: var(--ink);
+  }
+  .header-sub {
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--postal-blue);
+    margin-top: 4px;
+    opacity: 0.75;
+  }
+  .header-actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .header-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 13px;
+    border-radius: 16px;
+    border: 1px solid rgba(44,72,112,0.35);
+    background: rgba(255,255,255,0.5);
+    color: var(--postal-blue);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .header-action-btn:hover { background: rgba(255,255,255,0.85); }
+
+  .cj-main {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 18px 16px 100px;
+    position: relative;
+  }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--postal-blue); opacity: 0.7; }
+  .empty-state p { margin: 10px 0 0; font-size: 15px; }
+  .empty-sub { font-style: italic; opacity: 0.8; }
+
+  .entry-list { display: flex; flex-direction: column; gap: 14px; }
+
+  .entry-card {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    background: var(--paper);
+    border: 1px solid rgba(43,36,32,0.18);
+    border-radius: 6px;
+    padding: 12px;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    position: relative;
+    width: 100%;
+    font-family: inherit;
+  }
+  .entry-card::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 8px; bottom: 8px; width: 3px;
+    background: var(--postal-red);
+    border-radius: 2px;
+  }
+  .entry-card-body { flex: 1; min-width: 0; padding-left: 6px; }
+  .entry-card-title { font-weight: 700; font-size: 16px; color: var(--ink); }
+  .entry-card-meta { font-size: 12px; color: var(--postal-blue); margin-top: 2px; }
+  .entry-card-snippet {
+    font-size: 13px;
+    color: rgba(43,36,32,0.7);
+    margin-top: 6px;
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .postmark { width: 64px; height: 64px; flex-shrink: 0; opacity: 0.92; }
+  .postmark-svg { width: 100%; height: 100%; }
+  .pm-ring-outer, .pm-ring-inner { fill: none; stroke: var(--postal-blue); stroke-width: 1.5; }
+  .pm-curve-text { font-family: 'Courier Prime', monospace; font-size: 8.5px; letter-spacing: 1px; fill: var(--postal-blue); }
+  .pm-day { font-family: 'Courier Prime', monospace; font-weight: 700; font-size: 20px; fill: var(--postal-red); }
+  .pm-month, .pm-year { font-family: 'Courier Prime', monospace; font-size: 9px; letter-spacing: 1px; fill: var(--postal-blue); }
+
+  .fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--postal-red);
+    color: #fff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    cursor: pointer;
+  }
+  @media (min-width: 600px) {
+    .fab { right: calc(50% - 280px - 56px - 16px); }
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--postal-blue);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 0 16px;
+  }
+
+  .detail-card, .form-card {
+    background: var(--paper);
+    border: 1px solid rgba(43,36,32,0.18);
+    border-radius: 8px;
+    padding: 22px 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  .detail-card h2 { margin: 10px 0 2px; font-family: 'Courier Prime', monospace; }
+  .detail-meta-row { color: var(--postal-blue); font-size: 13px; margin-bottom: 12px; }
+  .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .detail-tag { background: var(--kraft-dark); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }
+  .detail-section { margin-top: 16px; }
+  .detail-label {
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--postal-blue);
+    margin-bottom: 8px;
+  }
+  .detail-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .detail-chip { background: rgba(44,72,112,0.08); border: 1px solid rgba(44,72,112,0.2); border-radius: 16px; padding: 4px 10px; font-size: 13px; }
+  .detail-notes { font-size: 15px; line-height: 1.6; white-space: pre-wrap; }
+  .detail-photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .detail-photo-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; border: 1px solid rgba(43,36,32,0.15); cursor: pointer; }
+  .detail-actions { display: flex; gap: 10px; margin-top: 22px; }
+  .secondary-btn, .danger-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid rgba(43,36,32,0.2);
+    font-family: inherit;
+  }
+  .secondary-btn { background: var(--kraft-dark); color: var(--ink); }
+  .danger-btn { background: transparent; color: var(--postal-red); border-color: var(--postal-red); }
+
+  .field { margin-bottom: 18px; }
+  .field-label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--postal-blue); margin-bottom: 6px; }
+
+  .text-input, .notes-input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid rgba(43,36,32,0.25);
+    border-radius: 6px;
+    background: #fff;
+    font-size: 15px;
+    font-family: 'Libre Franklin', sans-serif;
+    color: var(--ink);
+  }
+  .notes-input {
+    resize: vertical;
+    line-height: 1.6;
+    background-image: repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(44,72,112,0.15) 28px);
+  }
+  .text-input:focus, .notes-input:focus { outline: 2px solid var(--postal-blue); outline-offset: 1px; }
+
+  .combo-wrap { position: relative; }
+  .combo-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 12px;
+    border: 1px solid rgba(43,36,32,0.25);
+    border-radius: 6px;
+    background: #fff;
+    font-size: 15px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+  }
+  .combo-trigger-text { color: rgba(43,36,32,0.45); }
+  .combo-trigger.has-value .combo-trigger-text { color: var(--ink); font-weight: 500; }
+  .chev { transition: transform 0.15s; color: var(--postal-blue); }
+  .chev-open { transform: rotate(180deg); }
+
+  .combo-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: #fff;
+    border: 1px solid rgba(43,36,32,0.25);
+    border-radius: 6px;
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 20;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  }
+  .combo-empty { padding: 12px; font-size: 13px; color: rgba(43,36,32,0.5); font-style: italic; }
+  .combo-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    background: none;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(43,36,32,0.07);
+    font-family: inherit;
+  }
+  .combo-option:hover { background: rgba(44,72,112,0.06); }
+  .combo-option.selected { background: rgba(163,52,42,0.08); font-weight: 600; }
+  .combo-add-row { padding: 6px; }
+  .combo-add-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 9px 10px;
+    background: none;
+    border: 1px dashed rgba(44,72,112,0.4);
+    border-radius: 5px;
+    color: var(--postal-blue);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .combo-add-form { display: flex; gap: 6px; }
+  .combo-add-input { flex: 1; padding: 8px 10px; border: 1px solid rgba(43,36,32,0.25); border-radius: 5px; font-size: 14px; }
+  .combo-add-confirm {
+    padding: 8px 12px;
+    background: var(--postal-blue);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(43,36,32,0.25);
+    background: #fff;
+    font-size: 13.5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: inherit;
+  }
+  .chip-selected { background: var(--postal-blue); color: #fff; border-color: var(--postal-blue); }
+  .chip-icon { font-size: 15px; }
+
+  .people-input-row { display: flex; gap: 8px; }
+  .people-add-btn {
+    width: 42px;
+    border-radius: 6px;
+    border: 1px solid var(--postal-blue);
+    background: var(--postal-blue);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .people-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .people-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(74,102,80,0.12);
+    border: 1px solid rgba(74,102,80,0.3);
+    color: var(--stamp-green);
+    padding: 5px 10px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .people-tag button { background: none; border: none; display: flex; cursor: pointer; color: var(--stamp-green); padding: 0; }
+
+  .person-photo-add {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1px dashed rgba(74,102,80,0.5);
+    background: rgba(74,102,80,0.08);
+    color: var(--stamp-green);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+  }
+  .person-photo-wrap {
+    position: relative;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    overflow: visible;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .person-photo-wrap img {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 1px solid rgba(74,102,80,0.4);
+  }
+  .person-photo-remove {
+    position: absolute;
+    top: -4px; right: -4px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .detail-people-grid { display: flex; flex-wrap: wrap; gap: 14px; }
+  .detail-person { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 64px; }
+  .detail-person-photo {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--paper);
+    box-shadow: 0 0 0 1px rgba(43,36,32,0.2);
+    cursor: pointer;
+  }
+  .detail-person-photo-empty {
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(74,102,80,0.1);
+    color: var(--stamp-green);
+    cursor: default;
+  }
+  .detail-person-name { font-size: 12px; text-align: center; line-height: 1.3; word-break: break-word; }
+
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .photo-thumb { position: relative; aspect-ratio: 1; border-radius: 6px; overflow: hidden; border: 1px solid rgba(43,36,32,0.2); }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-remove {
+    position: absolute; top: 3px; right: 3px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .photo-add {
+    aspect-ratio: 1;
+    border: 1.5px dashed rgba(44,72,112,0.4);
+    border-radius: 6px;
+    background: rgba(44,72,112,0.04);
+    color: var(--postal-blue);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .save-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--postal-red);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    margin-top: 6px;
+    font-family: 'Courier Prime', monospace;
+  }
+
+  .save-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 50;
+  }
+  .save-toast.error { background: var(--postal-red); }
+
+  .lightbox {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 6px; }
+
+  /* Trip Tools menu */
+  .trip-menu-wrap { position: relative; }
+  .trip-menu-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    border: 1px solid rgba(43,36,32,0.2);
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    z-index: 30;
+    min-width: 170px;
+    overflow: hidden;
+  }
+  .trip-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 14px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .trip-menu-item:hover { background: rgba(44,72,112,0.07); }
+  .trip-menu-item + .trip-menu-item { border-top: 1px solid rgba(43,36,32,0.1); }
+
+  .trip-tools-back-row {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 14px 16px 0;
+  }
+
+  .panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 19px;
+    margin: 0;
+  }
+  .panel-sub { font-size: 13px; color: rgba(43,36,32,0.65); margin: 6px 0 18px; }
+  .packing-header-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .text-link-btn {
+    background: none;
+    border: none;
+    color: var(--postal-blue);
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+  }
+  .empty-state-small { text-align: center; padding: 24px; color: rgba(43,36,32,0.55); font-style: italic; font-size: 14px; }
+
+  /* Packing list */
+  .packing-category {
+    border: 1px solid rgba(43,36,32,0.15);
+    border-radius: 7px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.4);
+  }
+  .packing-category-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    background: rgba(44,72,112,0.06);
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .packing-category-title { font-weight: 700; font-size: 14.5px; flex: 1; text-align: left; }
+  .packing-category-count {
+    font-size: 12px;
+    font-family: 'Courier Prime', monospace;
+    color: var(--postal-blue);
+    background: rgba(44,72,112,0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .packing-category-body { padding: 10px 14px 14px; }
+  .packing-item-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(43,36,32,0.07); }
+  .packing-item-row:last-of-type { border-bottom: none; }
+  .packing-checkbox {
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    border: 1.5px solid rgba(43,36,32,0.35);
+    background: #fff;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    padding: 0;
+  }
+  .packing-checkbox-checked { background: var(--stamp-green); border-color: var(--stamp-green); }
+  .packing-item-name { flex: 1; font-size: 14.5px; }
+  .packing-item-checked { text-decoration: line-through; opacity: 0.5; }
+  .packing-item-remove {
+    background: none;
+    border: none;
+    color: rgba(43,36,32,0.35);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+  }
+  .packing-item-remove:hover { color: var(--postal-red); }
+
+  /* Travel log */
+  .travel-leg-list { display: flex; flex-direction: column; gap: 10px; }
+  .travel-leg-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(43,36,32,0.15);
+    border-radius: 7px;
+    padding: 12px 14px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .travel-leg-icon { font-size: 22px; flex-shrink: 0; }
+  .travel-leg-body { flex: 1; min-width: 0; }
+  .travel-leg-title { font-weight: 700; font-size: 14.5px; }
+  .travel-leg-meta { font-size: 12.5px; color: var(--postal-blue); margin-top: 2px; }
+
+  .field-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 420px) { .field-row-2 { grid-template-columns: 1fr; } }
+
+  button { -webkit-tap-highlight-color: transparent; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+const { Plus, X, Camera, MapPin, Cloud, Users, ChevronDown, ChevronLeft, ChevronRight, Trash2, Edit3, BookOpen, Download, Upload, Backpack, Plane, Check, Compass, List } = lucide;
+
+// ---------- ROUTE DATA ----------
+const ROUTES = {
+  "Camino Francés": [
+    "Saint-Jean-Pied-de-Port", "Roncesvalles", "Zubiri", "Pamplona", "Puente la Reina",
+    "Estella", "Los Arcos", "Logroño", "Nájera", "Santo Domingo de la Calzada",
+    "Belorado", "Agés", "Burgos", "Hornillos del Camino", "Castrojeriz",
+    "Frómista", "Carrión de los Condes", "Terradillos de los Templarios", "Bercianos del Real Camino",
+    "Mansilla de las Mulas", "León", "Villadangos del Páramo", "Astorga",
+    "Rabanal del Camino", "Ponferrada", "Villafranca del Bierzo", "O Cebreiro",
+    "Triacastela", "Sarria", "Portomarín", "Palas de Rei", "Melide",
+    "Arzúa", "O Pedrouzo", "Santiago de Compostela"
+  ],
+  "Camino Portugués (Central)": [
+    "Lisbon", "Santarém", "Tomar", "Coimbra", "Porto", "Barcelos", "Ponte de Lima",
+    "Valença", "Tui", "O Porriño", "Redondela", "Pontevedra", "Caldas de Reis",
+    "Padrón", "Santiago de Compostela"
+  ],
+  "Camino Portugués (Coastal)": [
+    "Porto", "Vila do Conde", "Esposende", "Viana do Castelo", "Caminha",
+    "A Guarda", "Baiona", "Vigo", "Redondela", "Pontevedra", "Caldas de Reis",
+    "Padrón", "Santiago de Compostela"
+  ],
+  "Camino del Norte": [
+    "Irún", "San Sebastián", "Deba", "Markina-Xemein", "Bilbao", "Castro Urdiales",
+    "Santander", "Santillana del Mar", "Comillas", "Unquera", "Llanes", "Ribadesella",
+    "Gijón", "Avilés", "Luarca", "Ribadeo", "Mondoñedo", "Vilalba", "Sobrado dos Monxes",
+    "Santiago de Compostela"
+  ],
+  "Camino Primitivo": [
+    "Oviedo", "Grado", "Salas", "Tineo", "Pola de Allande", "Berducedo",
+    "Grandas de Salime", "A Fonsagrada", "Lugo", "Melide", "Santiago de Compostela"
+  ],
+  "Camino Inglés": [
+    "Ferrol", "Neda", "Pontedeume", "Betanzos", "Bruma", "Sigüeiro", "Santiago de Compostela"
+  ],
+  "Vía de la Plata": [
+    "Sevilla", "Mérida", "Cáceres", "Salamanca", "Zamora", "Ourense", "Santiago de Compostela"
+  ],
+  "Other / Custom Route": []
+};
+
+const SEED_ALBERGUES = {
+  "Saint-Jean-Pied-de-Port": ["Albergue Compostela", "Albergue Beilari", "Albergue Municipal"],
+  "Roncesvalles": ["Albergue de Roncesvalles (Colegiata)"],
+  "Pamplona": ["Albergue Jesús y María", "Albergue Plaza Catedral"],
+  "Burgos": ["Albergue Municipal de Burgos", "Casa Rey Pepe"],
+  "León": ["Albergue Monasterio Las Benedictinas", "Albergue La Casa del Peregrino"],
+  "Sarria": ["Albergue Internacional Sarria", "Albergue Los Blasones"],
+  "Santiago de Compostela": ["Seminario Menor", "Albergue Roots & Boots"],
+  "Porto": ["Pilgrims Porto Hostel", "Albergue Sé do Porto"],
+  "Tui": ["Albergue O Camiño"],
+};
+
+const WEATHER_OPTIONS = [
+  { label: "Sunny", icon: "☀️" },
+  { label: "Partly Cloudy", icon: "⛅" },
+  { label: "Overcast", icon: "☁️" },
+  { label: "Light Rain", icon: "🌦️" },
+  { label: "Heavy Rain", icon: "🌧️" },
+  { label: "Thunderstorm", icon: "⛈️" },
+  { label: "Foggy", icon: "🌫️" },
+  { label: "Windy", icon: "💨" },
+  { label: "Hot", icon: "🥵" },
+  { label: "Cold", icon: "🥶" },
+  { label: "Snow", icon: "❄️" },
+];
+
+const FEELING_OPTIONS = [
+  "Energized", "Tired", "Sore", "Peaceful", "Joyful", "Homesick",
+  "Inspired", "Overwhelmed", "Grateful", "Lonely", "Proud", "Content"
+];
+
+const DISTANCE_PRESETS = ["5", "10", "15", "18", "20", "22", "25", "28", "30", "32", "35", "Other"];
+
+// Standard Camino packing list, grouped by category. Anyone can check items off,
+// delete ones they don't need, or add their own — this is just a sensible starting point.
+const DEFAULT_PACKING_LIST = [
+  { category: "Documents & Money", items: [
+    "Passport / ID", "Pilgrim Credential (Credencial)", "Travel insurance info",
+    "Photocopies of documents", "Cash & cards", "Phone + charger"
+  ]},
+  { category: "Backpack & Sleep", items: [
+    "Backpack (30-40L)", "Backpack rain cover", "Sleeping bag liner / lightweight sleeping bag",
+    "Earplugs", "Eye mask", "Packing cubes / stuff sacks"
+  ]},
+  { category: "Footwear", items: [
+    "Broken-in hiking shoes or trail runners", "Camp shoes / sandals (for evenings)",
+    "Hiking socks (3-4 pairs, wool or synthetic)", "Liner socks (optional, blister prevention)"
+  ]},
+  { category: "Clothing", items: [
+    "Quick-dry t-shirts (2-3)", "Long-sleeve quick-dry layer", "Hiking pants or leggings (2 pairs)",
+    "Underwear (3-4 pairs, quick-dry)", "Sports bra(s)", "Fleece or warm mid-layer",
+    "Light rain jacket / poncho", "Hat or buff for sun", "Sleepwear", "Swimsuit (optional)"
+  ]},
+  { category: "Toiletries & First Aid", items: [
+    "Travel-size toiletries", "Sunscreen", "Lip balm with SPF", "Blister plasters (Compeed)",
+    "Small first aid kit (pain relief, antiseptic, tape)", "Personal medication",
+    "Quick-dry towel", "Laundry soap / detergent sheets", "Clothespins or small clothesline"
+  ]},
+  { category: "Tech & Extras", items: [
+    "Headlamp or small flashlight", "Power bank", "EU plug adapter", "Sunglasses",
+    "Refillable water bottle", "Trekking poles", "Guidebook or app", "Small notebook & pen",
+    "Spork / small utensil"
+  ]},
+];
+
+const TRAVEL_LEG_TYPES = [
+  { label: "Flight", icon: "✈️" },
+  { label: "Train", icon: "🚆" },
+  { label: "Bus", icon: "🚌" },
+  { label: "Taxi / Rideshare", icon: "🚕" },
+  { label: "Ferry", icon: "⛴️" },
+  { label: "Other", icon: "🧭" },
+];
+
+const STORAGE_KEY = "camino-journal-entries-v1";
+const ROUTES_KEY = "camino-journal-custom-v1";
+const PACKING_KEY = "camino-journal-packing-v1";
+const TRAVEL_KEY = "camino-journal-travel-v1";
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+function todayISO() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+function formatDateDisplay(iso) {
+  if (!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+}
+
+function buildDefaultPackingState() {
+  return DEFAULT_PACKING_LIST.map(group => ({
+    category: group.category,
+    items: group.items.map(name => ({ id: uid(), name: name, checked: false }))
+  }));
+}
+
+function formatDateTimeDisplay(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " · " +
+    d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+function loadFromStorage(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+function saveToStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ---------- COMBO SELECT ----------
+function ComboSelect({ label, icon, value, onChange, options, placeholder, allowAdd }) {
+  if (placeholder === undefined) placeholder = "Select…";
+  if (allowAdd === undefined) allowAdd = true;
+  const [open, setOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [newVal, setNewVal] = useState("");
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+        setAdding(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  return (
+    <div className="field" ref={ref}>
+      <label className="field-label">{icon}<span>{label}</span></label>
+      <div className="combo-wrap">
+        <button type="button" className={"combo-trigger " + (value ? "has-value" : "")} onClick={() => setOpen(o => !o)}>
+          <span className="combo-trigger-text">{value || placeholder}</span>
+          <ChevronDown size={18} className={"chev " + (open ? "chev-open" : "")} />
+        </button>
+        {open && (
+          <div className="combo-panel">
+            {options.length === 0 && !adding && <div className="combo-empty">No options yet — add one below.</div>}
+            {options.map(opt => (
+              <button key={opt} type="button" className={"combo-option " + (opt === value ? "selected" : "")}
+                onClick={() => { onChange(opt); setOpen(false); setAdding(false); }}>
+                {opt}
+              </button>
+            ))}
+            {allowAdd && (
+              <div className="combo-add-row">
+                {adding ? (
+                  <div className="combo-add-form">
+                    <input autoFocus className="combo-add-input" placeholder="Type new entry…" value={newVal}
+                      onChange={e => setNewVal(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" && newVal.trim()) {
+                          onChange(newVal.trim()); setNewVal(""); setAdding(false); setOpen(false);
+                        }
+                      }} />
+                    <button type="button" className="combo-add-confirm" onClick={() => {
+                      if (newVal.trim()) { onChange(newVal.trim()); setNewVal(""); setAdding(false); setOpen(false); }
+                    }}>Add</button>
+                  </div>
+                ) : (
+                  <button type="button" className="combo-add-btn" onClick={() => setAdding(true)}>
+                    <Plus size={15} /> Add new
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- CHIP SELECT ----------
+function ChipSelect({ label, icon, value, onChange, options, multi }) {
+  const selected = multi ? (value || []) : value;
+  function toggle(opt) {
+    if (multi) {
+      if (selected.includes(opt)) onChange(selected.filter(o => o !== opt));
+      else onChange([...selected, opt]);
+    } else {
+      onChange(opt === value ? "" : opt);
+    }
+  }
+  return (
+    <div className="field">
+      <label className="field-label">{icon}<span>{label}</span></label>
+      <div className="chip-row">
+        {options.map(opt => {
+          const optLabel = typeof opt === "string" ? opt : opt.label;
+          const optIcon = typeof opt === "string" ? null : opt.icon;
+          const isSel = multi ? selected.includes(optLabel) : selected === optLabel;
+          return (
+            <button key={optLabel} type="button" className={"chip " + (isSel ? "chip-selected" : "")} onClick={() => toggle(optLabel)}>
+              {optIcon && <span className="chip-icon">{optIcon}</span>}
+              {optLabel}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---------- PEOPLE MET (name + optional photo) ----------
+function PersonPhotoButton({ person, onPhoto, onRemovePhoto }) {
+  const inputRef = useRef(null);
+  function handleFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => onPhoto(reader.result);
+    reader.readAsDataURL(file);
+  }
+  return (
+    <React.Fragment>
+      {person.photo ? (
+        <div className="person-photo-wrap" onClick={() => inputRef.current && inputRef.current.click()}>
+          <img src={person.photo} alt="" />
+          <button type="button" className="person-photo-remove" onClick={(e) => { e.stopPropagation(); onRemovePhoto(); }}>
+            <X size={11} />
+          </button>
+        </div>
+      ) : (
+        <button type="button" className="person-photo-add" onClick={() => inputRef.current && inputRef.current.click()}>
+          <Camera size={13} />
+        </button>
+      )}
+      <input ref={inputRef} type="file" accept="image/*" style={{ display: "none" }}
+        onChange={e => { if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]); e.target.value = ""; }} />
+    </React.Fragment>
+  );
+}
+
+function PeopleInput({ value, onChange }) {
+  const [text, setText] = useState("");
+  const people = value || [];
+  function addPerson() {
+    const name = text.trim();
+    if (name && !people.some(p => p.name === name)) {
+      onChange([...people, { id: uid(), name: name, photo: null }]);
+    }
+    setText("");
+  }
+  function setPhoto(personId, photo) {
+    onChange(people.map(p => p.id === personId ? { ...p, photo: photo } : p));
+  }
+  function removePerson(personId) {
+    onChange(people.filter(p => p.id !== personId));
+  }
+  return (
+    <div className="field">
+      <label className="field-label"><Users size={16} /><span>People I Met</span></label>
+      <div className="people-input-row">
+        <input className="text-input" placeholder="Name, then press Enter…" value={text}
+          onChange={e => setText(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addPerson(); } }} />
+        <button type="button" className="people-add-btn" onClick={addPerson}><Plus size={16} /></button>
+      </div>
+      {people.length > 0 && (
+        <div className="people-tags">
+          {people.map(p => (
+            <span key={p.id} className="people-tag">
+              <PersonPhotoButton person={p} onPhoto={(photo) => setPhoto(p.id, photo)} onRemovePhoto={() => setPhoto(p.id, null)} />
+              {p.name}
+              <button type="button" onClick={() => removePerson(p.id)}><X size={12} /></button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- PHOTO PICKER ----------
+function PhotoPicker({ photos, onChange }) {
+  const inputRef = useRef(null);
+  function handleFiles(files) {
+    const arr = Array.from(files).slice(0, 6 - photos.length);
+    arr.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => onChange(prev => [...prev, { id: uid(), src: reader.result }]);
+      reader.readAsDataURL(file);
+    });
+  }
+  return (
+    <div className="field">
+      <label className="field-label"><Camera size={16} /><span>Photos</span></label>
+      <div className="photo-grid">
+        {photos.map(p => (
+          <div className="photo-thumb" key={p.id}>
+            <img src={p.src} alt="" />
+            <button type="button" className="photo-remove" onClick={() => onChange(prev => prev.filter(x => x.id !== p.id))}>
+              <X size={12} />
+            </button>
+          </div>
+        ))}
+        {photos.length < 6 && (
+          <button type="button" className="photo-add" onClick={() => inputRef.current && inputRef.current.click()}>
+            <Plus size={20} /><span>Add</span>
+          </button>
+        )}
+      </div>
+      <input ref={inputRef} type="file" accept="image/*" multiple style={{ display: "none" }}
+        onChange={e => { if (e.target.files && e.target.files.length) handleFiles(e.target.files); e.target.value = ""; }} />
+    </div>
+  );
+}
+
+// ---------- POSTMARK ----------
+function Postmark({ entry }) {
+  const d = entry.date ? new Date(entry.date + "T00:00:00") : null;
+  const day = d ? d.getDate() : "--";
+  const month = d ? d.toLocaleDateString(undefined, { month: "short" }).toUpperCase() : "---";
+  const year = d ? d.getFullYear() : "----";
+  return (
+    <div className="postmark">
+      <svg viewBox="0 0 140 140" className="postmark-svg">
+        <defs>
+          <path id={"circlePath-" + entry.id} d="M 70,70 m -52,0 a 52,52 0 1,1 104,0 a 52,52 0 1,1 -104,0" />
+        </defs>
+        <circle cx="70" cy="70" r="64" className="pm-ring-outer" />
+        <circle cx="70" cy="70" r="52" className="pm-ring-inner" />
+        <text className="pm-curve-text">
+          <textPath href={"#circlePath-" + entry.id} startOffset="2%">
+            {(entry.town || "ON THE CAMINO").toUpperCase() + " • " + (entry.route || "").toUpperCase()}
+          </textPath>
+        </text>
+        <text x="70" y="64" textAnchor="middle" className="pm-day">{day}</text>
+        <text x="70" y="82" textAnchor="middle" className="pm-month">{month}</text>
+        <text x="70" y="96" textAnchor="middle" className="pm-year">{year}</text>
+      </svg>
+    </div>
+  );
+}
+
+// ---------- PACKING CATEGORY (checklist with add/remove) ----------
+function PackingCategory({ group, onToggle, onAdd, onRemove }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [newVal, setNewVal] = useState("");
+  const checkedCount = group.items.filter(i => i.checked).length;
+
+  function submitAdd() {
+    if (newVal.trim()) {
+      onAdd(newVal.trim());
+      setNewVal("");
+      setAdding(false);
+    }
+  }
+
+  return (
+    <div className="packing-category">
+      <button type="button" className="packing-category-header" onClick={() => setCollapsed(c => !c)}>
+        <span className="packing-category-title">{group.category}</span>
+        <span className="packing-category-count">{checkedCount}/{group.items.length}</span>
+        <ChevronDown size={16} className={"chev " + (!collapsed ? "chev-open" : "")} />
+      </button>
+      {!collapsed && (
+        <div className="packing-category-body">
+          {group.items.map(item => (
+            <div key={item.id} className="packing-item-row">
+              <button type="button" className={"packing-checkbox " + (item.checked ? "packing-checkbox-checked" : "")}
+                onClick={() => onToggle(item.id)}>
+                {item.checked && <Check size={13} />}
+              </button>
+              <span className={"packing-item-name " + (item.checked ? "packing-item-checked" : "")}>{item.name}</span>
+              <button type="button" className="packing-item-remove" onClick={() => onRemove(item.id)}>
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+          {adding ? (
+            <div className="combo-add-form" style={{ marginTop: 8 }}>
+              <input autoFocus className="combo-add-input" placeholder="Add item…" value={newVal}
+                onChange={e => setNewVal(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") submitAdd(); }} />
+              <button type="button" className="combo-add-confirm" onClick={submitAdd}>Add</button>
+            </div>
+          ) : (
+            <button type="button" className="combo-add-btn" style={{ marginTop: 8 }} onClick={() => setAdding(true)}>
+              <Plus size={15} /> Add item
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- MAIN APP ----------
+function CaminoJournal() {
+  const [entries, setEntries] = useState(() => loadFromStorage(STORAGE_KEY, []));
+  const [customRoutes, setCustomRoutes] = useState(() => loadFromStorage(ROUTES_KEY, {}));
+  const [packingList, setPackingList] = useState(() => loadFromStorage(PACKING_KEY, null) || buildDefaultPackingState());
+  const [travelLegs, setTravelLegs] = useState(() => loadFromStorage(TRAVEL_KEY, []));
+  const [view, setView] = useState("journal");
+  const [activeEntryId, setActiveEntryId] = useState(null);
+  const [draft, setDraft] = useState(null);
+  const [travelDraft, setTravelDraft] = useState(null);
+  const [saveState, setSaveState] = useState("idle");
+  const [lightboxSrc, setLightboxSrc] = useState(null);
+  const [importMessage, setImportMessage] = useState(null);
+  const [tripMenuOpen, setTripMenuOpen] = useState(false);
+  const importInputRef = useRef(null);
+  const tripMenuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (tripMenuRef.current && !tripMenuRef.current.contains(e.target)) {
+        setTripMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  function persistEntries(next) {
+    setEntries(next);
+    setSaveState("saving");
+    const ok = saveToStorage(STORAGE_KEY, next);
+    setSaveState(ok ? "saved" : "error");
+    setTimeout(() => setSaveState("idle"), 1400);
+  }
+  function persistCustomRoutes(next) {
+    setCustomRoutes(next);
+    saveToStorage(ROUTES_KEY, next);
+  }
+  function persistPackingList(next) {
+    setPackingList(next);
+    saveToStorage(PACKING_KEY, next);
+  }
+  function persistTravelLegs(next) {
+    setTravelLegs(next);
+    saveToStorage(TRAVEL_KEY, next);
+  }
+
+  function exportBackup() {
+    try {
+      const payload = {
+        app: "camino-journal",
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        entries: entries,
+        customRoutes: customRoutes,
+        packingList: packingList,
+        travelLegs: travelLegs,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const dateStamp = todayISO();
+      a.href = url;
+      a.download = "camino-journal-backup-" + dateStamp + ".json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setSaveState("saved");
+      setTimeout(() => setSaveState("idle"), 1400);
+    } catch (e) {
+      setImportMessage({ type: "error", text: "Backup couldn't be created. Please try again." });
+      setTimeout(() => setImportMessage(null), 4000);
+    }
+  }
+
+  function importBackup(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!data || !Array.isArray(data.entries)) {
+          throw new Error("This file doesn't look like a Camino Journal backup.");
+        }
+        // Migrate older entries where people was an array of plain strings
+        const migratedEntries = data.entries.map(e => {
+          if (Array.isArray(e.people) && e.people.length > 0 && typeof e.people[0] === "string") {
+            return { ...e, people: e.people.map(name => ({ id: uid(), name: name, photo: null })) };
+          }
+          return e;
+        });
+        persistEntries(migratedEntries);
+        if (data.customRoutes) persistCustomRoutes(data.customRoutes);
+        if (Array.isArray(data.packingList)) persistPackingList(data.packingList);
+        if (Array.isArray(data.travelLegs)) persistTravelLegs(data.travelLegs);
+        setImportMessage({ type: "success", text: "Restored " + migratedEntries.length + " entr" + (migratedEntries.length === 1 ? "y" : "ies") + " from backup." });
+      } catch (e) {
+        setImportMessage({ type: "error", text: "Couldn't read that file. Make sure it's a Camino Journal backup JSON." });
+      }
+      setTimeout(() => setImportMessage(null), 4000);
+    };
+    reader.readAsText(file);
+  }
+
+  // ---- Packing list handlers ----
+  function togglePackingItem(category, itemId) {
+    const next = packingList.map(group => {
+      if (group.category !== category) return group;
+      return { ...group, items: group.items.map(it => it.id === itemId ? { ...it, checked: !it.checked } : it) };
+    });
+    persistPackingList(next);
+  }
+  function addPackingItem(category, name) {
+    const next = packingList.map(group => {
+      if (group.category !== category) return group;
+      return { ...group, items: [...group.items, { id: uid(), name: name, checked: false }] };
+    });
+    persistPackingList(next);
+  }
+  function removePackingItem(category, itemId) {
+    const next = packingList.map(group => {
+      if (group.category !== category) return group;
+      return { ...group, items: group.items.filter(it => it.id !== itemId) };
+    });
+    persistPackingList(next);
+  }
+  function resetPackingList() {
+    persistPackingList(buildDefaultPackingState());
+  }
+
+  // ---- Travel log handlers ----
+  function startNewTravelLeg() {
+    setTravelDraft({
+      id: uid(), type: "Flight", carrier: "", number: "",
+      from: "", to: "", departure: "", arrival: "", notes: ""
+    });
+  }
+  function editTravelLeg(leg) {
+    setTravelDraft({ ...leg });
+  }
+  function saveTravelLeg() {
+    const exists = travelLegs.some(l => l.id === travelDraft.id);
+    const next = exists ? travelLegs.map(l => l.id === travelDraft.id ? travelDraft : l) : [...travelLegs, travelDraft];
+    persistTravelLegs(next);
+    setTravelDraft(null);
+  }
+  function deleteTravelLeg(id) {
+    persistTravelLegs(travelLegs.filter(l => l.id !== id));
+  }
+
+  function getTownOptions(route) {
+    const base = ROUTES[route] || [];
+    const extra = (customRoutes[route] && customRoutes[route].towns) || [];
+    return [...base, ...extra.filter(t => !base.includes(t))];
+  }
+  function getAlbergueOptions(town) {
+    const seed = SEED_ALBERGUES[town] || [];
+    const extra = (customRoutes.__albergues && customRoutes.__albergues[town]) || [];
+    return [...seed, ...extra.filter(a => !seed.includes(a))];
+  }
+  function addCustomTown(route, town) {
+    const next = { ...customRoutes };
+    if (!next[route]) next[route] = { towns: [] };
+    if (!next[route].towns.includes(town)) {
+      next[route] = { ...next[route], towns: [...next[route].towns, town] };
+    }
+    persistCustomRoutes(next);
+  }
+  function addCustomAlbergue(town, albergue) {
+    const next = { ...customRoutes };
+    if (!next.__albergues) next.__albergues = {};
+    const list = next.__albergues[town] || [];
+    if (!list.includes(albergue)) {
+      next.__albergues = { ...next.__albergues, [town]: [...list, albergue] };
+    }
+    persistCustomRoutes(next);
+  }
+
+  function startNewEntry() {
+    const sorted = [...entries].sort((a, b) => (a.date < b.date ? 1 : -1));
+    const lastRoute = (sorted[0] && sorted[0].route) || "";
+    setDraft({
+      id: uid(), date: todayISO(), route: lastRoute, town: "", albergue: "",
+      distanceKm: "", distanceCustom: "", weather: [], feelings: [], people: [], photos: [], notes: ""
+    });
+    setView("new");
+  }
+  function editEntry(entry) {
+    setDraft({ ...entry, photos: entry.photos || [], people: entry.people || [], feelings: entry.feelings || [], weather: entry.weather || [] });
+    setView("new");
+  }
+  function saveDraft() {
+    if (draft.route && draft.town && !(ROUTES[draft.route] || []).includes(draft.town)) {
+      addCustomTown(draft.route, draft.town);
+    }
+    if (draft.town && draft.albergue && !(SEED_ALBERGUES[draft.town] || []).includes(draft.albergue)) {
+      addCustomAlbergue(draft.town, draft.albergue);
+    }
+    const exists = entries.some(e => e.id === draft.id);
+    const next = exists ? entries.map(e => (e.id === draft.id ? draft : e)) : [...entries, draft];
+    persistEntries(next);
+    setView("journal");
+    setDraft(null);
+  }
+  function deleteEntry(id) {
+    persistEntries(entries.filter(e => e.id !== id));
+    setView("journal");
+    setActiveEntryId(null);
+  }
+
+  const sortedEntries = [...entries].sort((a, b) => (a.date < b.date ? 1 : -1));
+  const activeEntry = entries.find(e => e.id === activeEntryId);
+
+  return (
+    <React.Fragment>
+      <div className="airmail-border" />
+      <header className="cj-header">
+        <div className="header-mark">✦</div>
+        <h1>Camino Journal</h1>
+        <div className="header-sub">a daily record of the way</div>
+        <div className="header-actions">
+          <div className="trip-menu-wrap" ref={tripMenuRef}>
+            <button className="header-action-btn" onClick={() => setTripMenuOpen(o => !o)}>
+              <Compass size={14} /> Trip Tools
+            </button>
+            {tripMenuOpen && (
+              <div className="trip-menu-panel">
+                <button className="trip-menu-item" onClick={() => { setView("packing"); setTripMenuOpen(false); }}>
+                  <Backpack size={16} /> Packing List
+                </button>
+                <button className="trip-menu-item" onClick={() => { setView("travel"); setTripMenuOpen(false); }}>
+                  <Plane size={16} /> Travel Log
+                </button>
+              </div>
+            )}
+          </div>
+          <button className="header-action-btn" onClick={exportBackup}>
+            <Download size={14} /> Backup
+          </button>
+          <button className="header-action-btn" onClick={() => importInputRef.current && importInputRef.current.click()}>
+            <Upload size={14} /> Restore
+          </button>
+          <input ref={importInputRef} type="file" accept="application/json" style={{ display: "none" }}
+            onChange={e => { if (e.target.files && e.target.files[0]) importBackup(e.target.files[0]); e.target.value = ""; }} />
+        </div>
+      </header>
+
+      {view !== "journal" && view !== "entry" && view !== "new" && (
+        <div className="trip-tools-back-row">
+          <button className="back-link" onClick={() => setView("journal")}><ChevronLeft size={18} /> Journal</button>
+        </div>
+      )}
+
+      {view === "journal" && (
+        <main className="cj-main">
+          {sortedEntries.length === 0 ? (
+            <div className="empty-state">
+              <BookOpen size={36} strokeWidth={1.5} />
+              <p>Your journal is empty.</p>
+              <p className="empty-sub">Buen camino — start with today's stamp.</p>
+            </div>
+          ) : (
+            <div className="entry-list">
+              {sortedEntries.map(entry => (
+                <button key={entry.id} className="entry-card" onClick={() => { setActiveEntryId(entry.id); setView("entry"); }}>
+                  <Postmark entry={entry} />
+                  <div className="entry-card-body">
+                    <div className="entry-card-title">{entry.town || "Untitled stop"}</div>
+                    <div className="entry-card-meta">{formatDateDisplay(entry.date)}</div>
+                    {entry.distanceKm && <div className="entry-card-meta">{entry.distanceKm === "Other" ? entry.distanceCustom : entry.distanceKm} km walked</div>}
+                    {entry.notes && <div className="entry-card-snippet">{entry.notes.slice(0, 80)}{entry.notes.length > 80 ? "…" : ""}</div>}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+          <button className="fab" onClick={startNewEntry}><Plus size={26} /></button>
+        </main>
+      )}
+
+      {view === "entry" && activeEntry && (
+        <main className="cj-main">
+          <button className="back-link" onClick={() => setView("journal")}><ChevronLeft size={18} /> Journal</button>
+          <div className="detail-card">
+            <Postmark entry={activeEntry} />
+            <h2>{activeEntry.town || "Untitled stop"}</h2>
+            <div className="detail-meta-row">{formatDateDisplay(activeEntry.date)}</div>
+            <div className="detail-tags">
+              {activeEntry.route && <span className="detail-tag">{activeEntry.route}</span>}
+              {activeEntry.albergue && <span className="detail-tag">🛏 {activeEntry.albergue}</span>}
+              {activeEntry.distanceKm && <span className="detail-tag">{activeEntry.distanceKm === "Other" ? activeEntry.distanceCustom : activeEntry.distanceKm} km</span>}
+            </div>
+            {activeEntry.weather && activeEntry.weather.length > 0 && (
+              <div className="detail-section">
+                <div className="detail-label">Weather</div>
+                <div className="detail-chips">
+                  {activeEntry.weather.map(w => {
+                    const found = WEATHER_OPTIONS.find(o => o.label === w);
+                    return <span key={w} className="detail-chip">{found ? found.icon : ""} {w}</span>;
+                  })}
+                </div>
+              </div>
+            )}
+            {activeEntry.feelings && activeEntry.feelings.length > 0 && (
+              <div className="detail-section">
+                <div className="detail-label">Feeling</div>
+                <div className="detail-chips">{activeEntry.feelings.map(f => <span key={f} className="detail-chip">{f}</span>)}</div>
+              </div>
+            )}
+            {activeEntry.people && activeEntry.people.length > 0 && (
+              <div className="detail-section">
+                <div className="detail-label">People Met</div>
+                <div className="detail-people-grid">
+                  {activeEntry.people.map(p => (
+                    <div key={p.id || p} className="detail-person">
+                      {(p.photo) ? (
+                        <img className="detail-person-photo" src={p.photo} alt="" onClick={() => setLightboxSrc(p.photo)} />
+                      ) : (
+                        <div className="detail-person-photo detail-person-photo-empty"><Users size={16} /></div>
+                      )}
+                      <span className="detail-person-name">{p.name || p}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {activeEntry.photos && activeEntry.photos.length > 0 && (
+              <div className="detail-section">
+                <div className="detail-label">Photos</div>
+                <div className="detail-photo-grid">
+                  {activeEntry.photos.map(p => <img key={p.id} src={p.src} alt="" onClick={() => setLightboxSrc(p.src)} />)}
+                </div>
+              </div>
+            )}
+            {activeEntry.notes && (
+              <div className="detail-section">
+                <div className="detail-label">Notes</div>
+                <p className="detail-notes">{activeEntry.notes}</p>
+              </div>
+            )}
+            <div className="detail-actions">
+              <button className="secondary-btn" onClick={() => editEntry(activeEntry)}><Edit3 size={15} /> Edit</button>
+              <button className="danger-btn" onClick={() => deleteEntry(activeEntry.id)}><Trash2 size={15} /> Delete</button>
+            </div>
+          </div>
+        </main>
+      )}
+
+      {view === "new" && draft && (
+        <main className="cj-main">
+          <button className="back-link" onClick={() => { setView("journal"); setDraft(null); }}><ChevronLeft size={18} /> Cancel</button>
+          <div className="form-card">
+            <div className="field">
+              <label className="field-label"><span>Date</span></label>
+              <input type="date" className="text-input" value={draft.date} onChange={e => setDraft({ ...draft, date: e.target.value })} />
+            </div>
+
+            <ComboSelect label="Route" icon={<MapPin size={16} />} value={draft.route}
+              onChange={v => setDraft({ ...draft, route: v, town: "" })}
+              options={Object.keys(ROUTES)} placeholder="Which way are you walking?" allowAdd={false} />
+
+            {draft.route && (
+              <ComboSelect label="Town / City stayed in" icon={<MapPin size={16} />} value={draft.town}
+                onChange={v => setDraft({ ...draft, town: v })}
+                options={getTownOptions(draft.route)} placeholder="Select a stop…" />
+            )}
+
+            {draft.town && (
+              <ComboSelect label="Albergue / Lodging" icon={<span style={{ fontSize: 15 }}>🛏</span>} value={draft.albergue}
+                onChange={v => setDraft({ ...draft, albergue: v })}
+                options={getAlbergueOptions(draft.town)} placeholder="Where did you sleep?" />
+            )}
+
+            <div className="field">
+              <label className="field-label"><span>Distance Walked (km)</span></label>
+              <div className="chip-row">
+                {DISTANCE_PRESETS.map(d => (
+                  <button key={d} type="button" className={"chip " + (draft.distanceKm === d ? "chip-selected" : "")}
+                    onClick={() => setDraft({ ...draft, distanceKm: d, distanceCustom: d === "Other" ? draft.distanceCustom : "" })}>
+                    {d === "Other" ? d : d + " km"}
+                  </button>
+                ))}
+              </div>
+              {draft.distanceKm === "Other" && (
+                <input className="text-input" style={{ marginTop: 8 }} placeholder="Enter km" inputMode="decimal"
+                  value={draft.distanceCustom} onChange={e => setDraft({ ...draft, distanceCustom: e.target.value })} />
+              )}
+            </div>
+
+            <ChipSelect label="Weather" icon={<Cloud size={16} />} value={draft.weather}
+              onChange={v => setDraft({ ...draft, weather: v })} options={WEATHER_OPTIONS} multi />
+
+            <ChipSelect label="How I Felt" value={draft.feelings}
+              onChange={v => setDraft({ ...draft, feelings: v })} options={FEELING_OPTIONS} multi />
+
+            <PeopleInput value={draft.people} onChange={v => setDraft({ ...draft, people: v })} />
+
+            <PhotoPicker photos={draft.photos}
+              onChange={updater => setDraft(d => ({ ...d, photos: typeof updater === "function" ? updater(d.photos) : updater }))} />
+
+            <div className="field">
+              <label className="field-label"><span>Today's Thoughts</span></label>
+              <textarea className="notes-input" placeholder="What happened today? How did it feel?" rows={6}
+                value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })} />
+            </div>
+
+            <button className="save-btn" onClick={saveDraft}>Stamp This Day</button>
+          </div>
+        </main>
+      )}
+
+      {view === "packing" && (
+        <main className="cj-main">
+          <div className="form-card">
+            <div className="packing-header-row">
+              <h2 className="panel-title"><Backpack size={20} /> Packing List</h2>
+              <button className="text-link-btn" onClick={resetPackingList}>Reset to default</button>
+            </div>
+            <p className="panel-sub">Standard Camino gear, ready to check off. Add or remove anything to make it yours.</p>
+            {packingList.map(group => (
+              <PackingCategory
+                key={group.category}
+                group={group}
+                onToggle={(itemId) => togglePackingItem(group.category, itemId)}
+                onAdd={(name) => addPackingItem(group.category, name)}
+                onRemove={(itemId) => removePackingItem(group.category, itemId)}
+              />
+            ))}
+          </div>
+        </main>
+      )}
+
+      {view === "travel" && !travelDraft && (
+        <main className="cj-main">
+          <div className="form-card">
+            <div className="packing-header-row">
+              <h2 className="panel-title"><Plane size={20} /> Travel Log</h2>
+            </div>
+            <p className="panel-sub">Flights, trains, buses — every leg of getting to and from the Camino.</p>
+            {travelLegs.length === 0 ? (
+              <div className="empty-state-small">No travel legs yet.</div>
+            ) : (
+              <div className="travel-leg-list">
+                {[...travelLegs].sort((a, b) => (a.departure || "") < (b.departure || "") ? -1 : 1).map(leg => {
+                  const typeInfo = TRAVEL_LEG_TYPES.find(t => t.label === leg.type) || TRAVEL_LEG_TYPES[5];
+                  return (
+                    <button key={leg.id} className="travel-leg-card" onClick={() => editTravelLeg(leg)}>
+                      <span className="travel-leg-icon">{typeInfo.icon}</span>
+                      <div className="travel-leg-body">
+                        <div className="travel-leg-title">
+                          {leg.from || "?"} <ChevronRight size={13} style={{ display: "inline", verticalAlign: "middle" }} /> {leg.to || "?"}
+                        </div>
+                        <div className="travel-leg-meta">
+                          {leg.carrier}{leg.carrier && leg.number ? " " : ""}{leg.number}
+                          {(leg.carrier || leg.number) && leg.departure ? " · " : ""}
+                          {formatDateTimeDisplay(leg.departure)}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <button className="save-btn" onClick={startNewTravelLeg} style={{ marginTop: 18 }}>
+              <Plus size={16} style={{ display: "inline", verticalAlign: "middle", marginRight: 6 }} /> Add Travel Leg
+            </button>
+          </div>
+        </main>
+      )}
+
+      {view === "travel" && travelDraft && (
+        <main className="cj-main">
+          <button className="back-link" onClick={() => setTravelDraft(null)}><ChevronLeft size={18} /> Travel Log</button>
+          <div className="form-card">
+            <div className="field">
+              <label className="field-label"><span>Type</span></label>
+              <div className="chip-row">
+                {TRAVEL_LEG_TYPES.map(t => (
+                  <button key={t.label} type="button" className={"chip " + (travelDraft.type === t.label ? "chip-selected" : "")}
+                    onClick={() => setTravelDraft({ ...travelDraft, type: t.label })}>
+                    <span className="chip-icon">{t.icon}</span>{t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="field-row-2">
+              <div className="field">
+                <label className="field-label"><span>From</span></label>
+                <input className="text-input" placeholder="e.g. JFK, Madrid" value={travelDraft.from}
+                  onChange={e => setTravelDraft({ ...travelDraft, from: e.target.value })} />
+              </div>
+              <div className="field">
+                <label className="field-label"><span>To</span></label>
+                <input className="text-input" placeholder="e.g. Biarritz, SJPP" value={travelDraft.to}
+                  onChange={e => setTravelDraft({ ...travelDraft, to: e.target.value })} />
+              </div>
+            </div>
+            <div className="field-row-2">
+              <div className="field">
+                <label className="field-label"><span>Carrier / Line</span></label>
+                <input className="text-input" placeholder="e.g. Iberia, RENFE" value={travelDraft.carrier}
+                  onChange={e => setTravelDraft({ ...travelDraft, carrier: e.target.value })} />
+              </div>
+              <div className="field">
+                <label className="field-label"><span>Number</span></label>
+                <input className="text-input" placeholder="e.g. IB6275" value={travelDraft.number}
+                  onChange={e => setTravelDraft({ ...travelDraft, number: e.target.value })} />
+              </div>
+            </div>
+            <div className="field-row-2">
+              <div className="field">
+                <label className="field-label"><span>Departure</span></label>
+                <input type="datetime-local" className="text-input" value={travelDraft.departure}
+                  onChange={e => setTravelDraft({ ...travelDraft, departure: e.target.value })} />
+              </div>
+              <div className="field">
+                <label className="field-label"><span>Arrival</span></label>
+                <input type="datetime-local" className="text-input" value={travelDraft.arrival}
+                  onChange={e => setTravelDraft({ ...travelDraft, arrival: e.target.value })} />
+              </div>
+            </div>
+            <div className="field">
+              <label className="field-label"><span>Notes</span></label>
+              <textarea className="notes-input" rows={3} placeholder="Confirmation number, gate, seat, reminders…"
+                value={travelDraft.notes} onChange={e => setTravelDraft({ ...travelDraft, notes: e.target.value })} />
+            </div>
+            <div className="detail-actions">
+              <button className="save-btn" style={{ flex: 1 }} onClick={saveTravelLeg}>Save</button>
+            </div>
+            {travelLegs.some(l => l.id === travelDraft.id) && (
+              <button className="danger-btn" style={{ width: "100%", marginTop: 10 }}
+                onClick={() => { deleteTravelLeg(travelDraft.id); setTravelDraft(null); }}>
+                <Trash2 size={15} /> Delete this leg
+              </button>
+            )}
+          </div>
+        </main>
+      )}
+
+      {lightboxSrc && (
+        <div className="lightbox" onClick={() => setLightboxSrc(null)}>
+          <img src={lightboxSrc} alt="" />
+        </div>
+      )}
+
+      {importMessage && (
+        <div className={"save-toast " + (importMessage.type === "error" ? "error" : "")}>
+          {importMessage.text}
+        </div>
+      )}
+
+      {saveState !== "idle" && (
+        <div className={"save-toast " + saveState}>
+          {saveState === "saving" && "Saving…"}
+          {saveState === "saved" && "Saved ✓"}
+          {saveState === "error" && "Couldn't save — storage may be full"}
+        </div>
+      )}
+    </React.Fragment>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<CaminoJournal />);
+</script>
+</body>
+</html>
