@@ -643,6 +643,7 @@
 
 <script type="text/babel" data-presets="react">
 const { useState, useEffect, useRef } = React;
+
 // ---------- ICONS (inline SVG, no external dependency) ----------
 function makeIcon(strokePaths, viewBox) {
   viewBox = viewBox || "0 0 24 24";
@@ -851,7 +852,8 @@ function formatDateTimeDisplay(iso) {
 function loadFromStorage(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed !== null ? parsed : fallback;
   } catch (e) {
     return fallback;
   }
@@ -1148,10 +1150,10 @@ function PackingCategory({ group, onToggle, onAdd, onRemove }) {
 
 // ---------- MAIN APP ----------
 function CaminoJournal() {
-  const [entries, setEntries] = useState(() => loadFromStorage(STORAGE_KEY, []));
-  const [customRoutes, setCustomRoutes] = useState(() => loadFromStorage(ROUTES_KEY, {}));
+  const [entries, setEntries] = useState(() => loadFromStorage(STORAGE_KEY, []) || []);
+  const [customRoutes, setCustomRoutes] = useState(() => loadFromStorage(ROUTES_KEY, {}) || {});
   const [packingList, setPackingList] = useState(() => loadFromStorage(PACKING_KEY, null) || buildDefaultPackingState());
-  const [travelLegs, setTravelLegs] = useState(() => loadFromStorage(TRAVEL_KEY, []));
+  const [travelLegs, setTravelLegs] = useState(() => loadFromStorage(TRAVEL_KEY, []) || []);
   const [view, setView] = useState("journal");
   const [activeEntryId, setActiveEntryId] = useState(null);
   const [draft, setDraft] = useState(null);
@@ -1325,7 +1327,7 @@ function CaminoJournal() {
   }
 
   function startNewEntry() {
-    const sorted = [...entries].sort((a, b) => (a.date < b.date ? 1 : -1));
+    const sorted = [...(entries || [])].sort((a, b) => (a.date < b.date ? 1 : -1));
     const lastRoute = (sorted[0] && sorted[0].route) || "";
     setDraft({
       id: uid(), date: todayISO(), route: lastRoute, town: "", albergue: "",
@@ -1356,7 +1358,7 @@ function CaminoJournal() {
     setActiveEntryId(null);
   }
 
-  const sortedEntries = [...entries].sort((a, b) => (a.date < b.date ? 1 : -1));
+  const sortedEntries = [...(entries || [])].sort((a, b) => (a.date < b.date ? 1 : -1));
   const activeEntry = entries.find(e => e.id === activeEntryId);
 
   return (
