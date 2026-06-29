@@ -14,7 +14,14 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
+<script>
+  // Force Babel to use the "classic" JSX runtime to prevent import errors
+  Babel.registerPreset('react-classic', {
+    presets: [
+      [Babel.availablePresets['react'], { runtime: 'classic' }]
+    ]
+  });
+</script>
 <style>
   :root {
     --kraft: #e8dcc3;
@@ -641,7 +648,7 @@
 <body>
 <div id="root"></div>
 
-<script type="text/babel" data-presets="react">
+<script type="text/babel" data-presets="react-classic">
 const { useState, useEffect, useRef } = React;
 
 // ---------- ICONS (inline SVG, no external dependency) ----------
