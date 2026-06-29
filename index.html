@@ -1759,7 +1759,8 @@ let state = {
   printMode: null,
   printLayout: "mixed",
   printSize: "phone",
-  packingOpen: {}
+  packingOpen: {},
+  pendingPersonPhoto: null
 };
 
 function uid() {
@@ -1935,111 +1936,6 @@ function previousTownForEntry(entry) {
     .filter(e =>
       e.id !== entry.id &&
       e.route === entry.route &&
-      e.date < entry.date &&
-      e.town
-    )
-    .sort((a, b) => a.date < b.date ? 1 : -1);
-
-  return earlier[0]?.town || "";
-}
-
-function naturalList(items) {
-  items = (items || []).filter(Boolean);
-
-  if (items.length === 0) return "";
-  if (items.length === 1) return items[0];
-  if (items.length === 2) return items[0] + " and " + items[1];
-
-  return items.slice(0, -1).join(", ") + ", and " + items[items.length - 1];
-}
-
-function buildPrettyJournalText(entry) {
-  const fromTown = previousTownForEntry(entry);
-  const toTown = entry.town || "tonight’s stop";
-  const distance = distanceText(entry);
-  const albergue = entry.albergue || "";
-  const people = (entry.people || []).map(p => p.name).filter(Boolean);
-  const stops = entry.stops || [];
-  const feelings = entry.feelings || [];
-  const weather = entry.weather || [];
-  const notes = (entry.notes || "").trim();
-
-  const lines = [];
-
-  lines.push("Dear Camino,");
-
-  let opening = "Today, ";
-
-  if (distance && fromTown && toTown) {
-    opening += "I walked " + distance + " from " + fromTown + " to " + toTown + ".";
-  } else if (distance && toTown) {
-    opening += "I walked " + distance + " and landed in " + toTown + ".";
-  } else if (fromTown && toTown) {
-    opening += "I made my way from " + fromTown + " to " + toTown + ".";
-  } else if (toTown) {
-    opening += "I landed in " + toTown + ".";
-  } else {
-    opening += "I walked another day along the Way.";
-  }
-
-  lines.push(opening);
-
-  if (albergue) {
-    lines.push("Tonight I am staying at " + albergue + ".");
-  }
-
-  if (weather.length) {
-    lines.push("The weather felt like " + naturalList(weather.map(w => w.toLowerCase())) + ".");
-  }
-
-  if (feelings.length) {
-    lines.push("I was feeling " + naturalList(feelings.map(f => f.toLowerCase())) + " as the day unfolded.");
-  }
-
-  if (stops.length) {
-    stops.forEach(stop => {
-      let stopLine = "";
-
-      if (stop.name && stop.type) {
-        stopLine = "I stopped at " + stop.name + ", a " + stop.type.toLowerCase();
-      } else if (stop.name) {
-        stopLine = "I stopped at " + stop.name;
-      } else if (stop.type) {
-        stopLine = "I stopped at a " + stop.type.toLowerCase();
-      }
-
-      if (stop.area) {
-        stopLine += " near " + stop.area;
-      }
-
-      if (stopLine) {
-        stopLine += ".";
-        lines.push(stopLine);
-      }
-
-      if (stop.notes) {
-        lines.push(stop.notes.trim());
-      }
-    });
-  }
-
-  if (people.length) {
-    lines.push("Along the way, I met " + naturalList(people) + ".");
-  }
-
-  if (notes) {
-    lines.push(notes);
-  }
-
-  lines.push("Buen Camino.");
-
-  return lines.join("\n\n");
-}
-function previousTownForEntry(entry) {
-  const earlier = entries
-    .filter(e =>
-      e.id !== entry.id &&
-      e.route === entry.route &&
       e.date <= entry.date &&
       e.town
     )
@@ -2099,11 +1995,11 @@ function buildPrettyJournalText(entry) {
   lines.push(opening);
 
   if (albergue) {
-    lines.push("Tonight I am staying at " + albergue + ".");
+    lines.push("I am staying at " + albergue + ".");
   }
 
   if (weather.length) {
-    lines.push("The weather felt like " + naturalList(weather.map(w => w.toLowerCase())) + ".");
+    lines.push("The weather was " + naturalList(weather.map(w => w.toLowerCase())) + ".");
   }
 
   if (feelings.length) {
@@ -2145,7 +2041,7 @@ function buildPrettyJournalText(entry) {
   lines.push("Buen Camino.");
 
   return lines.join("\n\n");
-}  
+}
 function hashLayout(value) {
   let h = 0;
   String(value || "").split("").forEach(ch => {
@@ -2158,10 +2054,54 @@ function app() {
   return document.getElementById("app");
 }
 
-function setView(view) {
+function setView(view, opts) {
+  opts = opts || {};
   state.view = view;
+
+  const historyState = {
+    caminoView: view,
+    activeId: state.activeId,
+    draft: state.draft,
+    stopDraft: state.stopDraft,
+    travelDraft: state.travelDraft,
+    printLayout: state.printLayout,
+    printSize: state.printSize
+  };
+
+  if (opts.replace) {
+    history.replaceState(historyState, "");
+  } else {
+    history.pushState(historyState, "");
+  }
+
   render();
 }
+
+window.addEventListener("popstate", e => {
+  const s = e.state;
+
+  if (!s || !s.caminoView) {
+    // No app state on this history entry (e.g. the very first page load) —
+    // treat it as the journal root rather than leaving the app blank.
+    state.view = "journal";
+    state.activeId = null;
+    state.draft = null;
+    state.stopDraft = null;
+    state.travelDraft = null;
+    render();
+    return;
+  }
+
+  state.view = s.caminoView;
+  state.activeId = s.activeId || null;
+  state.draft = s.draft || null;
+  state.stopDraft = s.stopDraft || null;
+  state.travelDraft = s.travelDraft || null;
+  if (s.printLayout) state.printLayout = s.printLayout;
+  if (s.printSize) state.printSize = s.printSize;
+
+  render();
+});
 
 function activeEntry() {
   return entries.find(e => e.id === state.activeId);
@@ -2250,14 +2190,6 @@ function renderJournal() {
 
   app().innerHTML = `
     <main class="main">
-      <div class="card route-card">
-        <div>
-          <div class="route-title">${escapeHtml(settings.currentRoute || "Choose Your Route")}</div>
-          <div class="route-meta">Saved as your current route until you change it.</div>
-        </div>
-        <button class="btn" data-view="settings">⚙️ Change</button>
-      </div>
-
       ${
         list.length === 0
           ? `<div class="card empty">
@@ -2301,7 +2233,7 @@ function renderJournal() {
 function renderEntry() {
   const entry = activeEntry();
   if (!entry) {
-    setView("journal");
+    setView("journal", { replace: true });
     return;
   }
 
@@ -2366,7 +2298,7 @@ function renderEntry() {
 
         ${entry.photos?.length ? `
           <div class="detail-section">
-            <div class="detail-label">Photos</div>
+            <div class="detail-label">Photos of the Day</div>
             <div class="photo-grid">
               ${entry.photos.map(p => `<div class="photo-tile"><img class="light-img" src="${p.src}" alt=""></div>`).join("")}
             </div>
@@ -2389,7 +2321,7 @@ function renderEntry() {
     </main>
   `;
 
-  document.querySelector("[data-view='journal']").onclick = () => setView("journal");
+  document.querySelector("[data-view='journal']").onclick = () => history.back();
   document.getElementById("editEntryBtn").onclick = () => editEntry(entry);
   document.getElementById("prettyPageBtn").onclick = () => {
     state.printLayout = "mixed";
@@ -2414,7 +2346,7 @@ function startNewEntry() {
     route: settings.currentRoute || "Camino Francés",
     town: "",
     albergue: "",
-    distanceValue: "",
+    distanceValue: "10",
     distanceUnit: "mi",
     weather: [],
     feelings: [],
@@ -2424,6 +2356,7 @@ function startNewEntry() {
     notes: ""
   };
   state.stopDraft = null;
+  state.pendingPersonPhoto = null;
   setView("new");
 }
 
@@ -2435,6 +2368,7 @@ function editEntry(entry) {
   state.draft.weather = state.draft.weather || [];
   state.draft.feelings = state.draft.feelings || [];
   state.stopDraft = null;
+  state.pendingPersonPhoto = null;
   setView("new");
 }
 
@@ -2454,15 +2388,6 @@ function renderForm() {
       <div class="entry-form-heading">
   <h2>Journal Entry</h2>
   <div class="entry-form-route">${escapeHtml(d.route || settings.currentRoute || "Camino Route")}</div>
-</div>
-
-<div class="field">
-  <label class="field-label">Date</label>
-  <input class="input" type="date" id="dateInput" value="${escapeHtml(d.date)}">
-</div>
-    <div class="route-title" style="font-size:23px;">${escapeHtml(d.route || settings.currentRoute || "Camino Route")}</div>
-    <div class="route-meta">Current route. Change it from Trip Tools → Trip Settings.</div>
-  </div>
 </div>
 
 <div class="field">
@@ -2520,32 +2445,30 @@ function renderForm() {
           <label class="field-label">People I Met</label>
           <div class="person-row">
             <input class="input" id="personInput" placeholder="Name, then press Add">
+            <button type="button" class="person-photo-btn" id="personPhotoBtn" title="${state.pendingPersonPhoto ? "Change photo" : "Add a photo"}">
+              ${
+                state.pendingPersonPhoto
+                  ? `<img class="person-photo" src="${state.pendingPersonPhoto}" alt="">`
+                  : "📷"
+              }
+            </button>
             <button class="btn" id="addPersonBtn">＋</button>
           </div>
+          <input type="file" accept="image/*" class="hidden" id="personPhotoInput">
 
           <div class="person-tags">
             ${d.people.map(p => `
               <span class="person-tag">
-                ${
-                  p.photo
-                    ? `<img class="person-photo light-img" src="${p.photo}" alt="">`
-                    : `<button type="button" class="person-photo-btn" data-person-photo="${p.id}">📷</button>`
-                }
+                ${p.photo ? `<img class="person-photo light-img" src="${p.photo}" alt="">` : ""}
                 ${escapeHtml(p.name)}
-                ${
-                  p.photo
-                    ? `<button type="button" class="person-photo-btn" data-person-photo="${p.id}" title="Change photo">📷</button>`
-                    : ""
-                }
                 <button type="button" data-remove-person="${p.id}">✕</button>
-                <input type="file" accept="image/*" class="hidden" data-person-file="${p.id}">
               </span>
             `).join("")}
           </div>
         </div>
 
         <div class="field">
-          <label class="field-label">Photos</label>
+          <label class="field-label">Photos of the Day</label>
           <div class="photo-grid">
             ${d.photos.map(p => `
               <div class="photo-tile">
@@ -2679,7 +2602,8 @@ function bindForm() {
 
   document.getElementById("cancelFormBtn").onclick = () => {
     state.draft = null;
-    setView("journal");
+    state.pendingPersonPhoto = null;
+    history.back();
   };
 
  
@@ -2745,7 +2669,17 @@ function bindForm() {
 
   document.querySelectorAll("[data-unit]").forEach(btn => {
     btn.onclick = () => {
-      d.distanceUnit = btn.dataset.unit;
+      const newUnit = btn.dataset.unit;
+      if (newUnit === d.distanceUnit) return;
+
+      const defaults = { mi: "10", km: "15" };
+      const atDefault = d.distanceValue === defaults[d.distanceUnit] || d.distanceValue === "";
+
+      d.distanceUnit = newUnit;
+      if (atDefault) {
+        d.distanceValue = defaults[newUnit];
+      }
+
       renderForm();
     };
   });
@@ -2786,30 +2720,19 @@ function bindForm() {
     };
   });
 
-  document.querySelectorAll("[data-person-photo]").forEach(btn => {
-    btn.onclick = () => {
-      const id = btn.dataset.personPhoto;
-      const fileInput = document.querySelector(`[data-person-file="${CSS.escape(id)}"]`);
-      if (fileInput) fileInput.click();
+  document.getElementById("personPhotoBtn").onclick = () => document.getElementById("personPhotoInput").click();
+
+  document.getElementById("personPhotoInput").onchange = e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      state.pendingPersonPhoto = reader.result;
+      renderForm();
     };
-  });
-
-  document.querySelectorAll("[data-person-file]").forEach(input => {
-    input.onchange = e => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-
-      const id = input.dataset.personFile;
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        d.people = d.people.map(p => p.id === id ? { ...p, photo: reader.result } : p);
-        renderForm();
-      };
-
-      reader.readAsDataURL(file);
-    };
-  });
+    reader.readAsDataURL(file);
+  };
 
   document.getElementById("addPhotoBtn").onclick = () => document.getElementById("photoInput").click();
   document.getElementById("photoInput").onchange = e => handlePhotos(e.target.files);
@@ -2843,6 +2766,7 @@ function bindForm() {
 
     persistEntries();
     state.draft = null;
+    state.pendingPersonPhoto = null;
     toast("Saved");
     setView("journal");
   };
@@ -2865,10 +2789,11 @@ function addPerson() {
   if (!name) return;
 
   if (!state.draft.people.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-    state.draft.people.push({ id: uid(), name, photo: null });
+    state.draft.people.push({ id: uid(), name, photo: state.pendingPersonPhoto || null });
   }
 
   input.value = "";
+  state.pendingPersonPhoto = null;
   renderForm();
 }
 
@@ -2970,7 +2895,7 @@ function renderSettings() {
     </main>
   `;
 
-  document.querySelector("[data-view='journal']").onclick = () => setView("journal");
+  document.querySelector("[data-view='journal']").onclick = () => history.back();
 
   document.getElementById("saveSettingsBtn").onclick = () => {
     settings.currentRoute = document.getElementById("currentRouteSelect").value;
@@ -3025,7 +2950,7 @@ function renderPacking() {
     </main>
   `;
 
-  document.querySelector("[data-view='journal']").onclick = () => setView("journal");
+  document.querySelector("[data-view='journal']").onclick = () => history.back();
 
   document.getElementById("resetPackingBtn").onclick = () => {
     if (confirm("Reset packing list to default?")) {
@@ -3106,7 +3031,7 @@ function renderTravel() {
     </main>
   `;
 
-  document.querySelector("[data-view='journal']").onclick = () => setView("journal");
+  document.querySelector("[data-view='journal']").onclick = () => history.back();
 
   document.getElementById("addTravelBtn").onclick = () => {
     state.travelDraft = {
@@ -3120,13 +3045,13 @@ function renderTravel() {
       arrival: "",
       notes: ""
     };
-    renderTravel();
+    setView("travel");
   };
 
   document.querySelectorAll("[data-travel]").forEach(btn => {
     btn.onclick = () => {
       state.travelDraft = JSON.parse(JSON.stringify(travel.find(t => t.id === btn.dataset.travel)));
-      renderTravel();
+      setView("travel");
     };
   });
 }
@@ -3194,8 +3119,7 @@ function renderTravelForm() {
   `;
 
   document.getElementById("backTravelBtn").onclick = () => {
-    state.travelDraft = null;
-    renderTravel();
+    history.back();
   };
 
   document.getElementById("saveTravelBtn").onclick = () => {
@@ -3214,7 +3138,7 @@ function renderTravelForm() {
     persistTravel();
     state.travelDraft = null;
     toast("Saved");
-    renderTravel();
+    history.back();
   };
 
   document.getElementById("deleteTravelBtn").onclick = () => {
@@ -3222,7 +3146,7 @@ function renderTravelForm() {
     persistTravel();
     state.travelDraft = null;
     toast("Deleted");
-    renderTravel();
+    history.back();
   };
 }
 
@@ -3274,11 +3198,7 @@ function renderPrint(entriesToPrint, mode) {
   `;
 
   document.getElementById("backPrintBtn").onclick = () => {
-    if (mode === "book") {
-      setView("journal");
-    } else {
-      setView("entry");
-    }
+    history.back();
   };
 
   document.getElementById("pageSizeSelect").onchange = e => {
@@ -3572,7 +3492,7 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-render();
+setView(state.view, { replace: true });
 </script>
 </body>
 </html>
