@@ -11,10 +11,10 @@
 <meta name="apple-mobile-web-app-title" content="Camino Journal" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <link rel="manifest" href="./manifest.json" />
-
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23efe4cf'/%3E%3Ctext x='50' y='66' text-anchor='middle' font-size='58'%3E%F0%9F%90%9A%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Courier+Prime:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Courier+Prime:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 :root {
@@ -100,10 +100,10 @@ button {
 }
 
 .header-mark {
-  font-size: 25px;
-  color: var(--gold);
+  font-size: 31px;
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
+  filter: drop-shadow(0 2px 2px rgba(62,47,29,.18));
 }
 
 .app-title {
@@ -1255,6 +1255,90 @@ button {
   text-align: center;
   line-height: 1.15;
 }
+  /* ---- PATCH: handwritten scrapbook journal text ---- */
+.handwritten-entry {
+  font-family: "Caveat", "Comic Sans MS", cursive;
+  font-size: 29px;
+  line-height: 1.32;
+  color: #3b2d22;
+  white-space: pre-wrap;
+}
+
+.handwritten-entry strong {
+  font-weight: 700;
+  color: var(--red);
+}
+
+.handwritten-note-card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.52), rgba(255,255,255,.22)),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0),
+      rgba(255,255,255,0) 35px,
+      rgba(47,73,110,.10) 36px
+    );
+  border: 1px solid rgba(185,139,59,.28);
+  box-shadow: 0 8px 20px rgba(62,47,29,.12);
+  padding: 22px 24px;
+  margin: 20px 0;
+  transform: rotate(-.35deg);
+}
+
+.handwritten-note-card.alt-tilt {
+  transform: rotate(.45deg);
+}
+
+.scrapbook-caption {
+  font-family: "Caveat", cursive;
+  font-size: 25px;
+  color: var(--blue);
+  margin-top: 8px;
+  text-align: center;
+}
+
+.shell-stamp {
+  position: absolute;
+  right: 42px;
+  top: 34px;
+  width: 92px;
+  height: 92px;
+  border: 2px solid rgba(47,73,110,.18);
+  border-radius: 50%;
+  color: rgba(47,73,110,.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  transform: rotate(10deg);
+}
+
+.layout-scrapbook {
+  background:
+    radial-gradient(circle at 12% 10%, rgba(255,255,255,.75), transparent 28%),
+    radial-gradient(circle at 82% 82%, rgba(153,58,48,.08), transparent 34%),
+    linear-gradient(160deg, #fff9ed, #ead6b5);
+}
+
+.layout-diary .handwritten-entry {
+  font-size: 31px;
+}
+
+.layout-postcard .handwritten-note-card {
+  transform: rotate(.25deg);
+}
+
+.layout-log .handwritten-note-card {
+  transform: rotate(-.2deg);
+}
+
+.layout-photo .handwritten-note-card {
+  transform: rotate(.35deg);
+}
+
+.print-title {
+  max-width: 620px;
+}
 </style>
 </head>
 
@@ -1262,7 +1346,7 @@ button {
 <div class="airmail-border"></div>
 
 <header class="app-header no-print">
-  <div class="header-mark">✦</div>
+  <div class="header-mark">🐚</div>
   <h1 class="app-title">Camino Journal</h1>
   <div class="app-subtitle">a daily record of the way</div>
 
@@ -1574,7 +1658,106 @@ function addCustomAlbergue(town, albergue) {
   if (!custom.__albergues[town].includes(albergue)) custom.__albergues[town].push(albergue);
   persistCustom();
 }
+function previousTownForEntry(entry) {
+  const sameRouteEntries = entries
+    .filter(e => e.id !== entry.id && e.route === entry.route && e.date <= entry.date && e.town)
+    .sort((a, b) => a.date < b.date ? 1 : -1);
 
+  return sameRouteEntries[0]?.town || "";
+}
+
+function naturalList(items) {
+  items = (items || []).filter(Boolean);
+
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return items[0] + " and " + items[1];
+
+  return items.slice(0, -1).join(", ") + ", and " + items[items.length - 1];
+}
+
+function buildPrettyJournalText(entry) {
+  const fromTown = previousTownForEntry(entry);
+  const toTown = entry.town || "tonight’s stop";
+  const distance = distanceText(entry);
+  const albergue = entry.albergue || "";
+  const people = (entry.people || []).map(p => p.name).filter(Boolean);
+  const stops = entry.stops || [];
+  const feelings = entry.feelings || [];
+  const weather = entry.weather || [];
+  const notes = (entry.notes || "").trim();
+
+  const lines = [];
+
+  lines.push("Dear Camino,");
+
+  let opening = "Today, ";
+
+  if (distance && fromTown && toTown) {
+    opening += "I walked " + distance + " from " + fromTown + " to " + toTown + ".";
+  } else if (distance && toTown) {
+    opening += "I walked " + distance + " and landed in " + toTown + ".";
+  } else if (fromTown && toTown) {
+    opening += "I made my way from " + fromTown + " to " + toTown + ".";
+  } else if (toTown) {
+    opening += "I landed in " + toTown + ".";
+  } else {
+    opening += "I walked another day along the Way.";
+  }
+
+  lines.push(opening);
+
+  if (albergue) {
+    lines.push("Tonight I am staying at " + albergue + ".");
+  }
+
+  if (weather.length) {
+    lines.push("The weather felt like " + naturalList(weather.map(w => w.toLowerCase())) + ".");
+  }
+
+  if (feelings.length) {
+    lines.push("I was feeling " + naturalList(feelings.map(f => f.toLowerCase())) + " as the day unfolded.");
+  }
+
+  if (stops.length) {
+    stops.forEach(stop => {
+      let stopLine = "";
+
+      if (stop.name && stop.type) {
+        stopLine = "I stopped at " + stop.name + ", a " + stop.type.toLowerCase();
+      } else if (stop.name) {
+        stopLine = "I stopped at " + stop.name;
+      } else if (stop.type) {
+        stopLine = "I stopped at a " + stop.type.toLowerCase();
+      }
+
+      if (stop.area) {
+        stopLine += " near " + stop.area;
+      }
+
+      if (stopLine) {
+        stopLine += ".";
+        lines.push(stopLine);
+      }
+
+      if (stop.notes) {
+        lines.push(stop.notes.trim());
+      }
+    });
+  }
+
+  if (people.length) {
+    lines.push("Along the way, I met " + naturalList(people) + ".");
+  }
+
+  if (notes) {
+    lines.push(notes);
+  }
+
+  lines.push("Buen Camino.");
+
+  return lines.join("\n\n");
+}
 function hashLayout(value) {
   let h = 0;
   String(value || "").split("").forEach(ch => {
@@ -1880,18 +2063,17 @@ function renderForm() {
       <button class="back-btn" id="cancelFormBtn">‹ Cancel</button>
 
       <div class="card">
-        <div class="field">
-          <label class="field-label">Date</label>
-          <input class="input" type="date" id="dateInput" value="${escapeHtml(d.date)}">
-        </div>
+       <div class="card route-card" style="box-shadow:none;background:rgba(255,255,255,.35);margin-bottom:20px;">
+  <div>
+    <div class="route-title" style="font-size:23px;">${escapeHtml(d.route || settings.currentRoute || "Camino Route")}</div>
+    <div class="route-meta">Current route. Change it from Trip Tools → Trip Settings.</div>
+  </div>
+</div>
 
-        <div class="card route-card" style="box-shadow:none;background:rgba(255,255,255,.35);">
-          <div>
-            <div class="route-title" style="font-size:23px;">${escapeHtml(d.route || settings.currentRoute || "Camino Route")}</div>
-            <div class="route-meta">Current route for this entry.</div>
-          </div>
-          <button class="btn" id="changeRouteBtn">⚙️ Change</button>
-        </div>
+<div class="field">
+  <label class="field-label">Date</label>
+  <input class="input" type="date" id="dateInput" value="${escapeHtml(d.date)}">
+</div>
 
         <div class="field">
           <label class="field-label">Tonight’s Stop</label>
@@ -2105,10 +2287,7 @@ function bindForm() {
     setView("journal");
   };
 
-  document.getElementById("changeRouteBtn").onclick = () => {
-    state.view = "settings";
-    render();
-  };
+ 
 
   document.getElementById("dateInput").oninput = e => {
     d.date = e.target.value;
@@ -2710,24 +2889,24 @@ function renderPrint(entriesToPrint, mode) {
 
 function printablePage(entry, layout) {
   const photos = (entry.photos || []).map(p => p.src);
-  const p1 = photos[0];
-  const p2 = photos[1];
-  const p3 = photos[2];
-  const p4 = photos[3];
+  const stopPhotos = (entry.stops || []).filter(s => s.photo).map(s => s.photo);
+  const allPhotos = [...photos, ...stopPhotos];
+
+  const p1 = allPhotos[0];
+  const p2 = allPhotos[1];
+  const p3 = allPhotos[2];
+  const p4 = allPhotos[3];
 
   const people = (entry.people || []).map(p => p.name).join(", ");
   const stops = entry.stops || [];
   const title = entry.town || "Camino Memory";
+  const journalText = buildPrettyJournalText(entry);
 
   const header = `
-    <div class="print-page-mark">CAMINO<br>JOURNAL</div>
+    <div class="shell-stamp">🐚</div>
     <div class="print-kicker">${escapeHtml(entry.route || "Camino Journal")}</div>
     <div class="print-title">${escapeHtml(title)}</div>
-    <div class="print-meta">
-      ${escapeHtml(formatDate(entry.date))}
-      ${entry.albergue ? " · Tonight at " + escapeHtml(entry.albergue) : ""}
-      ${distanceText(entry) ? " · " + escapeHtml(distanceText(entry)) : ""}
-    </div>
+    <div class="print-meta">${escapeHtml(formatDate(entry.date))}</div>
   `;
 
   const stopBits = stops.length
@@ -2738,8 +2917,6 @@ function printablePage(entry, layout) {
     ? `<div class="print-people">People met along the way: ${escapeHtml(people)}</div>`
     : "";
 
-  const notes = entry.notes || "A day on the Camino worth remembering.";
-
   if (layout === 1) {
     return `
       <section class="print-page layout-scrapbook">
@@ -2748,26 +2925,25 @@ function printablePage(entry, layout) {
         <div class="collage">
           ${
             p1
-              ? `<div class="scrap-tape" style="left:12%;top:4px;"></div><div class="polaroid p1"><img src="${p1}"></div>`
+              ? `<div class="scrap-tape" style="left:12%;top:4px;"></div><div class="polaroid p1"><img src="${p1}"><div class="scrapbook-caption">a Camino moment</div></div>`
               : `<div class="blank-photo" style="position:absolute;left:4%;top:10px;width:44%;height:245px;transform:rotate(-5deg);">photo memory</div>`
           }
           ${
             p2
-              ? `<div class="scrap-tape" style="right:15%;top:28px;transform:rotate(7deg);"></div><div class="polaroid p2"><img src="${p2}"></div>`
+              ? `<div class="scrap-tape" style="right:15%;top:28px;transform:rotate(7deg);"></div><div class="polaroid p2"><img src="${p2}"><div class="scrapbook-caption">along the way</div></div>`
               : `<div class="blank-photo" style="position:absolute;right:5%;top:35px;width:44%;height:245px;transform:rotate(4deg);">the road</div>`
           }
           ${
             p3
-              ? `<div class="polaroid p3"><img src="${p3}"></div>`
+              ? `<div class="polaroid p3"><img src="${p3}"><div class="scrapbook-caption">remember this</div></div>`
               : `<div class="blank-photo" style="position:absolute;left:28%;bottom:0;width:44%;height:245px;transform:rotate(1deg);">small moments</div>`
           }
         </div>
 
         ${stopBits}
 
-        <div class="memory-card">
-          <div class="memory-card-title">Field Notes</div>
-          <div class="print-notes">${escapeHtml(notes)}</div>
+        <div class="handwritten-note-card">
+          <div class="handwritten-entry">${escapeHtml(journalText)}</div>
         </div>
 
         ${peopleBit}
@@ -2782,20 +2958,20 @@ function printablePage(entry, layout) {
 
         <div class="log-grid">
           <div class="log-box">
-            <div class="log-label">Tonight’s Albergue</div>
-            <div class="log-value">${escapeHtml(entry.albergue || "—")}</div>
+            <div class="log-label">From</div>
+            <div class="log-value">${escapeHtml(previousTownForEntry(entry) || "—")}</div>
+          </div>
+          <div class="log-box">
+            <div class="log-label">To</div>
+            <div class="log-value">${escapeHtml(entry.town || "—")}</div>
           </div>
           <div class="log-box">
             <div class="log-label">Distance</div>
             <div class="log-value">${escapeHtml(distanceText(entry) || "—")}</div>
           </div>
           <div class="log-box">
-            <div class="log-label">Weather</div>
-            <div class="log-value">${escapeHtml((entry.weather || []).join(", ") || "—")}</div>
-          </div>
-          <div class="log-box">
-            <div class="log-label">Feeling</div>
-            <div class="log-value">${escapeHtml((entry.feelings || []).join(", ") || "—")}</div>
+            <div class="log-label">Tonight</div>
+            <div class="log-value">${escapeHtml(entry.albergue || "—")}</div>
           </div>
         </div>
 
@@ -2807,9 +2983,8 @@ function printablePage(entry, layout) {
 
         ${stopBits}
 
-        <div class="memory-card">
-          <div class="memory-card-title">Journal Entry</div>
-          <div class="print-notes">${escapeHtml(notes)}</div>
+        <div class="handwritten-note-card alt-tilt">
+          <div class="handwritten-entry">${escapeHtml(journalText)}</div>
         </div>
 
         ${peopleBit}
@@ -2828,9 +3003,8 @@ function printablePage(entry, layout) {
             : `<div class="blank-photo" style="height:430px;margin:22px 0;">Camino photo</div>`
         }
 
-        <div class="memory-card">
-          <div class="memory-card-title">What I Remember</div>
-          <div class="print-notes">${escapeHtml(notes)}</div>
+        <div class="handwritten-note-card">
+          <div class="handwritten-entry">${escapeHtml(journalText)}</div>
         </div>
 
         <div class="mini-row">
@@ -2853,16 +3027,15 @@ function printablePage(entry, layout) {
         ${header}
 
         <div class="diary-panel">
-          <div class="memory-card-title">Dear Camino</div>
-          <div class="print-notes">${escapeHtml(notes)}</div>
+          <div class="handwritten-entry">${escapeHtml(journalText)}</div>
         </div>
 
         ${stopBits}
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:24px;">
           ${
-            photos.slice(0,4).length
-              ? photos.slice(0,4).map(src => `<img class="print-photo" src="${src}" style="width:100%;height:190px;">`).join("")
+            allPhotos.slice(0,4).length
+              ? allPhotos.slice(0,4).map(src => `<img class="print-photo" src="${src}" style="width:100%;height:190px;">`).join("")
               : `<div class="blank-photo">morning</div><div class="blank-photo">midday</div><div class="blank-photo">evening</div><div class="blank-photo">tonight</div>`
           }
         </div>
@@ -2894,9 +3067,8 @@ function printablePage(entry, layout) {
 
       ${stopBits}
 
-      <div class="memory-card">
-        <div class="memory-card-title">Postcard From The Way</div>
-        <div class="print-notes">${escapeHtml(notes)}</div>
+      <div class="handwritten-note-card alt-tilt">
+        <div class="handwritten-entry">${escapeHtml(journalText)}</div>
       </div>
 
       ${peopleBit}
