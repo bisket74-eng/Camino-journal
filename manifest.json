@@ -1,7 +1,7 @@
 {
   "name": "Camino Journal",
-  "short_name": "Camino",
-  "description": "A daily Camino journal, travel log, scrapbook, and printable book.",
+  "short_name": " My Camino",
+  "description": "A daily journal, travel log, scrapbook, and printable book.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -10,7 +10,7 @@
   "theme_color": "#efe4cf",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%23efe4cf'/%3E%3Ctext x='256' y='322' text-anchor='middle' font-size='250'%3E%F0%9F%90%9A%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%20120%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%231f1b16%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M60%2018v15M36%2024l8%2013M84%2024l-8%2013M18%2042l14%208M102%2042l-14%208%22%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%22M60%2030c-13%200-34%2016-43%2045-3%2010%205%2020%2016%2020h54c11%200%2019-10%2016-20-9-29-30-45-43-45Z%22%20fill%3D%22%23e9e1cf%22%20stroke%3D%22%231f1b16%22%20stroke-width%3D%225%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%231f1b16%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M60%2033v59M48%2037l-17%2055M72%2037l17%2055M38%2047%2025%2087M82%2047l13%2040M30%2063h60%22%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%22M60%2044c5%207%2010%209%2016%207-2%206-5%209-11%209%205%208%205%2018-5%2026-10-8-10-18-5-26-6%200-9-3-11-9%206%202%2011%200%2016-7Z%22%20fill%3D%22%23993a30%22%2F%3E%3C%2Fsvg%3E",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
