@@ -4,736 +4,1173 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
 <title>Camino Journal</title>
-<meta name="description" content="A daily journal for walking the Camino de Santiago." />
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦪</text></svg>" />
+
+<meta name="description" content="A daily Camino journal, travel log, scrapbook, and printable book." />
+<meta name="theme-color" content="#efe4cf" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Camino Journal" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<link rel="manifest" href="./manifest.json" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Courier+Prime:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script>
-  // Force Babel to use the "classic" JSX runtime to prevent import errors
-  Babel.registerPreset('react-classic', {
-    presets: [
-      [Babel.availablePresets['react'], { runtime: 'classic' }]
-    ]
-  });
-</script>
 <style>
-  :root {
-    --kraft: #e8dcc3;
-    --kraft-dark: #d8c8a3;
-    --ink: #2b2420;
-    --postal-red: #a3342a;
-    --postal-blue: #2c4870;
-    --stamp-green: #4a6650;
-    --paper: #f6efdc;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  body {
-    font-family: 'Libre Franklin', sans-serif;
-    background: var(--kraft);
-    background-image:
-      radial-gradient(circle at 20% 10%, rgba(255,255,255,0.25), transparent 40%),
-      radial-gradient(circle at 80% 80%, rgba(0,0,0,0.04), transparent 50%);
-    color: var(--ink);
-    min-height: 100vh;
-  }
-  #root { min-height: 100vh; position: relative; padding-bottom: 40px; }
-
-  .cj-loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-  .loading-stamp { font-family: 'Courier Prime', monospace; letter-spacing: 1px; color: var(--postal-blue); }
-
-  .airmail-border {
-    height: 10px;
-    width: 100%;
-    background: repeating-linear-gradient(
-      -45deg,
-      var(--postal-red) 0px, var(--postal-red) 10px,
-      var(--paper) 10px, var(--paper) 14px,
-      var(--postal-blue) 14px, var(--postal-blue) 24px,
-      var(--paper) 24px, var(--paper) 28px
-    );
-  }
-
-  .cj-header {
-    text-align: center;
-    padding: 22px 16px 18px;
-    border-bottom: 2px solid rgba(43,36,32,0.15);
-    background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent);
-  }
-  .header-mark { font-size: 22px; color: var(--postal-red); margin-bottom: 2px; }
-  .cj-header h1 {
-    font-family: 'Courier Prime', monospace;
-    font-weight: 700;
-    font-size: 26px;
-    letter-spacing: 1px;
-    margin: 0;
-    color: var(--ink);
-  }
-  .header-sub {
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--postal-blue);
-    margin-top: 4px;
-    opacity: 0.75;
-  }
-  .header-actions {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 12px;
-    flex-wrap: wrap;
-  }
-  .header-action-btn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 13px;
-    border-radius: 16px;
-    border: 1px solid rgba(44,72,112,0.35);
-    background: rgba(255,255,255,0.5);
-    color: var(--postal-blue);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .header-action-btn:hover { background: rgba(255,255,255,0.85); }
-
-  .cj-main {
-    max-width: 560px;
-    margin: 0 auto;
-    padding: 18px 16px 100px;
-    position: relative;
-  }
-
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--postal-blue); opacity: 0.7; }
-  .empty-state p { margin: 10px 0 0; font-size: 15px; }
-  .empty-sub { font-style: italic; opacity: 0.8; }
-
-  .entry-list { display: flex; flex-direction: column; gap: 14px; }
-
-  .entry-card {
-    display: flex;
-    gap: 14px;
-    align-items: center;
-    background: var(--paper);
-    border: 1px solid rgba(43,36,32,0.18);
-    border-radius: 6px;
-    padding: 12px;
-    text-align: left;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    position: relative;
-    width: 100%;
-    font-family: inherit;
-  }
-  .entry-card::before {
-    content: "";
-    position: absolute;
-    left: 0; top: 8px; bottom: 8px; width: 3px;
-    background: var(--postal-red);
-    border-radius: 2px;
-  }
-  .entry-card-body { flex: 1; min-width: 0; padding-left: 6px; }
-  .entry-card-title { font-weight: 700; font-size: 16px; color: var(--ink); }
-  .entry-card-meta { font-size: 12px; color: var(--postal-blue); margin-top: 2px; }
-  .entry-card-snippet {
-    font-size: 13px;
-    color: rgba(43,36,32,0.7);
-    margin-top: 6px;
-    font-style: italic;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .postmark { width: 64px; height: 64px; flex-shrink: 0; opacity: 0.92; }
-  .postmark-svg { width: 100%; height: 100%; }
-  .pm-ring-outer, .pm-ring-inner { fill: none; stroke: var(--postal-blue); stroke-width: 1.5; }
-  .pm-curve-text { font-family: 'Courier Prime', monospace; font-size: 8.5px; letter-spacing: 1px; fill: var(--postal-blue); }
-  .pm-day { font-family: 'Courier Prime', monospace; font-weight: 700; font-size: 20px; fill: var(--postal-red); }
-  .pm-month, .pm-year { font-family: 'Courier Prime', monospace; font-size: 9px; letter-spacing: 1px; fill: var(--postal-blue); }
-
-  .fab {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--postal-red);
-    color: #fff;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-    cursor: pointer;
-  }
-  @media (min-width: 600px) {
-    .fab { right: calc(50% - 280px - 56px - 16px); }
-  }
-
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: none;
-    border: none;
-    color: var(--postal-blue);
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    padding: 8px 0 16px;
-  }
-
-  .detail-card, .form-card {
-    background: var(--paper);
-    border: 1px solid rgba(43,36,32,0.18);
-    border-radius: 8px;
-    padding: 22px 18px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  }
-
-  .detail-card h2 { margin: 10px 0 2px; font-family: 'Courier Prime', monospace; }
-  .detail-meta-row { color: var(--postal-blue); font-size: 13px; margin-bottom: 12px; }
-  .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-  .detail-tag { background: var(--kraft-dark); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }
-  .detail-section { margin-top: 16px; }
-  .detail-label {
-    font-family: 'Courier Prime', monospace;
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--postal-blue);
-    margin-bottom: 8px;
-  }
-  .detail-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .detail-chip { background: rgba(44,72,112,0.08); border: 1px solid rgba(44,72,112,0.2); border-radius: 16px; padding: 4px 10px; font-size: 13px; }
-  .detail-notes { font-size: 15px; line-height: 1.6; white-space: pre-wrap; }
-  .detail-photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .detail-photo-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; border: 1px solid rgba(43,36,32,0.15); cursor: pointer; }
-  .detail-actions { display: flex; gap: 10px; margin-top: 22px; }
-  .secondary-btn, .danger-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 10px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    border: 1px solid rgba(43,36,32,0.2);
-    font-family: inherit;
-  }
-  .secondary-btn { background: var(--kraft-dark); color: var(--ink); }
-  .danger-btn { background: transparent; color: var(--postal-red); border-color: var(--postal-red); }
-
-  .field { margin-bottom: 18px; }
-  .field-label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--postal-blue); margin-bottom: 6px; }
-
-  .text-input, .notes-input {
-    width: 100%;
-    padding: 11px 12px;
-    border: 1px solid rgba(43,36,32,0.25);
-    border-radius: 6px;
-    background: #fff;
-    font-size: 15px;
-    font-family: 'Libre Franklin', sans-serif;
-    color: var(--ink);
-  }
-  .notes-input {
-    resize: vertical;
-    line-height: 1.6;
-    background-image: repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(44,72,112,0.15) 28px);
-  }
-  .text-input:focus, .notes-input:focus { outline: 2px solid var(--postal-blue); outline-offset: 1px; }
-
-  .combo-wrap { position: relative; }
-  .combo-trigger {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 11px 12px;
-    border: 1px solid rgba(43,36,32,0.25);
-    border-radius: 6px;
-    background: #fff;
-    font-size: 15px;
-    cursor: pointer;
-    text-align: left;
-    font-family: inherit;
-  }
-  .combo-trigger-text { color: rgba(43,36,32,0.45); }
-  .combo-trigger.has-value .combo-trigger-text { color: var(--ink); font-weight: 500; }
-  .chev { transition: transform 0.15s; color: var(--postal-blue); }
-  .chev-open { transform: rotate(180deg); }
-
-  .combo-panel {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0; right: 0;
-    background: #fff;
-    border: 1px solid rgba(43,36,32,0.25);
-    border-radius: 6px;
-    max-height: 260px;
-    overflow-y: auto;
-    z-index: 20;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-  }
-  .combo-empty { padding: 12px; font-size: 13px; color: rgba(43,36,32,0.5); font-style: italic; }
-  .combo-option {
-    display: block;
-    width: 100%;
-    text-align: left;
-    padding: 10px 12px;
-    background: none;
-    border: none;
-    font-size: 14px;
-    cursor: pointer;
-    border-bottom: 1px solid rgba(43,36,32,0.07);
-    font-family: inherit;
-  }
-  .combo-option:hover { background: rgba(44,72,112,0.06); }
-  .combo-option.selected { background: rgba(163,52,42,0.08); font-weight: 600; }
-  .combo-add-row { padding: 6px; }
-  .combo-add-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    width: 100%;
-    padding: 9px 10px;
-    background: none;
-    border: 1px dashed rgba(44,72,112,0.4);
-    border-radius: 5px;
-    color: var(--postal-blue);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .combo-add-form { display: flex; gap: 6px; }
-  .combo-add-input { flex: 1; padding: 8px 10px; border: 1px solid rgba(43,36,32,0.25); border-radius: 5px; font-size: 14px; }
-  .combo-add-confirm {
-    padding: 8px 12px;
-    background: var(--postal-blue);
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip {
-    padding: 8px 14px;
-    border-radius: 20px;
-    border: 1px solid rgba(43,36,32,0.25);
-    background: #fff;
-    font-size: 13.5px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-family: inherit;
-  }
-  .chip-selected { background: var(--postal-blue); color: #fff; border-color: var(--postal-blue); }
-  .chip-icon { font-size: 15px; }
-
-  .people-input-row { display: flex; gap: 8px; }
-  .people-add-btn {
-    width: 42px;
-    border-radius: 6px;
-    border: 1px solid var(--postal-blue);
-    background: var(--postal-blue);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-  .people-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .people-tag {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(74,102,80,0.12);
-    border: 1px solid rgba(74,102,80,0.3);
-    color: var(--stamp-green);
-    padding: 5px 10px;
-    border-radius: 16px;
-    font-size: 13px;
-    font-weight: 600;
-  }
-  .people-tag button { background: none; border: none; display: flex; cursor: pointer; color: var(--stamp-green); padding: 0; }
-
-  .person-photo-add {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    border: 1px dashed rgba(74,102,80,0.5);
-    background: rgba(74,102,80,0.08);
-    color: var(--stamp-green);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    flex-shrink: 0;
-    padding: 0;
-  }
-  .person-photo-wrap {
-    position: relative;
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    overflow: visible;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .person-photo-wrap img {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    object-fit: cover;
-    display: block;
-    border: 1px solid rgba(74,102,80,0.4);
-  }
-  .person-photo-remove {
-    position: absolute;
-    top: -4px; right: -4px;
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.65);
-    color: #fff;
-    border: none;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    padding: 0;
-  }
-
-  .detail-people-grid { display: flex; flex-wrap: wrap; gap: 14px; }
-  .detail-person { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 64px; }
-  .detail-person-photo {
-    width: 56px; height: 56px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--paper);
-    box-shadow: 0 0 0 1px rgba(43,36,32,0.2);
-    cursor: pointer;
-  }
-  .detail-person-photo-empty {
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(74,102,80,0.1);
-    color: var(--stamp-green);
-    cursor: default;
-  }
-  .detail-person-name { font-size: 12px; text-align: center; line-height: 1.3; word-break: break-word; }
-
-  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .photo-thumb { position: relative; aspect-ratio: 1; border-radius: 6px; overflow: hidden; border: 1px solid rgba(43,36,32,0.2); }
-  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .photo-remove {
-    position: absolute; top: 3px; right: 3px;
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.6);
-    color: #fff;
-    border: none;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-  }
-  .photo-add {
-    aspect-ratio: 1;
-    border: 1.5px dashed rgba(44,72,112,0.4);
-    border-radius: 6px;
-    background: rgba(44,72,112,0.04);
-    color: var(--postal-blue);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    font-size: 11px;
-    cursor: pointer;
-    font-family: inherit;
-  }
-
-  .save-btn {
-    width: 100%;
-    padding: 15px;
-    background: var(--postal-red);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    margin-top: 6px;
-    font-family: 'Courier Prime', monospace;
-  }
-
-  .save-toast {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--ink);
-    color: #fff;
-    padding: 8px 18px;
-    border-radius: 20px;
-    font-size: 13px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    z-index: 50;
-  }
-  .save-toast.error { background: var(--postal-red); }
-
-  .lightbox {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.85);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 100;
-    padding: 20px;
-  }
-  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 6px; }
-
-  /* Trip Tools menu */
-  .trip-menu-wrap { position: relative; }
-  .trip-menu-panel {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: #fff;
-    border: 1px solid rgba(43,36,32,0.2);
-    border-radius: 8px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
-    z-index: 30;
-    min-width: 170px;
-    overflow: hidden;
-  }
-  .trip-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 11px 14px;
-    background: none;
-    border: none;
-    text-align: left;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--ink);
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .trip-menu-item:hover { background: rgba(44,72,112,0.07); }
-  .trip-menu-item + .trip-menu-item { border-top: 1px solid rgba(43,36,32,0.1); }
-
-  .trip-tools-back-row {
-    max-width: 560px;
-    margin: 0 auto;
-    padding: 14px 16px 0;
-  }
-
-  .panel-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'Courier Prime', monospace;
-    font-size: 19px;
-    margin: 0;
-  }
-  .panel-sub { font-size: 13px; color: rgba(43,36,32,0.65); margin: 6px 0 18px; }
-  .packing-header-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-  .text-link-btn {
-    background: none;
-    border: none;
-    color: var(--postal-blue);
-    font-size: 12.5px;
-    font-weight: 600;
-    text-decoration: underline;
-    cursor: pointer;
-    font-family: inherit;
-    padding: 0;
-  }
-  .empty-state-small { text-align: center; padding: 24px; color: rgba(43,36,32,0.55); font-style: italic; font-size: 14px; }
-
-  /* Packing list */
-  .packing-category {
-    border: 1px solid rgba(43,36,32,0.15);
-    border-radius: 7px;
-    margin-bottom: 12px;
-    overflow: hidden;
-    background: rgba(255,255,255,0.4);
-  }
-  .packing-category-header {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 14px;
-    background: rgba(44,72,112,0.06);
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .packing-category-title { font-weight: 700; font-size: 14.5px; flex: 1; text-align: left; }
-  .packing-category-count {
-    font-size: 12px;
-    font-family: 'Courier Prime', monospace;
-    color: var(--postal-blue);
-    background: rgba(44,72,112,0.1);
-    padding: 2px 8px;
-    border-radius: 10px;
-  }
-  .packing-category-body { padding: 10px 14px 14px; }
-  .packing-item-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(43,36,32,0.07); }
-  .packing-item-row:last-of-type { border-bottom: none; }
-  .packing-checkbox {
-    width: 22px; height: 22px;
-    border-radius: 5px;
-    border: 1.5px solid rgba(43,36,32,0.35);
-    background: #fff;
-    flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    color: #fff;
-    padding: 0;
-  }
-  .packing-checkbox-checked { background: var(--stamp-green); border-color: var(--stamp-green); }
-  .packing-item-name { flex: 1; font-size: 14.5px; }
-  .packing-item-checked { text-decoration: line-through; opacity: 0.5; }
-  .packing-item-remove {
-    background: none;
-    border: none;
-    color: rgba(43,36,32,0.35);
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-  }
-  .packing-item-remove:hover { color: var(--postal-red); }
-
-  /* Travel log */
-  .travel-leg-list { display: flex; flex-direction: column; gap: 10px; }
-  .travel-leg-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    text-align: left;
-    background: rgba(255,255,255,0.5);
-    border: 1px solid rgba(43,36,32,0.15);
-    border-radius: 7px;
-    padding: 12px 14px;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .travel-leg-icon { font-size: 22px; flex-shrink: 0; }
-  .travel-leg-body { flex: 1; min-width: 0; }
-  .travel-leg-title { font-weight: 700; font-size: 14.5px; }
-  .travel-leg-meta { font-size: 12.5px; color: var(--postal-blue); margin-top: 2px; }
-
-  .field-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 420px) { .field-row-2 { grid-template-columns: 1fr; } }
-
-  button { -webkit-tap-highlight-color: transparent; }
-</style>
-</head>
-<body>
-<div id="root"></div>
-
-<script type="text/babel" data-presets="react-classic">
-const { useState, useEffect, useRef } = React;
-
-// ---------- ICONS (inline SVG, no external dependency) ----------
-function makeIcon(strokePaths, viewBox) {
-  viewBox = viewBox || "0 0 24 24";
-  return function Icon({ size = 18, style, className, strokeWidth = 2 }) {
-    return (
-      <svg width={size} height={size} viewBox={viewBox} fill="none" stroke="currentColor"
-        strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style} className={className}>
-        {strokePaths}
-      </svg>
-    );
-  };
+:root {
+  --sand: #efe4cf;
+  --sand-dark: #dfcba8;
+  --paper: #fbf5e8;
+  --paper-soft: #f5ead6;
+  --ink: #2d241d;
+  --muted: #776650;
+  --blue: #2f496e;
+  --red: #993a30;
+  --green: #4f684f;
+  --gold: #b98b3b;
+  --line: rgba(45,36,29,.18);
+  --shadow: 0 12px 32px rgba(62,47,29,.14);
 }
 
-const Plus = makeIcon(<React.Fragment><path d="M12 5v14M5 12h14" /></React.Fragment>);
-const X = makeIcon(<React.Fragment><path d="M18 6 6 18M6 6l12 12" /></React.Fragment>);
-const Camera = makeIcon(<React.Fragment>
-  <path d="M3 7h3l1.5-2h9L18 7h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" />
-  <circle cx="12" cy="13" r="3.5" />
-</React.Fragment>);
-const MapPin = makeIcon(<React.Fragment>
-  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z" />
-  <circle cx="12" cy="10" r="3" />
-</React.Fragment>);
-const Cloud = makeIcon(<path d="M7 18a4.5 4.5 0 0 1-1-8.9A5.5 5.5 0 0 1 16.5 8a4 4 0 0 1 .5 8H7Z" />);
-const Users = makeIcon(<React.Fragment>
-  <path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-  <circle cx="9" cy="7" r="4" />
-  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-</React.Fragment>);
-const ChevronDown = makeIcon(<path d="m6 9 6 6 6-6" />);
-const ChevronLeft = makeIcon(<path d="m15 18-6-6 6-6" />);
-const ChevronRight = makeIcon(<path d="m9 18 6-6-6-6" />);
-const Trash2 = makeIcon(<React.Fragment>
-  <path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-  <path d="M10 11v6M14 11v6" />
-</React.Fragment>);
-const Edit3 = makeIcon(<React.Fragment><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></React.Fragment>);
-const BookOpen = makeIcon(<React.Fragment>
-  <path d="M2 4.5C2 3.7 2.7 3 3.5 3H10a3 3 0 0 1 3 3v15a2.5 2.5 0 0 0-2.5-2.5H2Z" />
-  <path d="M22 4.5c0-.8-.7-1.5-1.5-1.5H14a3 3 0 0 0-3 3v15a2.5 2.5 0 0 1 2.5-2.5H22Z" />
-</React.Fragment>);
-const Download = makeIcon(<React.Fragment><path d="M12 3v12" /><path d="m6 11 6 6 6-6" /><path d="M5 21h14" /></React.Fragment>);
-const Upload = makeIcon(<React.Fragment><path d="M12 21V9" /><path d="m6 13 6-6 6 6" /><path d="M5 21h14" /></React.Fragment>);
-const Backpack = makeIcon(<React.Fragment>
-  <path d="M6 8a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2Z" />
-  <path d="M9 4V2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V4" />
-  <path d="M9 13h6M6 11h2v5H6zM16 11h2v5h-2z" />
-</React.Fragment>);
-const Plane = makeIcon(<path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2.5 2v1.5l4-1 4 1V21l-2.5-2v-5.5Z" />);
-const Check = makeIcon(<path d="M5 12l5 5L20 7" />);
-const Compass = makeIcon(<React.Fragment>
-  <circle cx="12" cy="12" r="10" />
-  <path d="m15 9-2 6-6 2 2-6Z" />
-</React.Fragment>);
+* {
+  box-sizing: border-box;
+}
 
-// ---------- ROUTE DATA ----------
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: "Libre Franklin", system-ui, sans-serif;
+  font-size: 16px;
+  background:
+    radial-gradient(circle at 18% 4%, rgba(255,255,255,.55), transparent 32%),
+    radial-gradient(circle at 85% 70%, rgba(153,58,48,.08), transparent 34%),
+    linear-gradient(135deg, #eadbc0, #f7eedb 48%, #e2ceaa);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: .18;
+  background-image:
+    linear-gradient(90deg, rgba(45,36,29,.05) 1px, transparent 1px),
+    linear-gradient(rgba(45,36,29,.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.airmail-border {
+  height: 10px;
+  width: 100%;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--red) 0px,
+    var(--red) 10px,
+    var(--paper) 10px,
+    var(--paper) 15px,
+    var(--blue) 15px,
+    var(--blue) 25px,
+    var(--paper) 25px,
+    var(--paper) 30px
+  );
+}
+
+.app-header {
+  text-align: center;
+  padding: 26px 16px 21px;
+  border-bottom: 1px solid rgba(45,36,29,.16);
+  background: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,0));
+}
+
+.header-mark {
+  font-size: 25px;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.app-title {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 42px;
+  line-height: .95;
+  letter-spacing: .8px;
+  color: var(--ink);
+}
+
+.app-subtitle {
+  margin-top: 8px;
+  color: var(--blue);
+  font-family: "Courier Prime", monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2.4px;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.btn {
+  border: 1px solid rgba(47,73,110,.28);
+  background: rgba(251,245,232,.82);
+  color: var(--blue);
+  border-radius: 5px;
+  padding: 9px 13px;
+  cursor: pointer;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 2px 6px rgba(62,47,29,.07);
+}
+
+.btn:hover {
+  background: #fffdf8;
+}
+
+.btn-red {
+  background: var(--red);
+  color: white;
+  border-color: var(--red);
+}
+
+.btn-danger {
+  color: var(--red);
+  border-color: rgba(153,58,48,.45);
+  background: transparent;
+}
+
+.main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 110px;
+  position: relative;
+}
+
+.card {
+  background: rgba(251,245,232,.94);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  border-radius: 10px;
+  padding: 22px 20px;
+}
+
+.route-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 16px 17px;
+}
+
+.route-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.route-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.empty {
+  text-align: center;
+  padding: 48px 22px;
+  color: var(--blue);
+}
+
+.empty-icon {
+  font-size: 38px;
+}
+
+.empty p {
+  margin: 12px 0 0;
+  font-size: 17px;
+}
+
+.empty .soft {
+  color: var(--muted);
+  font-family: "Libre Baskerville", serif;
+  font-style: italic;
+  font-size: 14px;
+}
+
+.entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.entry-card {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(251,245,232,.96);
+  padding: 14px 14px 14px 12px;
+  box-shadow: 0 8px 22px rgba(62,47,29,.1);
+  cursor: pointer;
+}
+
+.entry-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(var(--red), var(--gold));
+}
+
+.entry-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.entry-meta {
+  font-family: "Courier Prime", monospace;
+  color: var(--blue);
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.entry-snippet {
+  margin-top: 9px;
+  font-family: "Libre Baskerville", serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(45,36,29,.76);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 58px;
+  height: 58px;
+  border: none;
+  border-radius: 50%;
+  background: var(--red);
+  color: white;
+  font-size: 31px;
+  line-height: 1;
+  box-shadow: 0 8px 20px rgba(62,47,29,.32);
+  cursor: pointer;
+}
+
+@media (min-width: 700px) {
+  .fab {
+    right: calc(50% - 320px - 72px);
+  }
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 7px 0 15px;
+  color: var(--blue);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.section-title {
+  margin: 0 0 8px;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.panel-sub {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 6px 0 20px;
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+.field-label,
+.detail-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: "Courier Prime", monospace;
+  color: var(--blue);
+  font-size: 13px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 9px;
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  border: 1px solid rgba(45,36,29,.24);
+  background: #fffdf8;
+  border-radius: 5px;
+  color: var(--ink);
+  padding: 12px 13px;
+  font-size: 16px;
+}
+
+.textarea {
+  min-height: 150px;
+  resize: vertical;
+  line-height: 1.75;
+  font-family: "Libre Baskerville", serif;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 31px,
+    rgba(47,73,110,.12) 32px
+  );
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: 2px solid rgba(47,73,110,.35);
+  outline-offset: 1px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 500px) {
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.choice {
+  border: 1px solid rgba(45,36,29,.22);
+  background: #fffdf8;
+  color: var(--ink);
+  border-radius: 4px;
+  padding: 9px 11px;
+  cursor: pointer;
+}
+
+.choice.selected {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+}
+
+.distance-box {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: stretch;
+}
+
+@media (max-width: 500px) {
+  .distance-box {
+    grid-template-columns: 1fr;
+  }
+}
+
+.distance-control {
+  display: flex;
+  border: 1px solid rgba(45,36,29,.24);
+  border-radius: 5px;
+  background: #fffdf8;
+  overflow: hidden;
+}
+
+.spin {
+  width: 44px;
+  border: none;
+  background: rgba(47,73,110,.08);
+  color: var(--blue);
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.distance-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.unit-toggle {
+  display: flex;
+  border: 1px solid rgba(45,36,29,.24);
+  border-radius: 5px;
+  background: #fffdf8;
+  overflow: hidden;
+}
+
+.unit-toggle button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+.unit-toggle button.active {
+  background: var(--blue);
+  color: white;
+}
+
+.detail-title {
+  margin: 12px 0 2px;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 36px;
+  line-height: 1;
+}
+
+.detail-meta {
+  color: var(--blue);
+  font-family: "Courier Prime", monospace;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  border-radius: 4px;
+  background: rgba(47,73,110,.08);
+  border: 1px solid rgba(47,73,110,.18);
+  color: var(--blue);
+  padding: 5px 9px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.detail-section {
+  margin-top: 20px;
+}
+
+.notes-display {
+  white-space: pre-wrap;
+  font-family: "Libre Baskerville", serif;
+  font-size: 16px;
+  line-height: 1.85;
+  color: #372d24;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+
+.photo-tile {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.4);
+}
+
+.photo-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  background: rgba(0,0,0,.62);
+  color: white;
+  cursor: pointer;
+}
+
+.photo-add {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  border: 1.5px dashed rgba(47,73,110,.36);
+  background: rgba(47,73,110,.04);
+  color: var(--blue);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.action-row .btn {
+  flex: 1;
+  min-width: 120px;
+}
+
+.postmark {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.detail-postmark {
+  width: 98px;
+  height: 98px;
+}
+
+.postmark svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pm-ring {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 1.8;
+}
+
+.pm-inner {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 1.35;
+}
+
+.pm-text {
+  font-family: "Courier Prime", monospace;
+  font-size: 10.6px;
+  letter-spacing: .85px;
+  fill: var(--blue);
+  font-weight: 700;
+}
+
+.pm-day {
+  font-family: "Courier Prime", monospace;
+  font-size: 28px;
+  fill: var(--red);
+  font-weight: 700;
+}
+
+.pm-month,
+.pm-year {
+  font-family: "Courier Prime", monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  fill: var(--blue);
+  font-weight: 700;
+}
+
+.stop-card {
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.45);
+  border-radius: 7px;
+  padding: 13px;
+  margin-bottom: 10px;
+}
+
+.stop-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stop-name {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 23px;
+  font-weight: 700;
+}
+
+.stop-meta {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.stop-notes {
+  font-family: "Libre Baskerville", serif;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
+.stop-photo {
+  margin-top: 9px;
+  width: 94px;
+  height: 94px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+}
+
+.person-row {
+  display: flex;
+  gap: 8px;
+}
+
+.person-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.person-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(79,104,79,.1);
+  border: 1px solid rgba(79,104,79,.25);
+  color: var(--green);
+  padding: 5px 9px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.person-tag button {
+  border: none;
+  background: none;
+  color: var(--green);
+  cursor: pointer;
+  padding: 0;
+}
+
+.person-photo {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: white;
+  padding: 9px 18px;
+  border-radius: 22px;
+  z-index: 80;
+  box-shadow: 0 8px 20px rgba(0,0,0,.24);
+  font-size: 13px;
+}
+
+.toast.error {
+  background: var(--red);
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.86);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 6px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.menu-wrap {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  box-shadow: 0 12px 24px rgba(62,47,29,.22);
+  z-index: 50;
+  min-width: 200px;
+  overflow: hidden;
+}
+
+.menu button {
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  padding: 12px 14px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.menu button:hover {
+  background: rgba(185,139,59,.12);
+}
+
+.menu button + button {
+  border-top: 1px solid rgba(45,36,29,.09);
+}
+
+.packing-group {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  background: rgba(255,255,255,.35);
+}
+
+.packing-head {
+  width: 100%;
+  border: none;
+  background: rgba(47,73,110,.06);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 13px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.packing-body {
+  padding: 10px 14px 14px;
+}
+
+.packing-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(45,36,29,.07);
+}
+
+.packing-row:last-child {
+  border-bottom: none;
+}
+
+.check-btn {
+  width: 23px;
+  height: 23px;
+  border-radius: 4px;
+  border: 1.5px solid rgba(45,36,29,.35);
+  background: white;
+  cursor: pointer;
+}
+
+.check-btn.checked {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+}
+
+.pack-name {
+  flex: 1;
+}
+
+.pack-name.checked {
+  text-decoration: line-through;
+  opacity: .55;
+}
+
+.travel-card {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.42);
+  border-radius: 6px;
+  padding: 13px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.travel-title {
+  font-weight: 700;
+}
+
+.travel-meta {
+  color: var(--blue);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.print-shell {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 18px 12px 60px;
+}
+
+.print-toolbar {
+  background: rgba(251,245,232,.96);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.print-page {
+  width: min(850px, 100%);
+  min-height: 1100px;
+  margin: 0 auto 22px;
+  background: #fff7e8;
+  color: #2d241b;
+  box-shadow: 0 8px 25px rgba(0,0,0,.15);
+  border: 1px solid rgba(45,36,29,.12);
+  position: relative;
+  overflow: hidden;
+  padding: 54px;
+  page-break-after: always;
+}
+
+.print-page::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border: 1px solid rgba(185,139,59,.28);
+  pointer-events: none;
+}
+
+.print-kicker {
+  font-family: "Courier Prime", monospace;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+
+.print-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 48px;
+  line-height: .95;
+  margin: 8px 0 10px;
+}
+
+.print-meta {
+  font-family: "Courier Prime", monospace;
+  color: var(--red);
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+.print-notes {
+  font-family: "Libre Baskerville", serif;
+  font-size: 17px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+
+.print-photo {
+  object-fit: cover;
+  border: 8px solid white;
+  box-shadow: 0 6px 14px rgba(45,36,29,.18);
+  background: #ddd;
+}
+
+.layout-postcard .photo-area {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.layout-postcard .photo-area img:first-child {
+  height: 330px;
+}
+
+.layout-postcard .side-photos {
+  display: grid;
+  gap: 16px;
+}
+
+.layout-postcard .side-photos img {
+  height: 155px;
+}
+
+.layout-scrapbook .collage {
+  height: 420px;
+  position: relative;
+  margin: 20px 0;
+}
+
+.polaroid {
+  position: absolute;
+  background: white;
+  padding: 10px 10px 34px;
+  box-shadow: 0 8px 17px rgba(45,36,29,.2);
+  width: 44%;
+  height: 245px;
+}
+
+.polaroid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.polaroid.p1 {
+  left: 4%;
+  top: 10px;
+  transform: rotate(-5deg);
+}
+
+.polaroid.p2 {
+  right: 5%;
+  top: 35px;
+  transform: rotate(4deg);
+}
+
+.polaroid.p3 {
+  left: 28%;
+  bottom: 0;
+  transform: rotate(1deg);
+}
+
+.layout-log .log-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin: 22px 0;
+}
+
+.log-box {
+  border: 1px solid rgba(45,36,29,.18);
+  padding: 14px;
+  background: rgba(255,255,255,.4);
+}
+
+.log-label {
+  font-family: "Courier Prime", monospace;
+  color: var(--blue);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.log-value {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 25px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.layout-photo .hero-photo {
+  width: 100%;
+  height: 430px;
+  margin: 22px 0;
+}
+
+.layout-photo .mini-row {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.layout-photo .mini-row img {
+  width: 100%;
+  height: 150px;
+}
+
+.layout-diary {
+  background: linear-gradient(180deg, #fff9ef, #f3e6cf);
+}
+
+.diary-panel {
+  border-left: 4px solid var(--red);
+  padding-left: 18px;
+  margin-top: 18px;
+}
+
+.print-stop-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 15px 0;
+}
+
+.print-stop {
+  border: 1px solid rgba(79,104,79,.24);
+  background: rgba(79,104,79,.08);
+  color: var(--green);
+  padding: 7px 9px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.print-people {
+  font-family: "Courier Prime", monospace;
+  color: var(--blue);
+  font-size: 12px;
+  margin-top: 16px;
+}
+
+@media print {
+  body {
+    background: white;
+  }
+
+  .airmail-border,
+  .app-header,
+  .print-toolbar,
+  .no-print {
+    display: none !important;
+  }
+
+  .print-shell {
+    max-width: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .print-page {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="airmail-border"></div>
+
+<header class="app-header no-print">
+  <div class="header-mark">✦</div>
+  <h1 class="app-title">Camino Journal</h1>
+  <div class="app-subtitle">a daily record of the way</div>
+
+  <div class="header-actions">
+    <div class="menu-wrap">
+      <button class="btn" id="tripMenuBtn">🧭 Trip Tools</button>
+      <div class="menu hidden" id="tripMenu">
+        <button data-view="settings">⚙️ Trip Settings</button>
+        <button data-view="packing">🎒 Packing List</button>
+        <button data-view="travel">✈️ Travel Log</button>
+        <button data-view="printBook">🖨️ Export Book</button>
+      </div>
+    </div>
+    <button class="btn" id="backupBtn">⬇️ Backup</button>
+    <button class="btn" id="restoreBtn">⬆️ Restore</button>
+    <input type="file" id="restoreInput" accept="application/json" class="hidden" />
+  </div>
+</header>
+
+<div id="app"></div>
+<div id="toast" class="toast hidden"></div>
+<div id="lightbox" class="lightbox hidden"></div>
+
+<script>
 const ROUTES = {
   "Camino Francés": [
     "Saint-Jean-Pied-de-Port", "Roncesvalles", "Zubiri", "Pamplona", "Puente la Reina",
     "Estella", "Los Arcos", "Logroño", "Nájera", "Santo Domingo de la Calzada",
     "Belorado", "Agés", "Burgos", "Hornillos del Camino", "Castrojeriz",
-    "Frómista", "Carrión de los Condes", "Terradillos de los Templarios", "Bercianos del Real Camino",
-    "Mansilla de las Mulas", "León", "Villadangos del Páramo", "Astorga",
-    "Rabanal del Camino", "Ponferrada", "Villafranca del Bierzo", "O Cebreiro",
-    "Triacastela", "Sarria", "Portomarín", "Palas de Rei", "Melide",
-    "Arzúa", "O Pedrouzo", "Santiago de Compostela"
+    "Frómista", "Carrión de los Condes", "Terradillos de los Templarios",
+    "Bercianos del Real Camino", "Mansilla de las Mulas", "León",
+    "Villadangos del Páramo", "Astorga", "Rabanal del Camino", "Ponferrada",
+    "Villafranca del Bierzo", "O Cebreiro", "Triacastela", "Sarria",
+    "Portomarín", "Palas de Rei", "Melide", "Arzúa", "O Pedrouzo",
+    "Santiago de Compostela"
   ],
   "Camino Portugués (Central)": [
-    "Lisbon", "Santarém", "Tomar", "Coimbra", "Porto", "Barcelos", "Ponte de Lima",
-    "Valença", "Tui", "O Porriño", "Redondela", "Pontevedra", "Caldas de Reis",
-    "Padrón", "Santiago de Compostela"
+    "Lisbon", "Santarém", "Tomar", "Coimbra", "Porto", "Barcelos",
+    "Ponte de Lima", "Valença", "Tui", "O Porriño", "Redondela",
+    "Pontevedra", "Caldas de Reis", "Padrón", "Santiago de Compostela"
   ],
   "Camino Portugués (Coastal)": [
     "Porto", "Vila do Conde", "Esposende", "Viana do Castelo", "Caminha",
-    "A Guarda", "Baiona", "Vigo", "Redondela", "Pontevedra", "Caldas de Reis",
-    "Padrón", "Santiago de Compostela"
+    "A Guarda", "Baiona", "Vigo", "Redondela", "Pontevedra",
+    "Caldas de Reis", "Padrón", "Santiago de Compostela"
   ],
   "Camino del Norte": [
-    "Irún", "San Sebastián", "Deba", "Markina-Xemein", "Bilbao", "Castro Urdiales",
-    "Santander", "Santillana del Mar", "Comillas", "Unquera", "Llanes", "Ribadesella",
-    "Gijón", "Avilés", "Luarca", "Ribadeo", "Mondoñedo", "Vilalba", "Sobrado dos Monxes",
+    "Irún", "San Sebastián", "Deba", "Markina-Xemein", "Bilbao",
+    "Castro Urdiales", "Santander", "Santillana del Mar", "Comillas",
+    "Unquera", "Llanes", "Ribadesella", "Gijón", "Avilés", "Luarca",
+    "Ribadeo", "Mondoñedo", "Vilalba", "Sobrado dos Monxes",
     "Santiago de Compostela"
   ],
   "Camino Primitivo": [
@@ -752,27 +1189,28 @@ const ROUTES = {
 const SEED_ALBERGUES = {
   "Saint-Jean-Pied-de-Port": ["Albergue Compostela", "Albergue Beilari", "Albergue Municipal"],
   "Roncesvalles": ["Albergue de Roncesvalles (Colegiata)"],
+  "Zubiri": ["Albergue Zaldiko", "Albergue Municipal de Zubiri"],
   "Pamplona": ["Albergue Jesús y María", "Albergue Plaza Catedral"],
   "Burgos": ["Albergue Municipal de Burgos", "Casa Rey Pepe"],
   "León": ["Albergue Monasterio Las Benedictinas", "Albergue La Casa del Peregrino"],
   "Sarria": ["Albergue Internacional Sarria", "Albergue Los Blasones"],
   "Santiago de Compostela": ["Seminario Menor", "Albergue Roots & Boots"],
   "Porto": ["Pilgrims Porto Hostel", "Albergue Sé do Porto"],
-  "Tui": ["Albergue O Camiño"],
+  "Tui": ["Albergue O Camiño"]
 };
 
 const WEATHER_OPTIONS = [
-  { label: "Sunny", icon: "☀️" },
-  { label: "Partly Cloudy", icon: "⛅" },
-  { label: "Overcast", icon: "☁️" },
-  { label: "Light Rain", icon: "🌦️" },
-  { label: "Heavy Rain", icon: "🌧️" },
-  { label: "Thunderstorm", icon: "⛈️" },
-  { label: "Foggy", icon: "🌫️" },
-  { label: "Windy", icon: "💨" },
-  { label: "Hot", icon: "🥵" },
-  { label: "Cold", icon: "🥶" },
-  { label: "Snow", icon: "❄️" },
+  ["Sunny", "☀️"],
+  ["Partly Cloudy", "⛅"],
+  ["Overcast", "☁️"],
+  ["Light Rain", "🌦️"],
+  ["Heavy Rain", "🌧️"],
+  ["Thunderstorm", "⛈️"],
+  ["Foggy", "🌫️"],
+  ["Windy", "💨"],
+  ["Hot", "🥵"],
+  ["Cold", "🥶"],
+  ["Snow", "❄️"]
 ];
 
 const FEELING_OPTIONS = [
@@ -780,945 +1218,1431 @@ const FEELING_OPTIONS = [
   "Inspired", "Overwhelmed", "Grateful", "Lonely", "Proud", "Content"
 ];
 
-const DISTANCE_PRESETS = ["5", "10", "15", "18", "20", "22", "25", "28", "30", "32", "35", "Other"];
+const STOP_TYPES = [
+  "Café", "Lunch", "Store", "Church", "Viewpoint", "Rest Stop",
+  "Landmark", "Albergue Visit", "Other"
+];
 
-// Standard Camino packing list, grouped by category. Anyone can check items off,
-// delete ones they don't need, or add their own — this is just a sensible starting point.
-const DEFAULT_PACKING_LIST = [
-  { category: "Documents & Money", items: [
+const DEFAULT_PACKING = [
+  ["Documents & Money", [
     "Passport / ID", "Pilgrim Credential (Credencial)", "Travel insurance info",
     "Photocopies of documents", "Cash & cards", "Phone + charger"
-  ]},
-  { category: "Backpack & Sleep", items: [
+  ]],
+  ["Backpack & Sleep", [
     "Backpack (30-40L)", "Backpack rain cover", "Sleeping bag liner / lightweight sleeping bag",
     "Earplugs", "Eye mask", "Packing cubes / stuff sacks"
-  ]},
-  { category: "Footwear", items: [
-    "Broken-in hiking shoes or trail runners", "Camp shoes / sandals (for evenings)",
-    "Hiking socks (3-4 pairs, wool or synthetic)", "Liner socks (optional, blister prevention)"
-  ]},
-  { category: "Clothing", items: [
-    "Quick-dry t-shirts (2-3)", "Long-sleeve quick-dry layer", "Hiking pants or leggings (2 pairs)",
-    "Underwear (3-4 pairs, quick-dry)", "Sports bra(s)", "Fleece or warm mid-layer",
-    "Light rain jacket / poncho", "Hat or buff for sun", "Sleepwear", "Swimsuit (optional)"
-  ]},
-  { category: "Toiletries & First Aid", items: [
-    "Travel-size toiletries", "Sunscreen", "Lip balm with SPF", "Blister plasters (Compeed)",
-    "Small first aid kit (pain relief, antiseptic, tape)", "Personal medication",
+  ]],
+  ["Footwear", [
+    "Broken-in hiking shoes or trail runners", "Camp shoes / sandals",
+    "Hiking socks (3-4 pairs)", "Liner socks (optional)"
+  ]],
+  ["Clothing", [
+    "Quick-dry t-shirts (2-3)", "Long-sleeve quick-dry layer",
+    "Hiking pants or leggings (2 pairs)", "Underwear (3-4 pairs)",
+    "Sports bra(s)", "Fleece or warm mid-layer", "Light rain jacket / poncho",
+    "Hat or buff", "Sleepwear", "Swimsuit (optional)"
+  ]],
+  ["Toiletries & First Aid", [
+    "Travel-size toiletries", "Sunscreen", "Lip balm with SPF",
+    "Blister plasters (Compeed)", "Small first aid kit", "Personal medication",
     "Quick-dry towel", "Laundry soap / detergent sheets", "Clothespins or small clothesline"
-  ]},
-  { category: "Tech & Extras", items: [
-    "Headlamp or small flashlight", "Power bank", "EU plug adapter", "Sunglasses",
-    "Refillable water bottle", "Trekking poles", "Guidebook or app", "Small notebook & pen",
-    "Spork / small utensil"
-  ]},
+  ]],
+  ["Tech & Extras", [
+    "Headlamp or small flashlight", "Power bank", "EU plug adapter",
+    "Sunglasses", "Refillable water bottle", "Trekking poles",
+    "Guidebook or app", "Small notebook & pen", "Spork / small utensil"
+  ]]
 ];
 
-const TRAVEL_LEG_TYPES = [
-  { label: "Flight", icon: "✈️" },
-  { label: "Train", icon: "🚆" },
-  { label: "Bus", icon: "🚌" },
-  { label: "Taxi / Rideshare", icon: "🚕" },
-  { label: "Ferry", icon: "⛴️" },
-  { label: "Other", icon: "🧭" },
-];
+const TRAVEL_TYPES = ["Flight", "Train", "Bus", "Taxi / Rideshare", "Ferry", "Other"];
 
-const STORAGE_KEY = "camino-journal-entries-v1";
-const ROUTES_KEY = "camino-journal-custom-v1";
-const PACKING_KEY = "camino-journal-packing-v1";
-const TRAVEL_KEY = "camino-journal-travel-v1";
+const KEYS = {
+  entries: "camino-journal-entries-v3",
+  oldEntries: "camino-journal-entries-v1",
+  custom: "camino-journal-custom-v3",
+  packing: "camino-journal-packing-v3",
+  travel: "camino-journal-travel-v3",
+  settings: "camino-journal-settings-v3"
+};
+
+let state = {
+  view: "journal",
+  activeId: null,
+  draft: null,
+  stopDraft: null,
+  travelDraft: null,
+  printMode: null,
+  printLayout: "mixed",
+  packingOpen: {}
+};
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
+
 function todayISO() {
-  const d = new Date();
-  return d.toISOString().slice(0, 10);
-}
-function formatDateDisplay(iso) {
-  if (!iso) return "";
-  const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  return new Date().toISOString().slice(0, 10);
 }
 
-function buildDefaultPackingState() {
-  return DEFAULT_PACKING_LIST.map(group => ({
-    category: group.category,
-    items: group.items.map(name => ({ id: uid(), name: name, checked: false }))
-  }));
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
-function formatDateTimeDisplay(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "";
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " · " +
-    d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-}
-
-function loadFromStorage(key, fallback) {
+function load(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
-    const parsed = raw ? JSON.parse(raw) : null;
-    return parsed !== null ? parsed : fallback;
+    return raw ? JSON.parse(raw) : fallback;
   } catch (e) {
     return fallback;
   }
 }
-function saveToStorage(key, value) {
+
+function save(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
     return true;
   } catch (e) {
+    toast("Storage is full — backup your journal soon.", true);
     return false;
   }
 }
 
-// ---------- COMBO SELECT ----------
-function ComboSelect({ label, icon, value, onChange, options, placeholder, allowAdd }) {
-  if (placeholder === undefined) placeholder = "Select…";
-  if (allowAdd === undefined) allowAdd = true;
-  const [open, setOpen] = useState(false);
-  const [adding, setAdding] = useState(false);
-  const [newVal, setNewVal] = useState("");
-  const ref = useRef(null);
-
-  useEffect(() => {
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) {
-        setOpen(false);
-        setAdding(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  return (
-    <div className="field" ref={ref}>
-      <label className="field-label">{icon}<span>{label}</span></label>
-      <div className="combo-wrap">
-        <button type="button" className={"combo-trigger " + (value ? "has-value" : "")} onClick={() => setOpen(o => !o)}>
-          <span className="combo-trigger-text">{value || placeholder}</span>
-          <ChevronDown size={18} className={"chev " + (open ? "chev-open" : "")} />
-        </button>
-        {open && (
-          <div className="combo-panel">
-            {options.length === 0 && !adding && <div className="combo-empty">No options yet — add one below.</div>}
-            {options.map(opt => (
-              <button key={opt} type="button" className={"combo-option " + (opt === value ? "selected" : "")}
-                onClick={() => { onChange(opt); setOpen(false); setAdding(false); }}>
-                {opt}
-              </button>
-            ))}
-            {allowAdd && (
-              <div className="combo-add-row">
-                {adding ? (
-                  <div className="combo-add-form">
-                    <input autoFocus className="combo-add-input" placeholder="Type new entry…" value={newVal}
-                      onChange={e => setNewVal(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === "Enter" && newVal.trim()) {
-                          onChange(newVal.trim()); setNewVal(""); setAdding(false); setOpen(false);
-                        }
-                      }} />
-                    <button type="button" className="combo-add-confirm" onClick={() => {
-                      if (newVal.trim()) { onChange(newVal.trim()); setNewVal(""); setAdding(false); setOpen(false); }
-                    }}>Add</button>
-                  </div>
-                ) : (
-                  <button type="button" className="combo-add-btn" onClick={() => setAdding(true)}>
-                    <Plus size={15} /> Add new
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+function makeDefaultPacking() {
+  return DEFAULT_PACKING.map(group => ({
+    category: group[0],
+    items: group[1].map(name => ({ id: uid(), name, checked: false }))
+  }));
 }
 
-// ---------- CHIP SELECT ----------
-function ChipSelect({ label, icon, value, onChange, options, multi }) {
-  const selected = multi ? (value || []) : value;
-  function toggle(opt) {
-    if (multi) {
-      if (selected.includes(opt)) onChange(selected.filter(o => o !== opt));
-      else onChange([...selected, opt]);
-    } else {
-      onChange(opt === value ? "" : opt);
-    }
-  }
-  return (
-    <div className="field">
-      <label className="field-label">{icon}<span>{label}</span></label>
-      <div className="chip-row">
-        {options.map(opt => {
-          const optLabel = typeof opt === "string" ? opt : opt.label;
-          const optIcon = typeof opt === "string" ? null : opt.icon;
-          const isSel = multi ? selected.includes(optLabel) : selected === optLabel;
-          return (
-            <button key={optLabel} type="button" className={"chip " + (isSel ? "chip-selected" : "")} onClick={() => toggle(optLabel)}>
-              {optIcon && <span className="chip-icon">{optIcon}</span>}
-              {optLabel}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
+let entries = load(KEYS.entries, null);
+if (!entries) {
+  const old = load(KEYS.oldEntries, []);
+  entries = Array.isArray(old) ? old.map(migrateEntry) : [];
+  save(KEYS.entries, entries);
 }
 
-// ---------- PEOPLE MET (name + optional photo) ----------
-function PersonPhotoButton({ person, onPhoto, onRemovePhoto }) {
-  const inputRef = useRef(null);
-  function handleFile(file) {
-    const reader = new FileReader();
-    reader.onload = () => onPhoto(reader.result);
-    reader.readAsDataURL(file);
-  }
-  return (
-    <React.Fragment>
-      {person.photo ? (
-        <div className="person-photo-wrap" onClick={() => inputRef.current && inputRef.current.click()}>
-          <img src={person.photo} alt="" />
-          <button type="button" className="person-photo-remove" onClick={(e) => { e.stopPropagation(); onRemovePhoto(); }}>
-            <X size={11} />
-          </button>
-        </div>
-      ) : (
-        <button type="button" className="person-photo-add" onClick={() => inputRef.current && inputRef.current.click()}>
-          <Camera size={13} />
-        </button>
-      )}
-      <input ref={inputRef} type="file" accept="image/*" style={{ display: "none" }}
-        onChange={e => { if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]); e.target.value = ""; }} />
-    </React.Fragment>
-  );
+let custom = load(KEYS.custom, {});
+let packing = load(KEYS.packing, makeDefaultPacking());
+let travel = load(KEYS.travel, []);
+let settings = load(KEYS.settings, { currentRoute: "Camino Francés" });
+
+function migrateEntry(e) {
+  return {
+    id: e.id || uid(),
+    date: e.date || todayISO(),
+    route: e.route || settings.currentRoute || "Camino Francés",
+    town: e.town || "",
+    albergue: e.albergue || "",
+    distanceValue: e.distanceValue || (e.distanceKm === "Other" ? e.distanceCustom : e.distanceKm) || "",
+    distanceUnit: e.distanceUnit || (e.distanceKm ? "km" : "mi"),
+    weather: e.weather || [],
+    feelings: e.feelings || [],
+    stops: e.stops || [],
+    people: Array.isArray(e.people) ? e.people.map(p => typeof p === "string" ? { id: uid(), name: p, photo: null } : p) : [],
+    photos: e.photos || [],
+    notes: e.notes || ""
+  };
 }
 
-function PeopleInput({ value, onChange }) {
-  const [text, setText] = useState("");
-  const people = value || [];
-  function addPerson() {
-    const name = text.trim();
-    if (name && !people.some(p => p.name === name)) {
-      onChange([...people, { id: uid(), name: name, photo: null }]);
-    }
-    setText("");
-  }
-  function setPhoto(personId, photo) {
-    onChange(people.map(p => p.id === personId ? { ...p, photo: photo } : p));
-  }
-  function removePerson(personId) {
-    onChange(people.filter(p => p.id !== personId));
-  }
-  return (
-    <div className="field">
-      <label className="field-label"><Users size={16} /><span>People I Met</span></label>
-      <div className="people-input-row">
-        <input className="text-input" placeholder="Name, then press Enter…" value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addPerson(); } }} />
-        <button type="button" className="people-add-btn" onClick={addPerson}><Plus size={16} /></button>
-      </div>
-      {people.length > 0 && (
-        <div className="people-tags">
-          {people.map(p => (
-            <span key={p.id} className="people-tag">
-              <PersonPhotoButton person={p} onPhoto={(photo) => setPhoto(p.id, photo)} onRemovePhoto={() => setPhoto(p.id, null)} />
-              {p.name}
-              <button type="button" onClick={() => removePerson(p.id)}><X size={12} /></button>
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+function persistEntries() {
+  save(KEYS.entries, entries);
 }
 
-// ---------- PHOTO PICKER ----------
-function PhotoPicker({ photos, onChange }) {
-  const inputRef = useRef(null);
-  function handleFiles(files) {
-    const arr = Array.from(files).slice(0, 6 - photos.length);
-    arr.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = () => onChange(prev => [...prev, { id: uid(), src: reader.result }]);
-      reader.readAsDataURL(file);
-    });
-  }
-  return (
-    <div className="field">
-      <label className="field-label"><Camera size={16} /><span>Photos</span></label>
-      <div className="photo-grid">
-        {photos.map(p => (
-          <div className="photo-thumb" key={p.id}>
-            <img src={p.src} alt="" />
-            <button type="button" className="photo-remove" onClick={() => onChange(prev => prev.filter(x => x.id !== p.id))}>
-              <X size={12} />
-            </button>
-          </div>
-        ))}
-        {photos.length < 6 && (
-          <button type="button" className="photo-add" onClick={() => inputRef.current && inputRef.current.click()}>
-            <Plus size={20} /><span>Add</span>
-          </button>
-        )}
-      </div>
-      <input ref={inputRef} type="file" accept="image/*" multiple style={{ display: "none" }}
-        onChange={e => { if (e.target.files && e.target.files.length) handleFiles(e.target.files); e.target.value = ""; }} />
-    </div>
-  );
+function persistSettings() {
+  save(KEYS.settings, settings);
 }
 
-// ---------- POSTMARK ----------
-function Postmark({ entry }) {
+function persistCustom() {
+  save(KEYS.custom, custom);
+}
+
+function persistPacking() {
+  save(KEYS.packing, packing);
+}
+
+function persistTravel() {
+  save(KEYS.travel, travel);
+}
+
+function toast(msg, isError) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = "toast" + (isError ? " error" : "");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => el.className = "toast hidden", 1800);
+}
+
+function formatDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+function formatDateTime(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) +
+    " · " +
+    d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+function distanceText(entry) {
+  if (!entry || !entry.distanceValue) return "";
+  const num = Number(entry.distanceValue);
+  const clean = isNaN(num) ? entry.distanceValue : num.toFixed(1).replace(".0", "");
+  return clean + " " + (entry.distanceUnit || "mi");
+}
+
+function getTownOptions(route) {
+  const base = ROUTES[route] || [];
+  const extra = custom[route]?.towns || [];
+  return [...base, ...extra.filter(t => !base.includes(t))];
+}
+
+function getAlbergueOptions(town) {
+  const base = SEED_ALBERGUES[town] || [];
+  const extra = custom.__albergues?.[town] || [];
+  return [...base, ...extra.filter(a => !base.includes(a))];
+}
+
+function addCustomTown(route, town) {
+  if (!route || !town) return;
+  if ((ROUTES[route] || []).includes(town)) return;
+  if (!custom[route]) custom[route] = { towns: [] };
+  if (!custom[route].towns.includes(town)) custom[route].towns.push(town);
+  persistCustom();
+}
+
+function addCustomAlbergue(town, albergue) {
+  if (!town || !albergue) return;
+  if ((SEED_ALBERGUES[town] || []).includes(albergue)) return;
+  if (!custom.__albergues) custom.__albergues = {};
+  if (!custom.__albergues[town]) custom.__albergues[town] = [];
+  if (!custom.__albergues[town].includes(albergue)) custom.__albergues[town].push(albergue);
+  persistCustom();
+}
+
+function hashLayout(value) {
+  let h = 0;
+  String(value || "").split("").forEach(ch => {
+    h = (h * 31 + ch.charCodeAt(0)) % 9973;
+  });
+  return h;
+}
+
+function app() {
+  return document.getElementById("app");
+}
+
+function setView(view) {
+  state.view = view;
+  render();
+}
+
+function activeEntry() {
+  return entries.find(e => e.id === state.activeId);
+}
+
+function sortedEntries() {
+  return [...entries].sort((a, b) => a.date < b.date ? 1 : -1);
+}
+
+function routeOptionsHtml(selected) {
+  return Object.keys(ROUTES).map(route =>
+    `<option value="${escapeHtml(route)}" ${route === selected ? "selected" : ""}>${escapeHtml(route)}</option>`
+  ).join("");
+}
+
+function datalistHtml(id, options) {
+  return `<datalist id="${id}">${options.map(o => `<option value="${escapeHtml(o)}"></option>`).join("")}</datalist>`;
+}
+
+function choiceButtons(options, selected, field, multi) {
+  selected = selected || [];
+  return `<div class="choice-row">` + options.map(item => {
+    const label = Array.isArray(item) ? item[0] : item;
+    const icon = Array.isArray(item) ? item[1] : "";
+    const isSelected = multi ? selected.includes(label) : selected === label;
+    return `<button type="button" class="choice ${isSelected ? "selected" : ""}" data-choice="${escapeHtml(label)}" data-field="${field}" data-multi="${multi ? "1" : "0"}">${icon ? icon + " " : ""}${escapeHtml(label)}</button>`;
+  }).join("") + `</div>`;
+}
+
+function postmark(entry, big) {
   const d = entry.date ? new Date(entry.date + "T00:00:00") : null;
   const day = d ? d.getDate() : "--";
   const month = d ? d.toLocaleDateString(undefined, { month: "short" }).toUpperCase() : "---";
   const year = d ? d.getFullYear() : "----";
-  return (
-    <div className="postmark">
-      <svg viewBox="0 0 140 140" className="postmark-svg">
+  const id = "pm-" + entry.id;
+  const text = ((entry.town || "TONIGHT'S STOP") + " • " + (entry.route || "CAMINO")).toUpperCase();
+
+  return `
+    <div class="postmark ${big ? "detail-postmark" : ""}">
+      <svg viewBox="0 0 140 140">
         <defs>
-          <path id={"circlePath-" + entry.id} d="M 70,70 m -52,0 a 52,52 0 1,1 104,0 a 52,52 0 1,1 -104,0" />
+          <path id="${id}" d="M 70,70 m -57,0 a 57,57 0 1,1 114,0 a 57,57 0 1,1 -114,0"></path>
         </defs>
-        <circle cx="70" cy="70" r="64" className="pm-ring-outer" />
-        <circle cx="70" cy="70" r="52" className="pm-ring-inner" />
-        <text className="pm-curve-text">
-          <textPath href={"#circlePath-" + entry.id} startOffset="2%">
-            {(entry.town || "ON THE CAMINO").toUpperCase() + " • " + (entry.route || "").toUpperCase()}
-          </textPath>
+        <circle cx="70" cy="70" r="65" class="pm-ring"></circle>
+        <circle cx="70" cy="70" r="47" class="pm-inner"></circle>
+        <text class="pm-text">
+          <textPath href="#${id}" startOffset="3%">${escapeHtml(text)}</textPath>
         </text>
-        <text x="70" y="64" textAnchor="middle" className="pm-day">{day}</text>
-        <text x="70" y="82" textAnchor="middle" className="pm-month">{month}</text>
-        <text x="70" y="96" textAnchor="middle" className="pm-year">{year}</text>
+        <text x="70" y="65" text-anchor="middle" class="pm-day">${day}</text>
+        <text x="70" y="84" text-anchor="middle" class="pm-month">${month}</text>
+        <text x="70" y="99" text-anchor="middle" class="pm-year">${year}</text>
       </svg>
     </div>
-  );
+  `;
 }
 
-// ---------- PACKING CATEGORY (checklist with add/remove) ----------
-function PackingCategory({ group, onToggle, onAdd, onRemove }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [adding, setAdding] = useState(false);
-  const [newVal, setNewVal] = useState("");
-  const checkedCount = group.items.filter(i => i.checked).length;
+function render() {
+  closeMenu();
 
-  function submitAdd() {
-    if (newVal.trim()) {
-      onAdd(newVal.trim());
-      setNewVal("");
-      setAdding(false);
-    }
-  }
-
-  return (
-    <div className="packing-category">
-      <button type="button" className="packing-category-header" onClick={() => setCollapsed(c => !c)}>
-        <span className="packing-category-title">{group.category}</span>
-        <span className="packing-category-count">{checkedCount}/{group.items.length}</span>
-        <ChevronDown size={16} className={"chev " + (!collapsed ? "chev-open" : "")} />
-      </button>
-      {!collapsed && (
-        <div className="packing-category-body">
-          {group.items.map(item => (
-            <div key={item.id} className="packing-item-row">
-              <button type="button" className={"packing-checkbox " + (item.checked ? "packing-checkbox-checked" : "")}
-                onClick={() => onToggle(item.id)}>
-                {item.checked && <Check size={13} />}
-              </button>
-              <span className={"packing-item-name " + (item.checked ? "packing-item-checked" : "")}>{item.name}</span>
-              <button type="button" className="packing-item-remove" onClick={() => onRemove(item.id)}>
-                <X size={14} />
-              </button>
-            </div>
-          ))}
-          {adding ? (
-            <div className="combo-add-form" style={{ marginTop: 8 }}>
-              <input autoFocus className="combo-add-input" placeholder="Add item…" value={newVal}
-                onChange={e => setNewVal(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") submitAdd(); }} />
-              <button type="button" className="combo-add-confirm" onClick={submitAdd}>Add</button>
-            </div>
-          ) : (
-            <button type="button" className="combo-add-btn" style={{ marginTop: 8 }} onClick={() => setAdding(true)}>
-              <Plus size={15} /> Add item
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  if (state.view === "journal") renderJournal();
+  if (state.view === "entry") renderEntry();
+  if (state.view === "new") renderForm();
+  if (state.view === "settings") renderSettings();
+  if (state.view === "packing") renderPacking();
+  if (state.view === "travel") renderTravel();
+  if (state.view === "printEntry") renderPrint([activeEntry()], "page");
+  if (state.view === "printBook") renderPrint([...sortedEntries()].reverse(), "book");
 }
 
-// ---------- MAIN APP ----------
-function CaminoJournal() {
-  const [entries, setEntries] = useState(() => loadFromStorage(STORAGE_KEY, []) || []);
-  const [customRoutes, setCustomRoutes] = useState(() => loadFromStorage(ROUTES_KEY, {}) || {});
-  const [packingList, setPackingList] = useState(() => loadFromStorage(PACKING_KEY, null) || buildDefaultPackingState());
-  const [travelLegs, setTravelLegs] = useState(() => loadFromStorage(TRAVEL_KEY, []) || []);
-  const [view, setView] = useState("journal");
-  const [activeEntryId, setActiveEntryId] = useState(null);
-  const [draft, setDraft] = useState(null);
-  const [travelDraft, setTravelDraft] = useState(null);
-  const [saveState, setSaveState] = useState("idle");
-  const [lightboxSrc, setLightboxSrc] = useState(null);
-  const [importMessage, setImportMessage] = useState(null);
-  const [tripMenuOpen, setTripMenuOpen] = useState(false);
-  const importInputRef = useRef(null);
-  const tripMenuRef = useRef(null);
+function renderJournal() {
+  const list = sortedEntries();
 
-  useEffect(() => {
-    function handleClick(e) {
-      if (tripMenuRef.current && !tripMenuRef.current.contains(e.target)) {
-        setTripMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  function persistEntries(next) {
-    setEntries(next);
-    setSaveState("saving");
-    const ok = saveToStorage(STORAGE_KEY, next);
-    setSaveState(ok ? "saved" : "error");
-    setTimeout(() => setSaveState("idle"), 1400);
-  }
-  function persistCustomRoutes(next) {
-    setCustomRoutes(next);
-    saveToStorage(ROUTES_KEY, next);
-  }
-  function persistPackingList(next) {
-    setPackingList(next);
-    saveToStorage(PACKING_KEY, next);
-  }
-  function persistTravelLegs(next) {
-    setTravelLegs(next);
-    saveToStorage(TRAVEL_KEY, next);
-  }
-
-  function exportBackup() {
-    try {
-      const payload = {
-        app: "camino-journal",
-        version: 2,
-        exportedAt: new Date().toISOString(),
-        entries: entries,
-        customRoutes: customRoutes,
-        packingList: packingList,
-        travelLegs: travelLegs,
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const dateStamp = todayISO();
-      a.href = url;
-      a.download = "camino-journal-backup-" + dateStamp + ".json";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setSaveState("saved");
-      setTimeout(() => setSaveState("idle"), 1400);
-    } catch (e) {
-      setImportMessage({ type: "error", text: "Backup couldn't be created. Please try again." });
-      setTimeout(() => setImportMessage(null), 4000);
-    }
-  }
-
-  function importBackup(file) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const data = JSON.parse(reader.result);
-        if (!data || !Array.isArray(data.entries)) {
-          throw new Error("This file doesn't look like a Camino Journal backup.");
-        }
-        // Migrate older entries where people was an array of plain strings
-        const migratedEntries = data.entries.map(e => {
-          if (Array.isArray(e.people) && e.people.length > 0 && typeof e.people[0] === "string") {
-            return { ...e, people: e.people.map(name => ({ id: uid(), name: name, photo: null })) };
-          }
-          return e;
-        });
-        persistEntries(migratedEntries);
-        if (data.customRoutes) persistCustomRoutes(data.customRoutes);
-        if (Array.isArray(data.packingList)) persistPackingList(data.packingList);
-        if (Array.isArray(data.travelLegs)) persistTravelLegs(data.travelLegs);
-        setImportMessage({ type: "success", text: "Restored " + migratedEntries.length + " entr" + (migratedEntries.length === 1 ? "y" : "ies") + " from backup." });
-      } catch (e) {
-        setImportMessage({ type: "error", text: "Couldn't read that file. Make sure it's a Camino Journal backup JSON." });
-      }
-      setTimeout(() => setImportMessage(null), 4000);
-    };
-    reader.readAsText(file);
-  }
-
-  // ---- Packing list handlers ----
-  function togglePackingItem(category, itemId) {
-    const next = packingList.map(group => {
-      if (group.category !== category) return group;
-      return { ...group, items: group.items.map(it => it.id === itemId ? { ...it, checked: !it.checked } : it) };
-    });
-    persistPackingList(next);
-  }
-  function addPackingItem(category, name) {
-    const next = packingList.map(group => {
-      if (group.category !== category) return group;
-      return { ...group, items: [...group.items, { id: uid(), name: name, checked: false }] };
-    });
-    persistPackingList(next);
-  }
-  function removePackingItem(category, itemId) {
-    const next = packingList.map(group => {
-      if (group.category !== category) return group;
-      return { ...group, items: group.items.filter(it => it.id !== itemId) };
-    });
-    persistPackingList(next);
-  }
-  function resetPackingList() {
-    persistPackingList(buildDefaultPackingState());
-  }
-
-  // ---- Travel log handlers ----
-  function startNewTravelLeg() {
-    setTravelDraft({
-      id: uid(), type: "Flight", carrier: "", number: "",
-      from: "", to: "", departure: "", arrival: "", notes: ""
-    });
-  }
-  function editTravelLeg(leg) {
-    setTravelDraft({ ...leg });
-  }
-  function saveTravelLeg() {
-    const exists = travelLegs.some(l => l.id === travelDraft.id);
-    const next = exists ? travelLegs.map(l => l.id === travelDraft.id ? travelDraft : l) : [...travelLegs, travelDraft];
-    persistTravelLegs(next);
-    setTravelDraft(null);
-  }
-  function deleteTravelLeg(id) {
-    persistTravelLegs(travelLegs.filter(l => l.id !== id));
-  }
-
-  function getTownOptions(route) {
-    const base = ROUTES[route] || [];
-    const extra = (customRoutes[route] && customRoutes[route].towns) || [];
-    return [...base, ...extra.filter(t => !base.includes(t))];
-  }
-  function getAlbergueOptions(town) {
-    const seed = SEED_ALBERGUES[town] || [];
-    const extra = (customRoutes.__albergues && customRoutes.__albergues[town]) || [];
-    return [...seed, ...extra.filter(a => !seed.includes(a))];
-  }
-  function addCustomTown(route, town) {
-    const next = { ...customRoutes };
-    if (!next[route]) next[route] = { towns: [] };
-    if (!next[route].towns.includes(town)) {
-      next[route] = { ...next[route], towns: [...next[route].towns, town] };
-    }
-    persistCustomRoutes(next);
-  }
-  function addCustomAlbergue(town, albergue) {
-    const next = { ...customRoutes };
-    if (!next.__albergues) next.__albergues = {};
-    const list = next.__albergues[town] || [];
-    if (!list.includes(albergue)) {
-      next.__albergues = { ...next.__albergues, [town]: [...list, albergue] };
-    }
-    persistCustomRoutes(next);
-  }
-
-  function startNewEntry() {
-    const sorted = [...(entries || [])].sort((a, b) => (a.date < b.date ? 1 : -1));
-    const lastRoute = (sorted[0] && sorted[0].route) || "";
-    setDraft({
-      id: uid(), date: todayISO(), route: lastRoute, town: "", albergue: "",
-      distanceKm: "", distanceCustom: "", weather: [], feelings: [], people: [], photos: [], notes: ""
-    });
-    setView("new");
-  }
-  function editEntry(entry) {
-    setDraft({ ...entry, photos: entry.photos || [], people: entry.people || [], feelings: entry.feelings || [], weather: entry.weather || [] });
-    setView("new");
-  }
-  function saveDraft() {
-    if (draft.route && draft.town && !(ROUTES[draft.route] || []).includes(draft.town)) {
-      addCustomTown(draft.route, draft.town);
-    }
-    if (draft.town && draft.albergue && !(SEED_ALBERGUES[draft.town] || []).includes(draft.albergue)) {
-      addCustomAlbergue(draft.town, draft.albergue);
-    }
-    const exists = entries.some(e => e.id === draft.id);
-    const next = exists ? entries.map(e => (e.id === draft.id ? draft : e)) : [...entries, draft];
-    persistEntries(next);
-    setView("journal");
-    setDraft(null);
-  }
-  function deleteEntry(id) {
-    persistEntries(entries.filter(e => e.id !== id));
-    setView("journal");
-    setActiveEntryId(null);
-  }
-
-  const sortedEntries = [...(entries || [])].sort((a, b) => (a.date < b.date ? 1 : -1));
-  const activeEntry = entries.find(e => e.id === activeEntryId);
-
-  return (
-    <React.Fragment>
-      <div className="airmail-border" />
-      <header className="cj-header">
-        <div className="header-mark">✦</div>
-        <h1>Camino Journal</h1>
-        <div className="header-sub">a daily record of the way</div>
-        <div className="header-actions">
-          <div className="trip-menu-wrap" ref={tripMenuRef}>
-            <button className="header-action-btn" onClick={() => setTripMenuOpen(o => !o)}>
-              <Compass size={14} /> Trip Tools
-            </button>
-            {tripMenuOpen && (
-              <div className="trip-menu-panel">
-                <button className="trip-menu-item" onClick={() => { setView("packing"); setTripMenuOpen(false); }}>
-                  <Backpack size={16} /> Packing List
-                </button>
-                <button className="trip-menu-item" onClick={() => { setView("travel"); setTripMenuOpen(false); }}>
-                  <Plane size={16} /> Travel Log
-                </button>
-              </div>
-            )}
-          </div>
-          <button className="header-action-btn" onClick={exportBackup}>
-            <Download size={14} /> Backup
-          </button>
-          <button className="header-action-btn" onClick={() => importInputRef.current && importInputRef.current.click()}>
-            <Upload size={14} /> Restore
-          </button>
-          <input ref={importInputRef} type="file" accept="application/json" style={{ display: "none" }}
-            onChange={e => { if (e.target.files && e.target.files[0]) importBackup(e.target.files[0]); e.target.value = ""; }} />
+  app().innerHTML = `
+    <main class="main">
+      <div class="card route-card">
+        <div>
+          <div class="route-title">${escapeHtml(settings.currentRoute || "Choose Your Route")}</div>
+          <div class="route-meta">Saved as your current route until you change it.</div>
         </div>
-      </header>
+        <button class="btn" data-view="settings">⚙️ Change</button>
+      </div>
 
-      {view !== "journal" && view !== "entry" && view !== "new" && (
-        <div className="trip-tools-back-row">
-          <button className="back-link" onClick={() => setView("journal")}><ChevronLeft size={18} /> Journal</button>
-        </div>
-      )}
-
-      {view === "journal" && (
-        <main className="cj-main">
-          {sortedEntries.length === 0 ? (
-            <div className="empty-state">
-              <BookOpen size={36} strokeWidth={1.5} />
+      ${
+        list.length === 0
+          ? `<div class="card empty">
+              <div class="empty-icon">📖</div>
               <p>Your journal is empty.</p>
-              <p className="empty-sub">Buen camino — start with today's stamp.</p>
-            </div>
-          ) : (
-            <div className="entry-list">
-              {sortedEntries.map(entry => (
-                <button key={entry.id} className="entry-card" onClick={() => { setActiveEntryId(entry.id); setView("entry"); }}>
-                  <Postmark entry={entry} />
-                  <div className="entry-card-body">
-                    <div className="entry-card-title">{entry.town || "Untitled stop"}</div>
-                    <div className="entry-card-meta">{formatDateDisplay(entry.date)}</div>
-                    {entry.distanceKm && <div className="entry-card-meta">{entry.distanceKm === "Other" ? entry.distanceCustom : entry.distanceKm} km walked</div>}
-                    {entry.notes && <div className="entry-card-snippet">{entry.notes.slice(0, 80)}{entry.notes.length > 80 ? "…" : ""}</div>}
+              <p class="soft">Buen camino — start with tonight’s stop.</p>
+            </div>`
+          : `<div class="entry-list">
+              ${list.map(entry => `
+                <button class="entry-card" data-open="${entry.id}">
+                  ${postmark(entry)}
+                  <div class="entry-body">
+                    <div class="entry-title">${escapeHtml(entry.town || "Tonight’s Stop")}</div>
+                    <div class="entry-meta">${escapeHtml(formatDate(entry.date))}</div>
+                    ${distanceText(entry) ? `<div class="entry-meta">${escapeHtml(distanceText(entry))} walked</div>` : ""}
+                    ${entry.notes ? `<div class="entry-snippet">${escapeHtml(entry.notes.slice(0, 100))}${entry.notes.length > 100 ? "…" : ""}</div>` : ""}
                   </div>
                 </button>
-              ))}
-            </div>
-          )}
-          <button className="fab" onClick={startNewEntry}><Plus size={26} /></button>
-        </main>
-      )}
+              `).join("")}
+            </div>`
+      }
 
-      {view === "entry" && activeEntry && (
-        <main className="cj-main">
-          <button className="back-link" onClick={() => setView("journal")}><ChevronLeft size={18} /> Journal</button>
-          <div className="detail-card">
-            <Postmark entry={activeEntry} />
-            <h2>{activeEntry.town || "Untitled stop"}</h2>
-            <div className="detail-meta-row">{formatDateDisplay(activeEntry.date)}</div>
-            <div className="detail-tags">
-              {activeEntry.route && <span className="detail-tag">{activeEntry.route}</span>}
-              {activeEntry.albergue && <span className="detail-tag">🛏 {activeEntry.albergue}</span>}
-              {activeEntry.distanceKm && <span className="detail-tag">{activeEntry.distanceKm === "Other" ? activeEntry.distanceCustom : activeEntry.distanceKm} km</span>}
-            </div>
-            {activeEntry.weather && activeEntry.weather.length > 0 && (
-              <div className="detail-section">
-                <div className="detail-label">Weather</div>
-                <div className="detail-chips">
-                  {activeEntry.weather.map(w => {
-                    const found = WEATHER_OPTIONS.find(o => o.label === w);
-                    return <span key={w} className="detail-chip">{found ? found.icon : ""} {w}</span>;
-                  })}
-                </div>
-              </div>
-            )}
-            {activeEntry.feelings && activeEntry.feelings.length > 0 && (
-              <div className="detail-section">
-                <div className="detail-label">Feeling</div>
-                <div className="detail-chips">{activeEntry.feelings.map(f => <span key={f} className="detail-chip">{f}</span>)}</div>
-              </div>
-            )}
-            {activeEntry.people && activeEntry.people.length > 0 && (
-              <div className="detail-section">
-                <div className="detail-label">People Met</div>
-                <div className="detail-people-grid">
-                  {activeEntry.people.map(p => (
-                    <div key={p.id || p} className="detail-person">
-                      {(p.photo) ? (
-                        <img className="detail-person-photo" src={p.photo} alt="" onClick={() => setLightboxSrc(p.photo)} />
-                      ) : (
-                        <div className="detail-person-photo detail-person-photo-empty"><Users size={16} /></div>
-                      )}
-                      <span className="detail-person-name">{p.name || p}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {activeEntry.photos && activeEntry.photos.length > 0 && (
-              <div className="detail-section">
-                <div className="detail-label">Photos</div>
-                <div className="detail-photo-grid">
-                  {activeEntry.photos.map(p => <img key={p.id} src={p.src} alt="" onClick={() => setLightboxSrc(p.src)} />)}
-                </div>
-              </div>
-            )}
-            {activeEntry.notes && (
-              <div className="detail-section">
-                <div className="detail-label">Notes</div>
-                <p className="detail-notes">{activeEntry.notes}</p>
-              </div>
-            )}
-            <div className="detail-actions">
-              <button className="secondary-btn" onClick={() => editEntry(activeEntry)}><Edit3 size={15} /> Edit</button>
-              <button className="danger-btn" onClick={() => deleteEntry(activeEntry.id)}><Trash2 size={15} /> Delete</button>
-            </div>
-          </div>
-        </main>
-      )}
+      <button class="fab" id="newEntryBtn">+</button>
+    </main>
+  `;
 
-      {view === "new" && draft && (
-        <main className="cj-main">
-          <button className="back-link" onClick={() => { setView("journal"); setDraft(null); }}><ChevronLeft size={18} /> Cancel</button>
-          <div className="form-card">
-            <div className="field">
-              <label className="field-label"><span>Date</span></label>
-              <input type="date" className="text-input" value={draft.date} onChange={e => setDraft({ ...draft, date: e.target.value })} />
-            </div>
+  document.querySelectorAll("[data-open]").forEach(btn => {
+    btn.onclick = () => {
+      state.activeId = btn.dataset.open;
+      setView("entry");
+    };
+  });
 
-            <ComboSelect label="Route" icon={<MapPin size={16} />} value={draft.route}
-              onChange={v => setDraft({ ...draft, route: v, town: "" })}
-              options={Object.keys(ROUTES)} placeholder="Which way are you walking?" allowAdd={false} />
+  document.querySelectorAll("[data-view]").forEach(btn => {
+    btn.onclick = () => setView(btn.dataset.view);
+  });
 
-            {draft.route && (
-              <ComboSelect label="Town / City stayed in" icon={<MapPin size={16} />} value={draft.town}
-                onChange={v => setDraft({ ...draft, town: v })}
-                options={getTownOptions(draft.route)} placeholder="Select a stop…" />
-            )}
-
-            {draft.town && (
-              <ComboSelect label="Albergue / Lodging" icon={<span style={{ fontSize: 15 }}>🛏</span>} value={draft.albergue}
-                onChange={v => setDraft({ ...draft, albergue: v })}
-                options={getAlbergueOptions(draft.town)} placeholder="Where did you sleep?" />
-            )}
-
-            <div className="field">
-              <label className="field-label"><span>Distance Walked (km)</span></label>
-              <div className="chip-row">
-                {DISTANCE_PRESETS.map(d => (
-                  <button key={d} type="button" className={"chip " + (draft.distanceKm === d ? "chip-selected" : "")}
-                    onClick={() => setDraft({ ...draft, distanceKm: d, distanceCustom: d === "Other" ? draft.distanceCustom : "" })}>
-                    {d === "Other" ? d : d + " km"}
-                  </button>
-                ))}
-              </div>
-              {draft.distanceKm === "Other" && (
-                <input className="text-input" style={{ marginTop: 8 }} placeholder="Enter km" inputMode="decimal"
-                  value={draft.distanceCustom} onChange={e => setDraft({ ...draft, distanceCustom: e.target.value })} />
-              )}
-            </div>
-
-            <ChipSelect label="Weather" icon={<Cloud size={16} />} value={draft.weather}
-              onChange={v => setDraft({ ...draft, weather: v })} options={WEATHER_OPTIONS} multi />
-
-            <ChipSelect label="How I Felt" value={draft.feelings}
-              onChange={v => setDraft({ ...draft, feelings: v })} options={FEELING_OPTIONS} multi />
-
-            <PeopleInput value={draft.people} onChange={v => setDraft({ ...draft, people: v })} />
-
-            <PhotoPicker photos={draft.photos}
-              onChange={updater => setDraft(d => ({ ...d, photos: typeof updater === "function" ? updater(d.photos) : updater }))} />
-
-            <div className="field">
-              <label className="field-label"><span>Today's Thoughts</span></label>
-              <textarea className="notes-input" placeholder="What happened today? How did it feel?" rows={6}
-                value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })} />
-            </div>
-
-            <button className="save-btn" onClick={saveDraft}>Stamp This Day</button>
-          </div>
-        </main>
-      )}
-
-      {view === "packing" && (
-        <main className="cj-main">
-          <div className="form-card">
-            <div className="packing-header-row">
-              <h2 className="panel-title"><Backpack size={20} /> Packing List</h2>
-              <button className="text-link-btn" onClick={resetPackingList}>Reset to default</button>
-            </div>
-            <p className="panel-sub">Standard Camino gear, ready to check off. Add or remove anything to make it yours.</p>
-            {packingList.map(group => (
-              <PackingCategory
-                key={group.category}
-                group={group}
-                onToggle={(itemId) => togglePackingItem(group.category, itemId)}
-                onAdd={(name) => addPackingItem(group.category, name)}
-                onRemove={(itemId) => removePackingItem(group.category, itemId)}
-              />
-            ))}
-          </div>
-        </main>
-      )}
-
-      {view === "travel" && !travelDraft && (
-        <main className="cj-main">
-          <div className="form-card">
-            <div className="packing-header-row">
-              <h2 className="panel-title"><Plane size={20} /> Travel Log</h2>
-            </div>
-            <p className="panel-sub">Flights, trains, buses — every leg of getting to and from the Camino.</p>
-            {travelLegs.length === 0 ? (
-              <div className="empty-state-small">No travel legs yet.</div>
-            ) : (
-              <div className="travel-leg-list">
-                {[...travelLegs].sort((a, b) => (a.departure || "") < (b.departure || "") ? -1 : 1).map(leg => {
-                  const typeInfo = TRAVEL_LEG_TYPES.find(t => t.label === leg.type) || TRAVEL_LEG_TYPES[5];
-                  return (
-                    <button key={leg.id} className="travel-leg-card" onClick={() => editTravelLeg(leg)}>
-                      <span className="travel-leg-icon">{typeInfo.icon}</span>
-                      <div className="travel-leg-body">
-                        <div className="travel-leg-title">
-                          {leg.from || "?"} <ChevronRight size={13} style={{ display: "inline", verticalAlign: "middle" }} /> {leg.to || "?"}
-                        </div>
-                        <div className="travel-leg-meta">
-                          {leg.carrier}{leg.carrier && leg.number ? " " : ""}{leg.number}
-                          {(leg.carrier || leg.number) && leg.departure ? " · " : ""}
-                          {formatDateTimeDisplay(leg.departure)}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            <button className="save-btn" onClick={startNewTravelLeg} style={{ marginTop: 18 }}>
-              <Plus size={16} style={{ display: "inline", verticalAlign: "middle", marginRight: 6 }} /> Add Travel Leg
-            </button>
-          </div>
-        </main>
-      )}
-
-      {view === "travel" && travelDraft && (
-        <main className="cj-main">
-          <button className="back-link" onClick={() => setTravelDraft(null)}><ChevronLeft size={18} /> Travel Log</button>
-          <div className="form-card">
-            <div className="field">
-              <label className="field-label"><span>Type</span></label>
-              <div className="chip-row">
-                {TRAVEL_LEG_TYPES.map(t => (
-                  <button key={t.label} type="button" className={"chip " + (travelDraft.type === t.label ? "chip-selected" : "")}
-                    onClick={() => setTravelDraft({ ...travelDraft, type: t.label })}>
-                    <span className="chip-icon">{t.icon}</span>{t.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="field-row-2">
-              <div className="field">
-                <label className="field-label"><span>From</span></label>
-                <input className="text-input" placeholder="e.g. JFK, Madrid" value={travelDraft.from}
-                  onChange={e => setTravelDraft({ ...travelDraft, from: e.target.value })} />
-              </div>
-              <div className="field">
-                <label className="field-label"><span>To</span></label>
-                <input className="text-input" placeholder="e.g. Biarritz, SJPP" value={travelDraft.to}
-                  onChange={e => setTravelDraft({ ...travelDraft, to: e.target.value })} />
-              </div>
-            </div>
-            <div className="field-row-2">
-              <div className="field">
-                <label className="field-label"><span>Carrier / Line</span></label>
-                <input className="text-input" placeholder="e.g. Iberia, RENFE" value={travelDraft.carrier}
-                  onChange={e => setTravelDraft({ ...travelDraft, carrier: e.target.value })} />
-              </div>
-              <div className="field">
-                <label className="field-label"><span>Number</span></label>
-                <input className="text-input" placeholder="e.g. IB6275" value={travelDraft.number}
-                  onChange={e => setTravelDraft({ ...travelDraft, number: e.target.value })} />
-              </div>
-            </div>
-            <div className="field-row-2">
-              <div className="field">
-                <label className="field-label"><span>Departure</span></label>
-                <input type="datetime-local" className="text-input" value={travelDraft.departure}
-                  onChange={e => setTravelDraft({ ...travelDraft, departure: e.target.value })} />
-              </div>
-              <div className="field">
-                <label className="field-label"><span>Arrival</span></label>
-                <input type="datetime-local" className="text-input" value={travelDraft.arrival}
-                  onChange={e => setTravelDraft({ ...travelDraft, arrival: e.target.value })} />
-              </div>
-            </div>
-            <div className="field">
-              <label className="field-label"><span>Notes</span></label>
-              <textarea className="notes-input" rows={3} placeholder="Confirmation number, gate, seat, reminders…"
-                value={travelDraft.notes} onChange={e => setTravelDraft({ ...travelDraft, notes: e.target.value })} />
-            </div>
-            <div className="detail-actions">
-              <button className="save-btn" style={{ flex: 1 }} onClick={saveTravelLeg}>Save</button>
-            </div>
-            {travelLegs.some(l => l.id === travelDraft.id) && (
-              <button className="danger-btn" style={{ width: "100%", marginTop: 10 }}
-                onClick={() => { deleteTravelLeg(travelDraft.id); setTravelDraft(null); }}>
-                <Trash2 size={15} /> Delete this leg
-              </button>
-            )}
-          </div>
-        </main>
-      )}
-
-      {lightboxSrc && (
-        <div className="lightbox" onClick={() => setLightboxSrc(null)}>
-          <img src={lightboxSrc} alt="" />
-        </div>
-      )}
-
-      {importMessage && (
-        <div className={"save-toast " + (importMessage.type === "error" ? "error" : "")}>
-          {importMessage.text}
-        </div>
-      )}
-
-      {saveState !== "idle" && (
-        <div className={"save-toast " + saveState}>
-          {saveState === "saving" && "Saving…"}
-          {saveState === "saved" && "Saved ✓"}
-          {saveState === "error" && "Couldn't save — storage may be full"}
-        </div>
-      )}
-    </React.Fragment>
-  );
+  document.getElementById("newEntryBtn").onclick = startNewEntry;
 }
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<CaminoJournal />);
+function renderEntry() {
+  const entry = activeEntry();
+  if (!entry) {
+    setView("journal");
+    return;
+  }
+
+  app().innerHTML = `
+    <main class="main">
+      <button class="back-btn" data-view="journal">‹ Journal</button>
+      <div class="card">
+        ${postmark(entry, true)}
+        <h2 class="detail-title">${escapeHtml(entry.town || "Tonight’s Stop")}</h2>
+        <div class="detail-meta">${escapeHtml(formatDate(entry.date))}</div>
+
+        <div class="tag-row">
+          ${entry.route ? `<span class="tag">${escapeHtml(entry.route)}</span>` : ""}
+          ${entry.albergue ? `<span class="tag">🛏 ${escapeHtml(entry.albergue)}</span>` : ""}
+          ${distanceText(entry) ? `<span class="tag">${escapeHtml(distanceText(entry))}</span>` : ""}
+        </div>
+
+        ${entry.weather?.length ? `
+          <div class="detail-section">
+            <div class="detail-label">Weather</div>
+            <div class="tag-row">${entry.weather.map(w => {
+              const found = WEATHER_OPTIONS.find(x => x[0] === w);
+              return `<span class="tag">${found ? found[1] : ""} ${escapeHtml(w)}</span>`;
+            }).join("")}</div>
+          </div>
+        ` : ""}
+
+        ${entry.feelings?.length ? `
+          <div class="detail-section">
+            <div class="detail-label">Feeling</div>
+            <div class="tag-row">${entry.feelings.map(f => `<span class="tag">${escapeHtml(f)}</span>`).join("")}</div>
+          </div>
+        ` : ""}
+
+        ${entry.stops?.length ? `
+          <div class="detail-section">
+            <div class="detail-label">Stops Along the Way</div>
+            ${entry.stops.map(stop => `
+              <div class="stop-card">
+                <div class="stop-name">${escapeHtml(stop.name || "Unnamed stop")}</div>
+                <div class="stop-meta">${escapeHtml(stop.type || "")}${stop.area ? " · " + escapeHtml(stop.area) : ""}</div>
+                ${stop.notes ? `<div class="stop-notes">${escapeHtml(stop.notes)}</div>` : ""}
+                ${stop.photo ? `<img class="stop-photo light-img" src="${stop.photo}" alt="">` : ""}
+              </div>
+            `).join("")}
+          </div>
+        ` : ""}
+
+        ${entry.people?.length ? `
+          <div class="detail-section">
+            <div class="detail-label">People I Met</div>
+            <div class="person-tags">
+              ${entry.people.map(p => `
+                <span class="person-tag">
+                  ${p.photo ? `<img class="person-photo light-img" src="${p.photo}" alt="">` : ""}
+                  ${escapeHtml(p.name)}
+                </span>
+              `).join("")}
+            </div>
+          </div>
+        ` : ""}
+
+        ${entry.photos?.length ? `
+          <div class="detail-section">
+            <div class="detail-label">Photos</div>
+            <div class="photo-grid">
+              ${entry.photos.map(p => `<div class="photo-tile"><img class="light-img" src="${p.src}" alt=""></div>`).join("")}
+            </div>
+          </div>
+        ` : ""}
+
+        ${entry.notes ? `
+          <div class="detail-section">
+            <div class="detail-label">Today’s Thoughts</div>
+            <div class="notes-display">${escapeHtml(entry.notes)}</div>
+          </div>
+        ` : ""}
+
+        <div class="action-row">
+          <button class="btn" id="editEntryBtn">✏️ Edit</button>
+          <button class="btn" id="prettyPageBtn">🖨️ Pretty Page</button>
+          <button class="btn btn-danger" id="deleteEntryBtn">🗑 Delete</button>
+        </div>
+      </div>
+    </main>
+  `;
+
+  document.querySelector("[data-view='journal']").onclick = () => setView("journal");
+  document.getElementById("editEntryBtn").onclick = () => editEntry(entry);
+  document.getElementById("prettyPageBtn").onclick = () => {
+    state.printLayout = "mixed";
+    setView("printEntry");
+  };
+  document.getElementById("deleteEntryBtn").onclick = () => {
+    if (confirm("Delete this journal entry?")) {
+      entries = entries.filter(e => e.id !== entry.id);
+      persistEntries();
+      toast("Deleted");
+      setView("journal");
+    }
+  };
+
+  bindLightbox();
+}
+
+function startNewEntry() {
+  state.draft = {
+    id: uid(),
+    date: todayISO(),
+    route: settings.currentRoute || "Camino Francés",
+    town: "",
+    albergue: "",
+    distanceValue: "",
+    distanceUnit: "mi",
+    weather: [],
+    feelings: [],
+    stops: [],
+    people: [],
+    photos: [],
+    notes: ""
+  };
+  state.stopDraft = null;
+  setView("new");
+}
+
+function editEntry(entry) {
+  state.draft = JSON.parse(JSON.stringify(entry));
+  state.draft.stops = state.draft.stops || [];
+  state.draft.people = state.draft.people || [];
+  state.draft.photos = state.draft.photos || [];
+  state.draft.weather = state.draft.weather || [];
+  state.draft.feelings = state.draft.feelings || [];
+  state.stopDraft = null;
+  setView("new");
+}
+
+function renderForm() {
+  const d = state.draft;
+  const townListId = "town-list";
+  const albergueListId = "albergue-list";
+
+  app().innerHTML = `
+    <main class="main">
+      <button class="back-btn" id="cancelFormBtn">‹ Cancel</button>
+
+      <div class="card">
+        <div class="field">
+          <label class="field-label">Date</label>
+          <input class="input" type="date" id="dateInput" value="${escapeHtml(d.date)}">
+        </div>
+
+        <div class="card route-card" style="box-shadow:none;background:rgba(255,255,255,.35);">
+          <div>
+            <div class="route-title" style="font-size:23px;">${escapeHtml(d.route || settings.currentRoute || "Camino Route")}</div>
+            <div class="route-meta">Current route for this entry.</div>
+          </div>
+          <button class="btn" id="changeRouteBtn">⚙️ Change</button>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Tonight’s Stop</label>
+          <input class="input" id="townInput" list="${townListId}" placeholder="Where did you land tonight?" value="${escapeHtml(d.town)}">
+          ${datalistHtml(townListId, getTownOptions(d.route))}
+        </div>
+
+        <div class="field">
+          <label class="field-label">Tonight’s Albergue</label>
+          <input class="input" id="albergueInput" list="${albergueListId}" placeholder="Where are you staying tonight?" value="${escapeHtml(d.albergue)}">
+          ${datalistHtml(albergueListId, getAlbergueOptions(d.town))}
+        </div>
+
+        <div class="field">
+          <label class="field-label">Today’s Distance</label>
+          <div class="distance-box">
+            <div class="distance-control">
+              <button type="button" class="spin" id="distanceMinus">−</button>
+              <input class="distance-input" type="number" min="0" step="0.1" id="distanceInput" value="${escapeHtml(d.distanceValue)}">
+              <button type="button" class="spin" id="distancePlus">+</button>
+            </div>
+            <div class="unit-toggle">
+              <button type="button" class="${d.distanceUnit === "mi" ? "active" : ""}" data-unit="mi">mi</button>
+              <button type="button" class="${d.distanceUnit === "km" ? "active" : ""}" data-unit="km">km</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Weather</label>
+          ${choiceButtons(WEATHER_OPTIONS, d.weather, "weather", true)}
+        </div>
+
+        <div class="field">
+          <label class="field-label">How I Felt</label>
+          ${choiceButtons(FEELING_OPTIONS, d.feelings, "feelings", true)}
+        </div>
+
+        <div class="field">
+          <label class="field-label">Stops Along the Way</label>
+          <div id="stopsArea">${renderStopsHtml()}</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">People I Met</label>
+          <div class="person-row">
+            <input class="input" id="personInput" placeholder="Name, then press Add">
+            <button class="btn" id="addPersonBtn">＋</button>
+          </div>
+          <div class="person-tags">
+            ${d.people.map(p => `
+              <span class="person-tag">
+                ${p.photo ? `<img class="person-photo" src="${p.photo}" alt="">` : ""}
+                ${escapeHtml(p.name)}
+                <button type="button" data-remove-person="${p.id}">✕</button>
+              </span>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Photos</label>
+          <div class="photo-grid">
+            ${d.photos.map(p => `
+              <div class="photo-tile">
+                <img src="${p.src}" alt="">
+                <button type="button" class="photo-remove" data-remove-photo="${p.id}">×</button>
+              </div>
+            `).join("")}
+            <button type="button" class="photo-add" id="addPhotoBtn">＋<span>Add</span></button>
+          </div>
+          <input type="file" accept="image/*" multiple id="photoInput" class="hidden">
+        </div>
+
+        <div class="field">
+          <label class="field-label">Today’s Thoughts</label>
+          <textarea class="textarea" id="notesInput" rows="7" placeholder="What happened today? How did it feel?">${escapeHtml(d.notes)}</textarea>
+        </div>
+
+        <button class="btn btn-red" id="saveEntryBtn" style="width:100%;padding:16px;font-family:'Courier Prime',monospace;">Stamp This Day</button>
+      </div>
+    </main>
+  `;
+
+  bindForm();
+}
+
+function renderStopsHtml() {
+  const d = state.draft;
+  const stop = state.stopDraft;
+
+  return `
+    ${(d.stops || []).map(s => `
+      <div class="stop-card">
+        <div class="stop-head">
+          <div>
+            <div class="stop-name">${escapeHtml(s.name || "Unnamed stop")}</div>
+            <div class="stop-meta">${escapeHtml(s.type || "")}${s.area ? " · " + escapeHtml(s.area) : ""}</div>
+          </div>
+          <button class="btn btn-danger" data-remove-stop="${s.id}">🗑</button>
+        </div>
+        ${s.notes ? `<div class="stop-notes">${escapeHtml(s.notes)}</div>` : ""}
+        ${s.photo ? `<img class="stop-photo" src="${s.photo}" alt="">` : ""}
+      </div>
+    `).join("")}
+
+    ${
+      stop
+        ? `
+          <div class="stop-card">
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">Stop Name</label>
+                <input class="input" id="stopName" placeholder="Café, store, viewpoint…" value="${escapeHtml(stop.name)}">
+              </div>
+              <div class="field">
+                <label class="field-label">Type</label>
+                <select class="select" id="stopType">
+                  ${STOP_TYPES.map(t => `<option ${t === stop.type ? "selected" : ""}>${escapeHtml(t)}</option>`).join("")}
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Town / Area</label>
+              <input class="input" id="stopArea" placeholder="Optional" value="${escapeHtml(stop.area)}">
+            </div>
+
+            <div class="field">
+              <label class="field-label">Stop Notes</label>
+              <textarea class="textarea" id="stopNotes" style="min-height:90px;" placeholder="What did you eat, buy, see, or remember here?">${escapeHtml(stop.notes)}</textarea>
+            </div>
+
+            ${stop.photo ? `<img class="stop-photo" src="${stop.photo}" alt="">` : ""}
+
+            <div class="choice-row">
+              <button class="btn" id="stopPhotoBtn">📷 ${stop.photo ? "Change Photo" : "Add Photo"}</button>
+              ${stop.photo ? `<button class="btn" id="removeStopPhotoBtn">✕ Remove Photo</button>` : ""}
+              <button class="btn" id="saveStopBtn">✓ Save Stop</button>
+              <button class="btn" id="cancelStopBtn">Cancel</button>
+            </div>
+            <input type="file" accept="image/*" id="stopPhotoInput" class="hidden">
+          </div>
+        `
+        : `<button class="btn" id="addStopBtn" style="width:100%;">＋ Add a stop</button>`
+    }
+  `;
+}
+
+function saveDraftFromInputs() {
+  const d = state.draft;
+  d.date = document.getElementById("dateInput")?.value || d.date;
+  d.town = document.getElementById("townInput")?.value.trim() || "";
+  d.albergue = document.getElementById("albergueInput")?.value.trim() || "";
+  d.distanceValue = document.getElementById("distanceInput")?.value || "";
+  d.notes = document.getElementById("notesInput")?.value || "";
+
+  addCustomTown(d.route, d.town);
+  addCustomAlbergue(d.town, d.albergue);
+}
+
+function bindForm() {
+  const d = state.draft;
+
+  document.getElementById("cancelFormBtn").onclick = () => {
+    state.draft = null;
+    setView("journal");
+  };
+
+  document.getElementById("changeRouteBtn").onclick = () => {
+    state.view = "settings";
+    render();
+  };
+
+  document.getElementById("townInput").oninput = e => {
+    d.town = e.target.value;
+  };
+
+  document.getElementById("albergueInput").oninput = e => {
+    d.albergue = e.target.value;
+  };
+
+  document.getElementById("dateInput").oninput = e => {
+    d.date = e.target.value;
+  };
+
+  document.getElementById("distanceInput").oninput = e => {
+    d.distanceValue = e.target.value;
+  };
+
+  document.getElementById("notesInput").oninput = e => {
+    d.notes = e.target.value;
+  };
+
+  document.getElementById("distanceMinus").onclick = () => bumpDistance(-0.1);
+  document.getElementById("distancePlus").onclick = () => bumpDistance(0.1);
+
+  document.querySelectorAll("[data-unit]").forEach(btn => {
+    btn.onclick = () => {
+      d.distanceUnit = btn.dataset.unit;
+      renderForm();
+    };
+  });
+
+  document.querySelectorAll("[data-choice]").forEach(btn => {
+    btn.onclick = () => {
+      const field = btn.dataset.field;
+      const value = btn.dataset.choice;
+      const multi = btn.dataset.multi === "1";
+
+      if (multi) {
+        d[field] = d[field] || [];
+        if (d[field].includes(value)) {
+          d[field] = d[field].filter(x => x !== value);
+        } else {
+          d[field].push(value);
+        }
+      } else {
+        d[field] = d[field] === value ? "" : value;
+      }
+
+      renderForm();
+    };
+  });
+
+  document.getElementById("addPersonBtn").onclick = addPerson;
+  document.getElementById("personInput").onkeydown = e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addPerson();
+    }
+  };
+
+  document.querySelectorAll("[data-remove-person]").forEach(btn => {
+    btn.onclick = () => {
+      d.people = d.people.filter(p => p.id !== btn.dataset.removePerson);
+      renderForm();
+    };
+  });
+
+  document.getElementById("addPhotoBtn").onclick = () => document.getElementById("photoInput").click();
+  document.getElementById("photoInput").onchange = e => handlePhotos(e.target.files);
+
+  document.querySelectorAll("[data-remove-photo]").forEach(btn => {
+    btn.onclick = () => {
+      d.photos = d.photos.filter(p => p.id !== btn.dataset.removePhoto);
+      renderForm();
+    };
+  });
+
+  bindStops();
+
+  document.getElementById("saveEntryBtn").onclick = () => {
+    saveDraftFromInputs();
+
+    settings.currentRoute = d.route;
+    persistSettings();
+
+    const exists = entries.some(e => e.id === d.id);
+    if (exists) {
+      entries = entries.map(e => e.id === d.id ? d : e);
+    } else {
+      entries.push(d);
+    }
+
+    persistEntries();
+    state.draft = null;
+    toast("Saved");
+    setView("journal");
+  };
+}
+
+function bumpDistance(delta) {
+  const d = state.draft;
+  let n = parseFloat(d.distanceValue || "0");
+  if (isNaN(n)) n = 0;
+  n = Math.max(0, Math.round((n + delta) * 10) / 10);
+  d.distanceValue = n.toFixed(1);
+  renderForm();
+}
+
+function addPerson() {
+  const input = document.getElementById("personInput");
+  const name = input.value.trim();
+  if (!name) return;
+
+  if (!state.draft.people.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+    state.draft.people.push({ id: uid(), name, photo: null });
+  }
+
+  input.value = "";
+  renderForm();
+}
+
+function handlePhotos(files) {
+  const arr = Array.from(files || []).slice(0, 8 - state.draft.photos.length);
+  if (!arr.length) return;
+
+  let remaining = arr.length;
+  arr.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      state.draft.photos.push({ id: uid(), src: reader.result });
+      remaining--;
+      if (remaining === 0) renderForm();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function bindStops() {
+  const d = state.draft;
+
+  const addBtn = document.getElementById("addStopBtn");
+  if (addBtn) {
+    addBtn.onclick = () => {
+      state.stopDraft = { id: uid(), name: "", type: "Café", area: "", notes: "", photo: null };
+      renderForm();
+    };
+  }
+
+  document.querySelectorAll("[data-remove-stop]").forEach(btn => {
+    btn.onclick = () => {
+      d.stops = d.stops.filter(s => s.id !== btn.dataset.removeStop);
+      renderForm();
+    };
+  });
+
+  if (!state.stopDraft) return;
+
+  const stop = state.stopDraft;
+
+  document.getElementById("stopName").oninput = e => stop.name = e.target.value;
+  document.getElementById("stopType").onchange = e => stop.type = e.target.value;
+  document.getElementById("stopArea").oninput = e => stop.area = e.target.value;
+  document.getElementById("stopNotes").oninput = e => stop.notes = e.target.value;
+
+  document.getElementById("cancelStopBtn").onclick = () => {
+    state.stopDraft = null;
+    renderForm();
+  };
+
+  document.getElementById("saveStopBtn").onclick = () => {
+    if (!stop.name.trim() && !stop.notes.trim()) return;
+    stop.name = stop.name.trim();
+    d.stops.push(stop);
+    state.stopDraft = null;
+    renderForm();
+  };
+
+  document.getElementById("stopPhotoBtn").onclick = () => document.getElementById("stopPhotoInput").click();
+
+  const removePhoto = document.getElementById("removeStopPhotoBtn");
+  if (removePhoto) {
+    removePhoto.onclick = () => {
+      stop.photo = null;
+      renderForm();
+    };
+  }
+
+  document.getElementById("stopPhotoInput").onchange = e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      stop.photo = reader.result;
+      renderForm();
+    };
+    reader.readAsDataURL(file);
+  };
+}
+
+function renderSettings() {
+  app().innerHTML = `
+    <main class="main">
+      <button class="back-btn" data-view="journal">‹ Journal</button>
+      <div class="card">
+        <h2 class="section-title">Trip Settings</h2>
+        <p class="panel-sub">Pick your route once. New journal entries will keep using it until you change it.</p>
+
+        <div class="field">
+          <label class="field-label">Current Camino Route</label>
+          <select class="select" id="currentRouteSelect">
+            ${routeOptionsHtml(settings.currentRoute)}
+          </select>
+        </div>
+
+        <button class="btn btn-red" id="saveSettingsBtn">Save Route</button>
+      </div>
+    </main>
+  `;
+
+  document.querySelector("[data-view='journal']").onclick = () => setView("journal");
+
+  document.getElementById("saveSettingsBtn").onclick = () => {
+    settings.currentRoute = document.getElementById("currentRouteSelect").value;
+    persistSettings();
+
+    if (state.draft) {
+      state.draft.route = settings.currentRoute;
+      state.draft.town = "";
+      state.draft.albergue = "";
+      setView("new");
+    } else {
+      toast("Route saved");
+      setView("journal");
+    }
+  };
+}
+
+function renderPacking() {
+  app().innerHTML = `
+    <main class="main">
+      <button class="back-btn" data-view="journal">‹ Journal</button>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+          <h2 class="section-title">Packing List</h2>
+          <button class="btn" id="resetPackingBtn">Reset</button>
+        </div>
+        <p class="panel-sub">Standard Camino gear, ready to check off. Add or remove anything to make it yours.</p>
+
+        ${packing.map(group => `
+          <div class="packing-group">
+            <button class="packing-head" data-pack-head="${escapeHtml(group.category)}">
+              <span>${escapeHtml(group.category)}</span>
+              <span>${group.items.filter(i => i.checked).length}/${group.items.length}</span>
+            </button>
+            <div class="packing-body ${state.packingOpen[group.category] === false ? "hidden" : ""}">
+              ${group.items.map(item => `
+                <div class="packing-row">
+                  <button class="check-btn ${item.checked ? "checked" : ""}" data-pack-check="${item.id}" data-pack-cat="${escapeHtml(group.category)}">${item.checked ? "✓" : ""}</button>
+                  <span class="pack-name ${item.checked ? "checked" : ""}">${escapeHtml(item.name)}</span>
+                  <button class="btn btn-danger" data-pack-remove="${item.id}" data-pack-cat="${escapeHtml(group.category)}">×</button>
+                </div>
+              `).join("")}
+
+              <div class="person-row" style="margin-top:10px;">
+                <input class="input" placeholder="Add item…" data-pack-input="${escapeHtml(group.category)}">
+                <button class="btn" data-pack-add="${escapeHtml(group.category)}">＋</button>
+              </div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </main>
+  `;
+
+  document.querySelector("[data-view='journal']").onclick = () => setView("journal");
+
+  document.getElementById("resetPackingBtn").onclick = () => {
+    if (confirm("Reset packing list to default?")) {
+      packing = makeDefaultPacking();
+      persistPacking();
+      renderPacking();
+    }
+  };
+
+  document.querySelectorAll("[data-pack-head]").forEach(btn => {
+    btn.onclick = () => {
+      const cat = btn.dataset.packHead;
+      state.packingOpen[cat] = state.packingOpen[cat] === false ? true : false;
+      renderPacking();
+    };
+  });
+
+  document.querySelectorAll("[data-pack-check]").forEach(btn => {
+    btn.onclick = () => {
+      const group = packing.find(g => g.category === btn.dataset.packCat);
+      const item = group.items.find(i => i.id === btn.dataset.packCheck);
+      item.checked = !item.checked;
+      persistPacking();
+      renderPacking();
+    };
+  });
+
+  document.querySelectorAll("[data-pack-remove]").forEach(btn => {
+    btn.onclick = () => {
+      const group = packing.find(g => g.category === btn.dataset.packCat);
+      group.items = group.items.filter(i => i.id !== btn.dataset.packRemove);
+      persistPacking();
+      renderPacking();
+    };
+  });
+
+  document.querySelectorAll("[data-pack-add]").forEach(btn => {
+    btn.onclick = () => {
+      const cat = btn.dataset.packAdd;
+      const input = document.querySelector(`[data-pack-input="${CSS.escape(cat)}"]`);
+      const name = input.value.trim();
+      if (!name) return;
+      const group = packing.find(g => g.category === cat);
+      group.items.push({ id: uid(), name, checked: false });
+      persistPacking();
+      renderPacking();
+    };
+  });
+}
+
+function renderTravel() {
+  if (state.travelDraft) {
+    renderTravelForm();
+    return;
+  }
+
+  app().innerHTML = `
+    <main class="main">
+      <button class="back-btn" data-view="journal">‹ Journal</button>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+          <h2 class="section-title">Travel Log</h2>
+          <button class="btn" id="addTravelBtn">＋ Add</button>
+        </div>
+        <p class="panel-sub">Flights, trains, buses, taxis, and travel connections for getting to or from the Camino.</p>
+
+        ${
+          travel.length === 0
+            ? `<div class="empty"><p>No travel legs yet.</p></div>`
+            : travel.map(leg => `
+                <button class="travel-card" data-travel="${leg.id}">
+                  <div class="travel-title">${escapeHtml(leg.from || "From")} → ${escapeHtml(leg.to || "To")}</div>
+                  <div class="travel-meta">${escapeHtml(leg.type || "")}${leg.carrier ? " · " + escapeHtml(leg.carrier) : ""}${leg.departure ? " · " + escapeHtml(formatDateTime(leg.departure)) : ""}</div>
+                </button>
+              `).join("")
+        }
+      </div>
+    </main>
+  `;
+
+  document.querySelector("[data-view='journal']").onclick = () => setView("journal");
+
+  document.getElementById("addTravelBtn").onclick = () => {
+    state.travelDraft = {
+      id: uid(),
+      type: "Flight",
+      carrier: "",
+      number: "",
+      from: "",
+      to: "",
+      departure: "",
+      arrival: "",
+      notes: ""
+    };
+    renderTravel();
+  };
+
+  document.querySelectorAll("[data-travel]").forEach(btn => {
+    btn.onclick = () => {
+      state.travelDraft = JSON.parse(JSON.stringify(travel.find(t => t.id === btn.dataset.travel)));
+      renderTravel();
+    };
+  });
+}
+
+function renderTravelForm() {
+  const t = state.travelDraft;
+
+  app().innerHTML = `
+    <main class="main">
+      <button class="back-btn" id="backTravelBtn">‹ Travel Log</button>
+      <div class="card">
+        <h2 class="section-title">Travel Details</h2>
+
+        <div class="field">
+          <label class="field-label">Type</label>
+          <select class="select" id="travelType">
+            ${TRAVEL_TYPES.map(type => `<option ${type === t.type ? "selected" : ""}>${escapeHtml(type)}</option>`).join("")}
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Carrier</label>
+            <input class="input" id="travelCarrier" value="${escapeHtml(t.carrier)}">
+          </div>
+          <div class="field">
+            <label class="field-label">Number</label>
+            <input class="input" id="travelNumber" value="${escapeHtml(t.number)}">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">From</label>
+            <input class="input" id="travelFrom" value="${escapeHtml(t.from)}">
+          </div>
+          <div class="field">
+            <label class="field-label">To</label>
+            <input class="input" id="travelTo" value="${escapeHtml(t.to)}">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Departure</label>
+            <input class="input" type="datetime-local" id="travelDeparture" value="${escapeHtml(t.departure)}">
+          </div>
+          <div class="field">
+            <label class="field-label">Arrival</label>
+            <input class="input" type="datetime-local" id="travelArrival" value="${escapeHtml(t.arrival)}">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Notes</label>
+          <textarea class="textarea" id="travelNotes" style="min-height:100px;">${escapeHtml(t.notes)}</textarea>
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-red" id="saveTravelBtn">Save</button>
+          <button class="btn btn-danger" id="deleteTravelBtn">Delete</button>
+        </div>
+      </div>
+    </main>
+  `;
+
+  document.getElementById("backTravelBtn").onclick = () => {
+    state.travelDraft = null;
+    renderTravel();
+  };
+
+  document.getElementById("saveTravelBtn").onclick = () => {
+    t.type = document.getElementById("travelType").value;
+    t.carrier = document.getElementById("travelCarrier").value;
+    t.number = document.getElementById("travelNumber").value;
+    t.from = document.getElementById("travelFrom").value;
+    t.to = document.getElementById("travelTo").value;
+    t.departure = document.getElementById("travelDeparture").value;
+    t.arrival = document.getElementById("travelArrival").value;
+    t.notes = document.getElementById("travelNotes").value;
+
+    const exists = travel.some(x => x.id === t.id);
+    travel = exists ? travel.map(x => x.id === t.id ? t : x) : [...travel, t];
+
+    persistTravel();
+    state.travelDraft = null;
+    toast("Saved");
+    renderTravel();
+  };
+
+  document.getElementById("deleteTravelBtn").onclick = () => {
+    travel = travel.filter(x => x.id !== t.id);
+    persistTravel();
+    state.travelDraft = null;
+    toast("Deleted");
+    renderTravel();
+  };
+}
+
+function layoutFor(entriesToPrint, i, entry) {
+  if (state.printLayout !== "mixed") return Number(state.printLayout);
+
+  let layout = (hashLayout(entry.id) + i) % 5;
+
+  if (i > 0) {
+    const prev = (hashLayout(entriesToPrint[i - 1].id) + i - 1) % 5;
+    if (layout === prev) layout = (layout + 1) % 5;
+  }
+
+  return layout;
+}
+
+function renderPrint(entriesToPrint, mode) {
+  entriesToPrint = entriesToPrint.filter(Boolean);
+
+  app().innerHTML = `
+    <div class="print-shell">
+      <div class="print-toolbar no-print">
+        <button class="back-btn" id="backPrintBtn">‹ Journal</button>
+        <h2 class="section-title">${mode === "book" ? "Printable Book" : "Printable Page"}</h2>
+        <p class="panel-sub">Choose one layout, or use Mixed Layouts so book pages do not repeat the same look back-to-back.</p>
+
+        <div class="choice-row">
+          <select class="select" id="layoutSelect" style="max-width:260px;">
+            <option value="mixed" ${state.printLayout === "mixed" ? "selected" : ""}>Mixed layouts</option>
+            <option value="0" ${state.printLayout === "0" ? "selected" : ""}>Layout 1 — Postcard</option>
+            <option value="1" ${state.printLayout === "1" ? "selected" : ""}>Layout 2 — Scrapbook</option>
+            <option value="2" ${state.printLayout === "2" ? "selected" : ""}>Layout 3 — Pilgrim Log</option>
+            <option value="3" ${state.printLayout === "3" ? "selected" : ""}>Layout 4 — Photo Memory</option>
+            <option value="4" ${state.printLayout === "4" ? "selected" : ""}>Layout 5 — Old Paper Diary</option>
+          </select>
+          <button class="btn" id="printBtn">🖨️ Print / Save PDF</button>
+        </div>
+      </div>
+
+      ${entriesToPrint.map((entry, i) => printablePage(entry, layoutFor(entriesToPrint, i, entry))).join("")}
+    </div>
+  `;
+
+  document.getElementById("backPrintBtn").onclick = () => {
+    if (mode === "book") {
+      setView("journal");
+    } else {
+      setView("entry");
+    }
+  };
+
+  document.getElementById("layoutSelect").onchange = e => {
+    state.printLayout = e.target.value;
+    renderPrint(entriesToPrint, mode);
+  };
+
+  document.getElementById("printBtn").onclick = () => window.print();
+}
+
+function printablePage(entry, layout) {
+  const photos = (entry.photos || []).map(p => p.src);
+  const p1 = photos[0];
+  const p2 = photos[1];
+  const p3 = photos[2];
+  const p4 = photos[3];
+  const people = (entry.people || []).map(p => p.name).join(", ");
+  const stops = entry.stops || [];
+
+  const header = `
+    <div class="print-kicker">${escapeHtml(entry.route || "Camino Journal")}</div>
+    <div class="print-title">${escapeHtml(entry.town || "Tonight’s Stop")}</div>
+    <div class="print-meta">
+      ${escapeHtml(formatDate(entry.date))}
+      ${entry.albergue ? " · Tonight at " + escapeHtml(entry.albergue) : ""}
+      ${distanceText(entry) ? " · " + escapeHtml(distanceText(entry)) : ""}
+    </div>
+  `;
+
+  const stopBits = stops.length
+    ? `<div class="print-stop-list">${stops.slice(0, 6).map(s => `<span class="print-stop">${escapeHtml(s.type)}: ${escapeHtml(s.name)}</span>`).join("")}</div>`
+    : "";
+
+  const peopleBit = people ? `<div class="print-people">People met: ${escapeHtml(people)}</div>` : "";
+
+  if (layout === 1) {
+    return `
+      <section class="print-page layout-scrapbook">
+        ${header}
+        <div class="collage">
+          ${p1 ? `<div class="polaroid p1"><img src="${p1}"></div>` : ""}
+          ${p2 ? `<div class="polaroid p2"><img src="${p2}"></div>` : ""}
+          ${p3 ? `<div class="polaroid p3"><img src="${p3}"></div>` : ""}
+        </div>
+        ${stopBits}
+        <div class="print-notes">${escapeHtml(entry.notes || "A quiet day on the Camino.")}</div>
+        ${peopleBit}
+      </section>
+    `;
+  }
+
+  if (layout === 2) {
+    return `
+      <section class="print-page layout-log">
+        ${header}
+        <div class="log-grid">
+          <div class="log-box"><div class="log-label">Tonight’s Albergue</div><div class="log-value">${escapeHtml(entry.albergue || "—")}</div></div>
+          <div class="log-box"><div class="log-label">Distance</div><div class="log-value">${escapeHtml(distanceText(entry) || "—")}</div></div>
+          <div class="log-box"><div class="log-label">Weather</div><div class="log-value">${escapeHtml((entry.weather || []).join(", ") || "—")}</div></div>
+          <div class="log-box"><div class="log-label">Feeling</div><div class="log-value">${escapeHtml((entry.feelings || []).join(", ") || "—")}</div></div>
+        </div>
+        ${p1 ? `<img class="print-photo" src="${p1}" style="width:100%;height:260px;">` : ""}
+        ${stopBits}
+        <div class="print-notes">${escapeHtml(entry.notes || "")}</div>
+        ${peopleBit}
+      </section>
+    `;
+  }
+
+  if (layout === 3) {
+    return `
+      <section class="print-page layout-photo">
+        ${header}
+        ${p1 ? `<img class="print-photo hero-photo" src="${p1}">` : ""}
+        <div class="print-notes">${escapeHtml(entry.notes || "")}</div>
+        ${(p2 || p3 || p4) ? `<div class="mini-row">${[p2,p3,p4].filter(Boolean).map(src => `<img class="print-photo" src="${src}">`).join("")}</div>` : ""}
+        ${stopBits}
+        ${peopleBit}
+      </section>
+    `;
+  }
+
+  if (layout === 4) {
+    return `
+      <section class="print-page layout-diary">
+        ${header}
+        <div class="diary-panel">
+          <div class="print-notes">${escapeHtml(entry.notes || "")}</div>
+        </div>
+        ${stopBits}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:20px;">
+          ${photos.slice(0,4).map(src => `<img class="print-photo" src="${src}" style="width:100%;height:190px;">`).join("")}
+        </div>
+        ${peopleBit}
+      </section>
+    `;
+  }
+
+  return `
+    <section class="print-page layout-postcard">
+      ${header}
+      <div class="photo-area">
+        ${p1 ? `<img class="print-photo" src="${p1}" style="width:100%;">` : `<div></div>`}
+        <div class="side-photos">
+          ${[p2,p3].filter(Boolean).map(src => `<img class="print-photo" src="${src}" style="width:100%;">`).join("")}
+        </div>
+      </div>
+      ${stopBits}
+      <div class="print-notes">${escapeHtml(entry.notes || "")}</div>
+      ${peopleBit}
+    </section>
+  `;
+}
+
+function backupData() {
+  const payload = {
+    app: "camino-journal",
+    version: 3,
+    exportedAt: new Date().toISOString(),
+    entries,
+    custom,
+    packing,
+    travel,
+    settings
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = "camino-journal-backup-" + todayISO() + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast("Backup created");
+}
+
+function restoreData(file) {
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data || !Array.isArray(data.entries)) throw new Error("Bad backup");
+
+      entries = data.entries.map(migrateEntry);
+      custom = data.custom || data.customRoutes || {};
+      packing = Array.isArray(data.packing) ? data.packing : Array.isArray(data.packingList) ? data.packingList : packing;
+      travel = Array.isArray(data.travel) ? data.travel : Array.isArray(data.travelLegs) ? data.travelLegs : travel;
+      settings = data.settings || settings;
+
+      persistEntries();
+      persistCustom();
+      persistPacking();
+      persistTravel();
+      persistSettings();
+
+      toast("Restored " + entries.length + " entries");
+      setView("journal");
+    } catch (e) {
+      toast("Couldn't read that backup file.", true);
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+function bindLightbox() {
+  document.querySelectorAll(".light-img").forEach(img => {
+    img.onclick = () => {
+      const box = document.getElementById("lightbox");
+      box.innerHTML = `<img src="${img.src}" alt="">`;
+      box.className = "lightbox";
+    };
+  });
+}
+
+document.getElementById("lightbox").onclick = () => {
+  document.getElementById("lightbox").className = "lightbox hidden";
+  document.getElementById("lightbox").innerHTML = "";
+};
+
+function closeMenu() {
+  document.getElementById("tripMenu").classList.add("hidden");
+}
+
+document.getElementById("tripMenuBtn").onclick = e => {
+  e.stopPropagation();
+  document.getElementById("tripMenu").classList.toggle("hidden");
+};
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".menu-wrap")) closeMenu();
+});
+
+document.querySelectorAll("#tripMenu [data-view]").forEach(btn => {
+  btn.onclick = () => setView(btn.dataset.view);
+});
+
+document.getElementById("backupBtn").onclick = backupData;
+document.getElementById("restoreBtn").onclick = () => document.getElementById("restoreInput").click();
+
+document.getElementById("restoreInput").onchange = e => {
+  if (e.target.files && e.target.files[0]) restoreData(e.target.files[0]);
+  e.target.value = "";
+};
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+  });
+}
+
+render();
 </script>
 </body>
 </html>
