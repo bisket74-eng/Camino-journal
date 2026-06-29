@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="Camino Journal" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <link rel="manifest" href="./manifest.json" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23efe4cf'/%3E%3Ctext x='50' y='66' text-anchor='middle' font-size='58'%3E%F0%9F%90%9A%3C/text%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%20120%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%231f1b16%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M60%2018v15M36%2024l8%2013M84%2024l-8%2013M18%2042l14%208M102%2042l-14%208%22%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%22M60%2030c-13%200-34%2016-43%2045-3%2010%205%2020%2016%2020h54c11%200%2019-10%2016-20-9-29-30-45-43-45Z%22%20fill%3D%22%23e9e1cf%22%20stroke%3D%22%231f1b16%22%20stroke-width%3D%225%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%231f1b16%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M60%2033v59M48%2037l-17%2055M72%2037l17%2055M38%2047%2025%2087M82%2047l13%2040M30%2063h60%22%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%22M60%2044c5%207%2010%209%2016%207-2%206-5%209-11%209%205%208%205%2018-5%2026-10-8-10-18-5-26-6%200-9-3-11-9%206%202%2011%200%2016-7Z%22%20fill%3D%22%23993a30%22%2F%3E%3C%2Fsvg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Courier+Prime:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -100,9 +100,17 @@ button {
 }
 
 .header-mark {
-  font-size: 31px;
   line-height: 1;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.camino-shell-icon {
+  width: 58px;
+  height: 58px;
+  display: block;
   filter: drop-shadow(0 2px 2px rgba(62,47,29,.18));
 }
 
@@ -1339,6 +1347,190 @@ button {
 .print-title {
   max-width: 620px;
 }
+ /* ---- PATCH: phone-friendly pretty pages + book sizes ---- */
+
+.print-shell {
+  max-width: 100%;
+  padding: 12px 8px 50px;
+  overflow-x: hidden;
+}
+
+.print-page {
+  width: min(94vw, 520px);
+  min-height: auto;
+  aspect-ratio: 5 / 7;
+  padding: clamp(22px, 5vw, 42px);
+  margin: 0 auto 22px;
+}
+
+.print-shell.size-5x7 .print-page {
+  width: min(94vw, 500px);
+  aspect-ratio: 5 / 7;
+}
+
+.print-shell.size-8x10 .print-page {
+  width: min(94vw, 640px);
+  aspect-ratio: 4 / 5;
+}
+
+.print-shell.size-phone .print-page {
+  width: min(94vw, 430px);
+  aspect-ratio: 9 / 16;
+}
+
+.print-title {
+  font-size: clamp(31px, 9vw, 48px);
+  line-height: .96;
+  max-width: 78%;
+}
+
+.print-meta {
+  font-size: clamp(11px, 3vw, 13px);
+  line-height: 1.35;
+}
+
+.handwritten-entry {
+  font-family: "Caveat", "Comic Sans MS", cursive;
+  font-size: clamp(24px, 7vw, 32px);
+  line-height: 1.18;
+  color: #3b2d22;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.handwritten-note-card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.56), rgba(255,255,255,.24)),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0),
+      rgba(255,255,255,0) 32px,
+      rgba(47,73,110,.09) 33px
+    );
+  border: 1px solid rgba(185,139,59,.28);
+  box-shadow: 0 8px 20px rgba(62,47,29,.12);
+  padding: clamp(16px, 4vw, 24px);
+  margin: 18px 0;
+  transform: rotate(-.25deg);
+}
+
+.handwritten-note-card.alt-tilt {
+  transform: rotate(.35deg);
+}
+
+.shell-stamp {
+  position: absolute;
+  right: clamp(20px, 6vw, 42px);
+  top: clamp(24px, 6vw, 34px);
+  width: clamp(58px, 16vw, 92px);
+  height: clamp(58px, 16vw, 92px);
+  border: 2px solid rgba(47,73,110,.18);
+  border-radius: 50%;
+  color: rgba(47,73,110,.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(28px, 8vw, 42px);
+  transform: rotate(10deg);
+}
+
+.blank-photo {
+  border: 2px dashed rgba(185,139,59,.35);
+  background:
+    linear-gradient(135deg, rgba(185,139,59,.10), rgba(153,58,48,.06)),
+    rgba(255,255,255,.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Cormorant Garamond", serif;
+  color: rgba(45,36,29,.45);
+  text-align: center;
+  padding: 14px;
+}
+
+.layout-scrapbook .collage {
+  height: clamp(270px, 72vw, 420px);
+}
+
+.layout-scrapbook .polaroid {
+  height: clamp(170px, 43vw, 245px);
+}
+
+.layout-photo .hero-photo,
+.layout-photo .blank-photo.hero-blank {
+  height: clamp(240px, 72vw, 430px);
+}
+
+.layout-photo .mini-row img,
+.layout-photo .mini-row .blank-photo {
+  height: clamp(90px, 26vw, 150px);
+}
+
+.layout-postcard .photo-area {
+  grid-template-columns: 1fr;
+}
+
+.layout-postcard .side-photos {
+  grid-template-columns: 1fr 1fr;
+  display: grid;
+  gap: 12px;
+}
+
+.layout-postcard .photo-area img:first-child,
+.layout-postcard .blank-photo.main-blank {
+  height: clamp(210px, 62vw, 330px);
+}
+
+.layout-postcard .side-photos img,
+.layout-postcard .side-photos .blank-photo {
+  height: clamp(90px, 26vw, 155px);
+}
+
+@media (min-width: 700px) {
+  .layout-postcard .photo-area {
+    grid-template-columns: 1.2fr .8fr;
+  }
+
+  .layout-postcard .side-photos {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  @page {
+    margin: 0;
+  }
+
+  .print-shell.size-5x7 .print-page {
+    width: 5in;
+    height: 7in;
+    padding: .35in;
+  }
+
+  .print-shell.size-8x10 .print-page {
+    width: 8in;
+    height: 10in;
+    padding: .55in;
+  }
+
+  .print-shell.size-phone .print-page {
+    width: 5in;
+    height: 7in;
+    padding: .35in;
+  }
+
+  .print-page {
+    min-height: 0;
+    aspect-ratio: auto;
+    overflow: hidden;
+  }
+}
+  .shell-stamp svg {
+  width: 72%;
+  height: 72%;
+  display: block;
+}
 </style>
 </head>
 
@@ -1346,7 +1538,18 @@ button {
 <div class="airmail-border"></div>
 
 <header class="app-header no-print">
-  <div class="header-mark">🐚</div>
+ <div class="header-mark">
+  <svg class="camino-shell-icon" viewBox="0 0 120 120" aria-hidden="true">
+    <g fill="none" stroke="#1f1b16" stroke-width="5" stroke-linecap="round">
+      <path d="M60 18v15M36 24l8 13M84 24l-8 13M18 42l14 8M102 42l-14 8" />
+    </g>
+    <path d="M60 30c-13 0-34 16-43 45-3 10 5 20 16 20h54c11 0 19-10 16-20-9-29-30-45-43-45Z" fill="#e9e1cf" stroke="#1f1b16" stroke-width="5" stroke-linejoin="round" />
+    <g fill="none" stroke="#1f1b16" stroke-width="3" stroke-linecap="round">
+      <path d="M60 33v59M48 37l-17 55M72 37l17 55M38 47 25 87M82 47l13 40M30 63h60" />
+    </g>
+    <path d="M60 44c5 7 10 9 16 7-2 6-5 9-11 9 5 8 5 18-5 26-10-8-10-18-5-26-6 0-9-3-11-9 6 2 11 0 16-7Z" fill="#993a30" />
+  </svg>
+</div>
   <h1 class="app-title">Camino Journal</h1>
   <div class="app-subtitle">a daily record of the way</div>
 
@@ -1500,6 +1703,7 @@ let state = {
   travelDraft: null,
   printMode: null,
   printLayout: "mixed",
+  printSize: "phone",
   packingOpen: {}
 };
 
@@ -1594,7 +1798,13 @@ function persistPacking() {
 function persistTravel() {
   save(KEYS.travel, travel);
 }
-
+function persistAll() {
+  persistEntries();
+  persistSettings();
+  persistCustom();
+  persistPacking();
+  persistTravel();
+}
 function toast(msg, isError) {
   const el = document.getElementById("toast");
   el.textContent = msg;
@@ -1758,6 +1968,117 @@ function buildPrettyJournalText(entry) {
 
   return lines.join("\n\n");
 }
+function previousTownForEntry(entry) {
+  const earlier = entries
+    .filter(e =>
+      e.id !== entry.id &&
+      e.route === entry.route &&
+      e.date <= entry.date &&
+      e.town
+    )
+    .sort((a, b) => a.date < b.date ? 1 : -1);
+
+  return earlier[0]?.town || "";
+}
+
+function entryJourneyTitle(entry) {
+  const fromTown = previousTownForEntry(entry);
+  const toTown = entry.town || "";
+
+  if (fromTown && toTown) return fromTown + " to " + toTown;
+  if (toTown) return toTown;
+  return "Tonight’s Stop";
+}
+
+function naturalList(items) {
+  items = (items || []).filter(Boolean);
+
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return items[0] + " and " + items[1];
+
+  return items.slice(0, -1).join(", ") + ", and " + items[items.length - 1];
+}
+
+function buildPrettyJournalText(entry) {
+  const fromTown = previousTownForEntry(entry);
+  const toTown = entry.town || "tonight’s stop";
+  const distance = distanceText(entry);
+  const albergue = entry.albergue || "";
+  const people = (entry.people || []).map(p => p.name).filter(Boolean);
+  const stops = entry.stops || [];
+  const feelings = entry.feelings || [];
+  const weather = entry.weather || [];
+  const notes = (entry.notes || "").trim();
+
+  const lines = [];
+
+  lines.push("Dear Camino,");
+
+  let opening = "Today, ";
+
+  if (distance && fromTown && toTown) {
+    opening += "I walked " + distance + " from " + fromTown + " to " + toTown + ".";
+  } else if (distance && toTown) {
+    opening += "I walked " + distance + " and landed in " + toTown + ".";
+  } else if (fromTown && toTown) {
+    opening += "I made my way from " + fromTown + " to " + toTown + ".";
+  } else if (toTown) {
+    opening += "I landed in " + toTown + ".";
+  } else {
+    opening += "I walked another day along the Way.";
+  }
+
+  lines.push(opening);
+
+  if (albergue) {
+    lines.push("Tonight I am staying at " + albergue + ".");
+  }
+
+  if (weather.length) {
+    lines.push("The weather felt like " + naturalList(weather.map(w => w.toLowerCase())) + ".");
+  }
+
+  if (feelings.length) {
+    lines.push("I was feeling " + naturalList(feelings.map(f => f.toLowerCase())) + " as the day unfolded.");
+  }
+
+  stops.forEach(stop => {
+    let stopLine = "";
+
+    if (stop.name && stop.type) {
+      stopLine = "I stopped at " + stop.name + ", a " + stop.type.toLowerCase();
+    } else if (stop.name) {
+      stopLine = "I stopped at " + stop.name;
+    } else if (stop.type) {
+      stopLine = "I stopped at a " + stop.type.toLowerCase();
+    }
+
+    if (stop.area) {
+      stopLine += " near " + stop.area;
+    }
+
+    if (stopLine) {
+      lines.push(stopLine + ".");
+    }
+
+    if (stop.notes) {
+      lines.push(stop.notes.trim());
+    }
+  });
+
+  if (people.length) {
+    lines.push("Along the way, I met " + naturalList(people) + ".");
+  }
+
+  if (notes) {
+    lines.push(notes);
+  }
+
+  lines.push("Buen Camino.");
+
+  return lines.join("\n\n");
+}  
 function hashLayout(value) {
   let h = 0;
   String(value || "").split("").forEach(ch => {
@@ -1882,7 +2203,7 @@ function renderJournal() {
                 <button class="entry-card" data-open="${entry.id}">
                   ${postmark(entry)}
                   <div class="entry-body">
-                    <div class="entry-title">${escapeHtml(entry.town || "Tonight’s Stop")}</div>
+                    <div class="entry-title">${escapeHtml(entryJourneyTitle(entry))}</div>
                     <div class="entry-meta">${escapeHtml(formatDate(entry.date))}</div>
                     ${distanceText(entry) ? `<div class="entry-meta">${escapeHtml(distanceText(entry))} walked</div>` : ""}
                     ${entry.notes ? `<div class="entry-snippet">${escapeHtml(entry.notes.slice(0, 100))}${entry.notes.length > 100 ? "…" : ""}</div>` : ""}
@@ -1922,7 +2243,7 @@ function renderEntry() {
       <button class="back-btn" data-view="journal">‹ Journal</button>
       <div class="card">
         ${postmark(entry, true)}
-        <h2 class="detail-title">${escapeHtml(entry.town || "Tonight’s Stop")}</h2>
+        <h2 class="detail-title">${escapeHtml(entryJourneyTitle(entry))}</h2>
         <div class="detail-meta">${escapeHtml(formatDate(entry.date))}</div>
 
         <div class="tag-row">
@@ -2848,13 +3169,19 @@ function renderPrint(entriesToPrint, mode) {
   entriesToPrint = entriesToPrint.filter(Boolean);
 
   app().innerHTML = `
-    <div class="print-shell">
+    <div class="print-shell size-${escapeHtml(state.printSize || "phone")}">
       <div class="print-toolbar no-print">
         <button class="back-btn" id="backPrintBtn">‹ Journal</button>
         <h2 class="section-title">${mode === "book" ? "Printable Book" : "Printable Page"}</h2>
-        <p class="panel-sub">Choose one layout, or use Mixed Layouts so book pages do not repeat the same look back-to-back.</p>
+        <p class="panel-sub">Preview it for your phone, or choose a book size before printing or saving as PDF.</p>
 
         <div class="choice-row">
+          <select class="select" id="pageSizeSelect" style="max-width:220px;">
+            <option value="phone" ${state.printSize === "phone" ? "selected" : ""}>Phone Preview</option>
+            <option value="5x7" ${state.printSize === "5x7" ? "selected" : ""}>5×7 Book Page</option>
+            <option value="8x10" ${state.printSize === "8x10" ? "selected" : ""}>8×10 Book Page</option>
+          </select>
+
           <select class="select" id="layoutSelect" style="max-width:260px;">
             <option value="mixed" ${state.printLayout === "mixed" ? "selected" : ""}>Mixed layouts</option>
             <option value="0" ${state.printLayout === "0" ? "selected" : ""}>Layout 1 — Postcard</option>
@@ -2863,6 +3190,7 @@ function renderPrint(entriesToPrint, mode) {
             <option value="3" ${state.printLayout === "3" ? "selected" : ""}>Layout 4 — Photo Memory</option>
             <option value="4" ${state.printLayout === "4" ? "selected" : ""}>Layout 5 — Old Paper Diary</option>
           </select>
+
           <button class="btn" id="printBtn">🖨️ Print / Save PDF</button>
         </div>
       </div>
@@ -2879,6 +3207,11 @@ function renderPrint(entriesToPrint, mode) {
     }
   };
 
+  document.getElementById("pageSizeSelect").onchange = e => {
+    state.printSize = e.target.value;
+    renderPrint(entriesToPrint, mode);
+  };
+
   document.getElementById("layoutSelect").onchange = e => {
     state.printLayout = e.target.value;
     renderPrint(entriesToPrint, mode);
@@ -2886,7 +3219,6 @@ function renderPrint(entriesToPrint, mode) {
 
   document.getElementById("printBtn").onclick = () => window.print();
 }
-
 function printablePage(entry, layout) {
   const photos = (entry.photos || []).map(p => p.src);
   const stopPhotos = (entry.stops || []).filter(s => s.photo).map(s => s.photo);
@@ -2897,25 +3229,26 @@ function printablePage(entry, layout) {
   const p3 = allPhotos[2];
   const p4 = allPhotos[3];
 
-  const people = (entry.people || []).map(p => p.name).join(", ");
-  const stops = entry.stops || [];
-  const title = entry.town || "Camino Memory";
+  const title = entryJourneyTitle(entry);
   const journalText = buildPrettyJournalText(entry);
 
   const header = `
-    <div class="shell-stamp">🐚</div>
+    <div class="shell-stamp">
+  <svg viewBox="0 0 120 120" aria-hidden="true">
+    <g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round">
+      <path d="M60 18v15M36 24l8 13M84 24l-8 13M18 42l14 8M102 42l-14 8" />
+    </g>
+    <path d="M60 30c-13 0-34 16-43 45-3 10 5 20 16 20h54c11 0 19-10 16-20-9-29-30-45-43-45Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" />
+    <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+      <path d="M60 33v59M48 37l-17 55M72 37l17 55M38 47 25 87M82 47l13 40M30 63h60" />
+    </g>
+    <path d="M60 44c5 7 10 9 16 7-2 6-5 9-11 9 5 8 5 18-5 26-10-8-10-18-5-26-6 0-9-3-11-9 6 2 11 0 16-7Z" fill="#993a30" />
+  </svg>
+</div>
     <div class="print-kicker">${escapeHtml(entry.route || "Camino Journal")}</div>
     <div class="print-title">${escapeHtml(title)}</div>
     <div class="print-meta">${escapeHtml(formatDate(entry.date))}</div>
   `;
-
-  const stopBits = stops.length
-    ? `<div class="print-stop-list">${stops.slice(0, 6).map(s => `<span class="print-stop">${escapeHtml(s.type)}: ${escapeHtml(s.name || "Stop")}</span>`).join("")}</div>`
-    : "";
-
-  const peopleBit = people
-    ? `<div class="print-people">People met along the way: ${escapeHtml(people)}</div>`
-    : "";
 
   if (layout === 1) {
     return `
@@ -2925,28 +3258,24 @@ function printablePage(entry, layout) {
         <div class="collage">
           ${
             p1
-              ? `<div class="scrap-tape" style="left:12%;top:4px;"></div><div class="polaroid p1"><img src="${p1}"><div class="scrapbook-caption">a Camino moment</div></div>`
+              ? `<div class="scrap-tape" style="left:12%;top:4px;"></div><div class="polaroid p1"><img src="${p1}"></div>`
               : `<div class="blank-photo" style="position:absolute;left:4%;top:10px;width:44%;height:245px;transform:rotate(-5deg);">photo memory</div>`
           }
           ${
             p2
-              ? `<div class="scrap-tape" style="right:15%;top:28px;transform:rotate(7deg);"></div><div class="polaroid p2"><img src="${p2}"><div class="scrapbook-caption">along the way</div></div>`
+              ? `<div class="scrap-tape" style="right:15%;top:28px;transform:rotate(7deg);"></div><div class="polaroid p2"><img src="${p2}"></div>`
               : `<div class="blank-photo" style="position:absolute;right:5%;top:35px;width:44%;height:245px;transform:rotate(4deg);">the road</div>`
           }
           ${
             p3
-              ? `<div class="polaroid p3"><img src="${p3}"><div class="scrapbook-caption">remember this</div></div>`
+              ? `<div class="polaroid p3"><img src="${p3}"></div>`
               : `<div class="blank-photo" style="position:absolute;left:28%;bottom:0;width:44%;height:245px;transform:rotate(1deg);">small moments</div>`
           }
         </div>
 
-        ${stopBits}
-
         <div class="handwritten-note-card">
           <div class="handwritten-entry">${escapeHtml(journalText)}</div>
         </div>
-
-        ${peopleBit}
       </section>
     `;
   }
@@ -2981,13 +3310,9 @@ function printablePage(entry, layout) {
             : `<div class="blank-photo">today’s image</div>`
         }
 
-        ${stopBits}
-
         <div class="handwritten-note-card alt-tilt">
           <div class="handwritten-entry">${escapeHtml(journalText)}</div>
         </div>
-
-        ${peopleBit}
       </section>
     `;
   }
@@ -3000,7 +3325,7 @@ function printablePage(entry, layout) {
         ${
           p1
             ? `<img class="print-photo hero-photo" src="${p1}">`
-            : `<div class="blank-photo" style="height:430px;margin:22px 0;">Camino photo</div>`
+            : `<div class="blank-photo hero-blank">Camino photo</div>`
         }
 
         <div class="handwritten-note-card">
@@ -3014,9 +3339,6 @@ function printablePage(entry, layout) {
               : `<div class="blank-photo">café</div><div class="blank-photo">people</div><div class="blank-photo">view</div>`
           }
         </div>
-
-        ${stopBits}
-        ${peopleBit}
       </section>
     `;
   }
@@ -3030,8 +3352,6 @@ function printablePage(entry, layout) {
           <div class="handwritten-entry">${escapeHtml(journalText)}</div>
         </div>
 
-        ${stopBits}
-
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:24px;">
           ${
             allPhotos.slice(0,4).length
@@ -3039,8 +3359,6 @@ function printablePage(entry, layout) {
               : `<div class="blank-photo">morning</div><div class="blank-photo">midday</div><div class="blank-photo">evening</div><div class="blank-photo">tonight</div>`
           }
         </div>
-
-        ${peopleBit}
       </section>
     `;
   }
@@ -3053,29 +3371,24 @@ function printablePage(entry, layout) {
         ${
           p1
             ? `<img class="print-photo" src="${p1}" style="width:100%;">`
-            : `<div class="blank-photo">postcard image</div>`
+            : `<div class="blank-photo main-blank">postcard image</div>`
         }
 
         <div class="side-photos">
           ${
             [p2, p3].filter(Boolean).length
               ? [p2, p3].filter(Boolean).map(src => `<img class="print-photo" src="${src}" style="width:100%;">`).join("")
-              : `<div class="blank-photo" style="min-height:155px;">stamp</div><div class="blank-photo" style="min-height:155px;">memory</div>`
+              : `<div class="blank-photo">stamp</div><div class="blank-photo">memory</div>`
           }
         </div>
       </div>
 
-      ${stopBits}
-
       <div class="handwritten-note-card alt-tilt">
         <div class="handwritten-entry">${escapeHtml(journalText)}</div>
       </div>
-
-      ${peopleBit}
     </section>
   `;
 }
-
 function backupData() {
   const payload = {
     app: "camino-journal",
@@ -3171,7 +3484,14 @@ document.getElementById("restoreInput").onchange = e => {
   if (e.target.files && e.target.files[0]) restoreData(e.target.files[0]);
   e.target.value = "";
 };
+window.addEventListener("beforeunload", persistAll);
+window.addEventListener("pagehide", persistAll);
 
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    persistAll();
+  }
+});
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./service-worker.js").catch(() => {});
