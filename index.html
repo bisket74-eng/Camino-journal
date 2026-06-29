@@ -1531,6 +1531,61 @@ button {
   height: 72%;
   display: block;
 }
+.entry-form-heading {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(45,36,29,.14);
+}
+
+.entry-form-heading h2 {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 34px;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.entry-form-route {
+  margin-top: 6px;
+  font-family: "Courier Prime", monospace;
+  color: var(--blue);
+  font-size: 13px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+} 
+html,
+body {
+  overflow-y: auto;
+  height: auto;
+}
+
+.print-shell {
+  max-width: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+.print-page {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: auto !important;
+  aspect-ratio: auto !important;
+}
+
+.print-shell.size-phone .print-page,
+.print-shell.size-5x7 .print-page,
+.print-shell.size-8x10 .print-page {
+  aspect-ratio: auto !important;
+  min-height: auto !important;
+}
+
+@media print {
+  .print-page {
+    overflow: hidden !important;
+  }
+}  
 </style>
 </head>
 
@@ -1869,11 +1924,23 @@ function addCustomAlbergue(town, albergue) {
   persistCustom();
 }
 function previousTownForEntry(entry) {
-  const sameRouteEntries = entries
-    .filter(e => e.id !== entry.id && e.route === entry.route && e.date <= entry.date && e.town)
+  const routeTowns = ROUTES[entry.route] || [];
+  const currentIndex = routeTowns.indexOf(entry.town);
+
+  if (currentIndex > 0) {
+    return routeTowns[currentIndex - 1];
+  }
+
+  const earlier = entries
+    .filter(e =>
+      e.id !== entry.id &&
+      e.route === entry.route &&
+      e.date < entry.date &&
+      e.town
+    )
     .sort((a, b) => a.date < b.date ? 1 : -1);
 
-  return sameRouteEntries[0]?.town || "";
+  return earlier[0]?.town || "";
 }
 
 function naturalList(items) {
@@ -2384,8 +2451,15 @@ function renderForm() {
       <button class="back-btn" id="cancelFormBtn">‹ Cancel</button>
 
       <div class="card">
-       <div class="card route-card" style="box-shadow:none;background:rgba(255,255,255,.35);margin-bottom:20px;">
-  <div>
+      <div class="entry-form-heading">
+  <h2>Journal Entry</h2>
+  <div class="entry-form-route">${escapeHtml(d.route || settings.currentRoute || "Camino Route")}</div>
+</div>
+
+<div class="field">
+  <label class="field-label">Date</label>
+  <input class="input" type="date" id="dateInput" value="${escapeHtml(d.date)}">
+</div>
     <div class="route-title" style="font-size:23px;">${escapeHtml(d.route || settings.currentRoute || "Camino Route")}</div>
     <div class="route-meta">Current route. Change it from Trip Tools → Trip Settings.</div>
   </div>
