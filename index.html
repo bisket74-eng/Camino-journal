@@ -1808,7 +1808,10 @@ let state = {
   printLayout: "mixed",
   printSize: "phone",
   packingOpen: {},
-  pendingPersonPhoto: null
+  pendingPersonPhoto: null,
+  pendingPersonName: "",
+  townCustomMode: false,
+  albergueCustomMode: false
 };
 
 function uid() {
@@ -1836,9 +1839,6 @@ function load(key, fallback) {
   }
 }
 
-// Like load(), but tells the caller whether the raw value existed and failed
-// to parse, vs. genuinely never having been set. This matters for anything
-// we must never silently wipe (the journal entries, above all).
 function loadSafe(key, fallback) {
   let raw = null;
   try {
@@ -1886,19 +1886,11 @@ let entriesLoadWarning = null;
   const result = loadSafe(KEYS.entries, null);
 
   if (result.value !== null) {
-    // Normal case: the current-version key loaded and parsed fine.
     entries = result.value;
   } else if (result.hadRawValue && result.parseFailed) {
-    // The key existed but the JSON was corrupted somehow. DO NOT overwrite
-    // it with an empty array — that would permanently destroy the user's
-    // journal. Keep the app usable with an empty in-memory list, but never
-    // persist over the original key until the user takes a recovery action,
-    // and warn them loudly so they know to restore from a backup.
     entries = [];
     entriesLoadWarning = true;
   } else {
-    // The current-version key never existed at all. Try migrating the old
-    // v1 key if present; otherwise this is genuinely a fresh install.
     const old = load(KEYS.oldEntries, []);
     entries = Array.isArray(old) ? old.map(migrateEntry) : [];
     save(KEYS.entries, entries);
@@ -2013,13 +2005,6 @@ function addCustomAlbergue(town, albergue) {
   persistCustom();
 }
 function previousTownForEntry(entry) {
-  const routeTowns = ROUTES[entry.route] || [];
-  const currentIndex = routeTowns.indexOf(entry.town);
-
-  if (currentIndex > 0) {
-    return routeTowns[currentIndex - 1];
-  }
-
   const earlier = entries
     .filter(e =>
       e.id !== entry.id &&
@@ -2029,7 +2014,17 @@ function previousTownForEntry(entry) {
     )
     .sort((a, b) => a.date < b.date ? 1 : -1);
 
-  return earlier[0]?.town || "";
+  if (earlier[0]?.town) {
+    return earlier[0].town;
+  }
+
+  const routeTowns = ROUTES[entry.route] || [];
+  const currentIndex = routeTowns.indexOf(entry.town);
+  if (currentIndex > 0) {
+    return routeTowns[currentIndex - 1];
+  }
+
+  return "";
 }
 
 function entryJourneyTitle(entry) {
@@ -2169,8 +2164,6 @@ window.addEventListener("popstate", e => {
   const s = e.state;
 
   if (!s || !s.caminoView) {
-    // No app state on this history entry (e.g. the very first page load) —
-    // treat it as the journal root rather than leaving the app blank.
     state.view = "journal";
     state.activeId = null;
     state.draft = null;
@@ -2445,6 +2438,9 @@ function startNewEntry() {
   };
   state.stopDraft = null;
   state.pendingPersonPhoto = null;
+  state.pendingPersonName = "";
+  state.townCustomMode = false;
+  state.albergueCustomMode = false;
   setView("new");
 }
 
@@ -2457,6 +2453,9 @@ function editEntry(entry) {
   state.draft.feelings = state.draft.feelings || [];
   state.stopDraft = null;
   state.pendingPersonPhoto = null;
+  state.pendingPersonName = "";
+  state.townCustomMode = false;
+  state.albergueCustomMode = false;
   setView("new");
 }
 
@@ -2465,8 +2464,10 @@ function renderForm() {
   const townOptions = getTownOptions(d.route);
   const albergueOptions = getAlbergueOptions(d.town);
 
-  const townIsCustom = d.town && !townOptions.includes(d.town);
-  const albergueIsCustom = d.albergue && !albergueOptions.includes(d.albergue);
+  if (d.town && !townOptions.includes(d.town)) state.townCustomMode = true;
+  if (d.albergue && !albergueOptions.includes(d.albergue)) state.albergueCustomMode = true;
+  const townIsCustom = state.townCustomMode;
+  const albergueIsCustom = state.albergueCustomMode;
 
   app().innerHTML = `
     <main class="main">
@@ -2486,7 +2487,7 @@ function renderForm() {
         <div class="field">
           <label class="field-label">Tonight’s Stop</label>
           <select class="select" id="townSelect">
-            ${selectOptions(townOptions, d.town, "Choose tonight’s town / city")}
+            ${selectOptions(townOptions, townIsCustom ? "__custom__" : d.town, "Choose tonight’s town / city")}
           </select>
           <input class="input ${townIsCustom ? "" : "hidden"}" id="townCustomInput" style="margin-top:8px;" placeholder="Type tonight’s town / city" value="${townIsCustom ? escapeHtml(d.town) : ""}">
         </div>
@@ -2494,7 +2495,7 @@ function renderForm() {
         <div class="field">
           <label class="field-label">Tonight’s Albergue</label>
           <select class="select" id="albergueSelect">
-            ${selectOptions(albergueOptions, d.albergue, d.town ? "Choose tonight’s albergue / lodging" : "Choose a town first")}
+            ${selectOptions(albergueOptions, albergueIsCustom ? "__custom__" : d.albergue, d.town ? "Choose tonight’s albergue / lodging" : "Choose a town first")}
           </select>
           <input class="input ${albergueIsCustom ? "" : "hidden"}" id="albergueCustomInput" style="margin-top:8px;" placeholder="Type tonight’s albergue / lodging" value="${albergueIsCustom ? escapeHtml(d.albergue) : ""}">
         </div>
@@ -2533,7 +2534,7 @@ function renderForm() {
           <label class="field-label">People I Met</label>
           <div class="person-row">
             <div class="person-input-wrap">
-              <input class="input person-input-with-icon" id="personInput" placeholder="Name, then press Add">
+              <input class="input person-input-with-icon" id="personInput" placeholder="Name, then press Add" value="${escapeHtml(state.pendingPersonName)}">
               <button type="button" class="person-photo-inline-btn" id="personPhotoBtn" title="${state.pendingPersonPhoto ? "Change photo" : "Add a photo"}">
                 ${
                   state.pendingPersonPhoto
@@ -2693,10 +2694,11 @@ function bindForm() {
   document.getElementById("cancelFormBtn").onclick = () => {
     state.draft = null;
     state.pendingPersonPhoto = null;
+    state.pendingPersonName = "";
+    state.townCustomMode = false;
+    state.albergueCustomMode = false;
     history.back();
   };
-
- 
 
   document.getElementById("dateInput").oninput = e => {
     d.date = e.target.value;
@@ -2704,11 +2706,15 @@ function bindForm() {
 
   document.getElementById("townSelect").onchange = e => {
     if (e.target.value === "__custom__") {
+      state.townCustomMode = true;
       d.town = "";
       d.albergue = "";
+      state.albergueCustomMode = false;
     } else {
+      state.townCustomMode = false;
       d.town = e.target.value;
       d.albergue = "";
+      state.albergueCustomMode = false;
     }
     renderForm();
   };
@@ -2722,8 +2728,10 @@ function bindForm() {
 
   document.getElementById("albergueSelect").onchange = e => {
     if (e.target.value === "__custom__") {
+      state.albergueCustomMode = true;
       d.albergue = "";
     } else {
+      state.albergueCustomMode = false;
       d.albergue = e.target.value;
     }
     renderForm();
@@ -2796,6 +2804,9 @@ function bindForm() {
   });
 
   document.getElementById("addPersonBtn").onclick = addPerson;
+  document.getElementById("personInput").oninput = e => {
+    state.pendingPersonName = e.target.value;
+  };
   document.getElementById("personInput").onkeydown = e => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -2857,6 +2868,9 @@ function bindForm() {
     persistEntries();
     state.draft = null;
     state.pendingPersonPhoto = null;
+    state.pendingPersonName = "";
+    state.townCustomMode = false;
+    state.albergueCustomMode = false;
     toast("Saved");
     setView("journal");
   };
@@ -2874,15 +2888,14 @@ function bumpDistance(delta) {
   if (input) input.value = d.distanceValue;
 }
 function addPerson() {
-  const input = document.getElementById("personInput");
-  const name = input.value.trim();
+  const name = (state.pendingPersonName || "").trim();
   if (!name) return;
 
   if (!state.draft.people.some(p => p.name.toLowerCase() === name.toLowerCase())) {
     state.draft.people.push({ id: uid(), name, photo: state.pendingPersonPhoto || null });
   }
 
-  input.value = "";
+  state.pendingPersonName = "";
   state.pendingPersonPhoto = null;
   renderForm();
 }
@@ -3611,7 +3624,7 @@ document.getElementById("storageDebugBtn").onclick = () => {
 
   alert(report);
 };
-  
+
 document.getElementById("restoreInput").onchange = e => {
   if (e.target.files && e.target.files[0]) restoreData(e.target.files[0]);
   e.target.value = "";
@@ -3627,11 +3640,6 @@ document.addEventListener("visibilitychange", () => {
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./service-worker.js").then(reg => {
-      // Ask the browser to check for a newer service-worker.js right away,
-      // instead of waiting for its own (sometimes infrequent) update timer.
-      // This does NOT force a reload — it only makes sure the NEXT normal
-      // load picks up the latest version, so it can never interrupt the
-      // user mid-entry.
       reg.update().catch(() => {});
     }).catch(() => {});
   });
