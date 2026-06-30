@@ -905,9 +905,11 @@ button {
 }
 
 .print-shell {
-  max-width: 980px;
+  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
-  padding: 18px 12px 60px;
+  padding: 14px 8px 50px;
+  overflow-x: hidden;
 }
 
 .print-toolbar {
@@ -917,203 +919,229 @@ button {
   border-radius: 8px;
   padding: 14px;
   margin-bottom: 16px;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
+/* ---- Fixed page geometry ----
+   Each page size is a real, hard-bounded rectangle (overflow: hidden).
+   Content is sized DOWN to fit inside it — it never grows the page.
+   If a day has more photos than fit, extra photos go on a real second
+   page (.print-page--continuation), not an endlessly tall first page. */
 .print-page {
-  width: min(850px, 100%);
-  min-height: 1100px;
-  margin: 0 auto 22px;
+  position: relative;
+  margin: 0 auto 20px;
   background: #fff7e8;
   color: #2d241b;
   box-shadow: 0 8px 25px rgba(0,0,0,.15);
   border: 1px solid rgba(45,36,29,.12);
-  position: relative;
   overflow: hidden;
-  padding: 54px;
-  page-break-after: always;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .print-page::before {
   content: "";
   position: absolute;
-  inset: 18px;
+  inset: 12px;
   border: 1px solid rgba(185,139,59,.28);
   pointer-events: none;
 }
 
+/* Phone Preview: tall card, just for browsing on a screen, not a real print size */
+.print-shell.size-phone .print-page {
+  width: min(92vw, 380px);
+  aspect-ratio: 4.5 / 8;
+  padding: 18px;
+}
+
+/* 5x7 — fixed true aspect ratio of an actual 5x7 sheet */
+.print-shell.size-5x7 .print-page {
+  width: min(92vw, 460px);
+  aspect-ratio: 5 / 7;
+  padding: 22px;
+}
+
+/* 8x10 — fixed true aspect ratio of an actual 8x10 sheet, default size */
+.print-shell.size-8x10 .print-page {
+  width: min(92vw, 560px);
+  aspect-ratio: 8 / 10;
+  padding: 26px;
+}
+
 .print-kicker {
   font-family: "Courier Prime", monospace;
-  font-size: 12px;
-  letter-spacing: 2px;
+  font-size: 10px;
+  letter-spacing: 1.6px;
   text-transform: uppercase;
-  color: var(--blue);
+  color: var(--red);
 }
 
 .print-title {
   font-family: "Cormorant Garamond", serif;
-  font-size: 48px;
-  line-height: .95;
-  margin: 8px 0 10px;
+  font-size: clamp(20px, 5.2vw, 28px);
+  line-height: 1;
+  margin: 4px 0 2px;
+  max-width: 76%;
+  color: #3a2a1d;
 }
 
 .print-meta {
   font-family: "Courier Prime", monospace;
   color: var(--red);
-  font-size: 13px;
-  margin-bottom: 24px;
+  font-size: 10px;
+  margin-bottom: 8px;
 }
 
-.print-notes {
-  font-family: "Libre Baskerville", serif;
-  font-size: 17px;
-  line-height: 1.9;
+.print-page-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.print-journal-text {
+  font-family: "Caveat", "Comic Sans MS", cursive;
+  font-size: clamp(14px, 2.6vw, 18px);
+  line-height: 1.25;
+  color: #3b2d22;
   white-space: pre-wrap;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 19px,
+      rgba(47,73,110,.10) 20px
+    );
+  flex-shrink: 0;
 }
 
-.print-photo {
-  object-fit: cover;
-  border: 8px solid white;
-  box-shadow: 0 6px 14px rgba(45,36,29,.18);
-  background: #ddd;
-}
-
-.layout-postcard .photo-area {
+/* Photo grid: shows AS MANY of the day's photos as will reasonably fit,
+   arranged in a tidy grid rather than a fixed 1-4 photo cap. */
+.print-photo-grid {
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: 1.2fr .8fr;
-  gap: 16px;
-  margin: 20px 0;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 6px;
+  overflow: hidden;
 }
 
-.layout-postcard .photo-area img:first-child {
-  height: 330px;
-}
-
-.layout-postcard .side-photos {
-  display: grid;
-  gap: 16px;
-}
-
-.layout-postcard .side-photos img {
-  height: 155px;
-}
-
-.layout-scrapbook .collage {
-  height: 420px;
-  position: relative;
-  margin: 20px 0;
-}
-
-.polaroid {
-  position: absolute;
-  background: white;
-  padding: 10px 10px 34px;
-  box-shadow: 0 8px 17px rgba(45,36,29,.2);
-  width: 44%;
-  height: 245px;
-}
-
-.polaroid img {
+.print-photo-grid img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid rgba(45,36,29,.15);
+  box-shadow: 0 2px 5px rgba(45,36,29,.12);
 }
 
-.polaroid.p1 {
-  left: 4%;
-  top: 10px;
-  transform: rotate(-5deg);
+.print-photo-grid .blank-photo {
+  font-size: 10px;
+  border-radius: 3px;
 }
 
-.polaroid.p2 {
-  right: 5%;
-  top: 35px;
-  transform: rotate(4deg);
+.shell-stamp {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+  width: clamp(34px, 9vw, 52px);
+  height: clamp(34px, 9vw, 52px);
+  border: 1.5px solid rgba(47,73,110,.22);
+  border-radius: 50%;
+  color: rgba(47,73,110,.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(8deg);
 }
 
-.polaroid.p3 {
-  left: 28%;
-  bottom: 0;
-  transform: rotate(1deg);
+.shell-stamp svg {
+  width: 70%;
+  height: 70%;
+  display: block;
 }
 
-.layout-log .log-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  margin: 22px 0;
+.print-page--continuation .print-photo-grid {
+  flex: 1;
 }
 
-.log-box {
-  border: 1px solid rgba(45,36,29,.18);
-  padding: 14px;
-  background: rgba(255,255,255,.4);
-}
-
-.log-label {
+.print-continued-mark {
   font-family: "Courier Prime", monospace;
-  color: var(--blue);
-  font-size: 12px;
+  font-size: 10px;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  color: var(--muted);
+  margin-bottom: 6px;
 }
 
-.log-value {
+.blank-photo {
+  border: 1.5px dashed rgba(185,139,59,.35);
+  background:
+    linear-gradient(135deg, rgba(185,139,59,.10), rgba(153,58,48,.06)),
+    rgba(255,255,255,.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: "Cormorant Garamond", serif;
-  font-size: 25px;
-  font-weight: 700;
-  margin-top: 4px;
+  color: rgba(45,36,29,.4);
+  text-align: center;
+  border-radius: 3px;
 }
 
-.layout-photo .hero-photo {
-  width: 100%;
-  height: 430px;
-  margin: 22px 0;
-}
-
-.layout-photo .mini-row {
-  display: grid;
-  grid-template-columns: repeat(3,1fr);
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.layout-photo .mini-row img {
-  width: 100%;
-  height: 150px;
+/* Layout variants: each gives the page a slightly different mood via
+   background and tilt, but all share the same fixed-size, tight-spacing
+   structure above — no layout can push content outside the page. */
+.layout-scrapbook {
+  background:
+    radial-gradient(circle at 12% 10%, rgba(255,255,255,.75), transparent 28%),
+    linear-gradient(160deg, #fff9ed, #ead6b5);
 }
 
 .layout-diary {
   background: linear-gradient(180deg, #fff9ef, #f3e6cf);
 }
 
-.diary-panel {
-  border-left: 4px solid var(--red);
-  padding-left: 18px;
-  margin-top: 18px;
+.layout-diary .print-journal-text {
+  font-size: clamp(15px, 2.8vw, 19px);
+}
+
+.layout-postcard .print-page-body,
+.layout-log .print-page-body {
+  flex-direction: column;
+}
+
+.layout-photo .print-photo-grid {
+  grid-template-columns: 1fr 1fr;
 }
 
 .print-stop-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 15px 0;
+  gap: 4px;
+  margin: 4px 0;
 }
 
 .print-stop {
   border: 1px solid rgba(79,104,79,.24);
   background: rgba(79,104,79,.08);
   color: var(--green);
-  padding: 7px 9px;
-  border-radius: 4px;
-  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
   font-weight: 700;
 }
 
 .print-people {
   font-family: "Courier Prime", monospace;
   color: var(--blue);
-  font-size: 12px;
-  margin-top: 16px;
+  font-size: 9px;
+  margin-top: 4px;
 }
 
 @media print {
@@ -1134,417 +1162,6 @@ button {
     margin: 0;
   }
 
-  .print-page {
-    width: 100%;
-    min-height: 100vh;
-    margin: 0;
-    border: none;
-    box-shadow: none;
-  }
-}
-  /* ---- PATCH: cleaner menu backup buttons ---- */
-.menu button#backupMenuBtn,
-.menu button#restoreMenuBtn {
-  font-size: 15px;
-  color: var(--muted);
-  font-weight: 600;
-  background: rgba(255,255,255,.35);
-}
-
-/* ---- PATCH: better distance picker ---- */
-.distance-box {
-  grid-template-columns: minmax(0, 1fr) max-content;
-}
-
-.unit-toggle {
-  width: max-content;
-  justify-self: start;
-}
-
-.distance-input {
-  -moz-appearance: textfield;
-}
-
-.distance-input::-webkit-outer-spin-button,
-.distance-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.spin {
-  user-select: none;
-  touch-action: manipulation;
-}
-
-/* ---- PATCH: person photo button ---- */
-.person-input-wrap {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-}
-
-.person-input-with-icon {
-  padding-right: 46px;
-}
-
-.person-photo-inline-btn {
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: none;
-  background: none;
-  color: var(--green);
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 19px;
-  padding: 0;
-  border-radius: 50%;
-}
-
-.person-photo-inline-btn:active {
-  background: rgba(79,104,79,.12);
-}
-
-.person-photo-inline-btn .person-photo {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.person-tag .person-photo {
-  cursor: pointer;
-}
-
-/* ---- PATCH: prettier print pages ---- */
-.print-page {
-  background:
-    radial-gradient(circle at 18% 12%, rgba(255,255,255,.75), transparent 26%),
-    linear-gradient(180deg, #fffaf0, #f3e4c9);
-}
-
-.print-title {
-  color: #3a2a1d;
-  text-shadow: 0 1px 0 rgba(255,255,255,.7);
-}
-
-.print-kicker {
-  color: var(--red);
-}
-
-.scrap-tape {
-  position: absolute;
-  width: 84px;
-  height: 24px;
-  background: rgba(235,213,157,.72);
-  box-shadow: 0 1px 4px rgba(0,0,0,.12);
-  transform: rotate(-8deg);
-  z-index: 3;
-}
-
-.memory-card {
-  border: 1px solid rgba(185,139,59,.34);
-  background: rgba(255,255,255,.45);
-  padding: 16px;
-  margin: 18px 0;
-}
-
-.memory-card-title {
-  font-family: "Courier Prime", monospace;
-  color: var(--blue);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  font-size: 12px;
-  margin-bottom: 8px;
-}
-
-.blank-photo {
-  min-height: 220px;
-  border: 2px dashed rgba(185,139,59,.35);
-  background:
-    linear-gradient(135deg, rgba(185,139,59,.10), rgba(153,58,48,.06)),
-    rgba(255,255,255,.38);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: "Cormorant Garamond", serif;
-  font-size: 30px;
-  color: rgba(45,36,29,.45);
-  text-align: center;
-  padding: 20px;
-}
-
-.layout-scrapbook .print-title {
-  transform: rotate(-1deg);
-}
-
-.layout-diary .print-title {
-  font-size: 54px;
-  color: var(--red);
-}
-
-.layout-postcard .print-page-mark,
-.layout-log .print-page-mark,
-.layout-photo .print-page-mark,
-.layout-diary .print-page-mark,
-.layout-scrapbook .print-page-mark {
-  position: absolute;
-  right: 42px;
-  top: 36px;
-  font-family: "Courier Prime", monospace;
-  color: rgba(47,73,110,.25);
-  border: 2px solid rgba(47,73,110,.18);
-  border-radius: 50%;
-  width: 92px;
-  height: 92px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: rotate(10deg);
-  font-size: 13px;
-  text-align: center;
-  line-height: 1.15;
-}
-  /* ---- PATCH: handwritten scrapbook journal text ---- */
-.handwritten-entry {
-  font-family: "Caveat", "Comic Sans MS", cursive;
-  font-size: 29px;
-  line-height: 1.32;
-  color: #3b2d22;
-  white-space: pre-wrap;
-}
-
-.handwritten-entry strong {
-  font-weight: 700;
-  color: var(--red);
-}
-
-.handwritten-note-card {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.52), rgba(255,255,255,.22)),
-    repeating-linear-gradient(
-      to bottom,
-      rgba(255,255,255,0),
-      rgba(255,255,255,0) 35px,
-      rgba(47,73,110,.10) 36px
-    );
-  border: 1px solid rgba(185,139,59,.28);
-  box-shadow: 0 8px 20px rgba(62,47,29,.12);
-  padding: 22px 24px;
-  margin: 20px 0;
-  transform: rotate(-.35deg);
-}
-
-.handwritten-note-card.alt-tilt {
-  transform: rotate(.45deg);
-}
-
-.scrapbook-caption {
-  font-family: "Caveat", cursive;
-  font-size: 25px;
-  color: var(--blue);
-  margin-top: 8px;
-  text-align: center;
-}
-
-.shell-stamp {
-  position: absolute;
-  right: 42px;
-  top: 34px;
-  width: 92px;
-  height: 92px;
-  border: 2px solid rgba(47,73,110,.18);
-  border-radius: 50%;
-  color: rgba(47,73,110,.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 42px;
-  transform: rotate(10deg);
-}
-
-.layout-scrapbook {
-  background:
-    radial-gradient(circle at 12% 10%, rgba(255,255,255,.75), transparent 28%),
-    radial-gradient(circle at 82% 82%, rgba(153,58,48,.08), transparent 34%),
-    linear-gradient(160deg, #fff9ed, #ead6b5);
-}
-
-.layout-diary .handwritten-entry {
-  font-size: 31px;
-}
-
-.layout-postcard .handwritten-note-card {
-  transform: rotate(.25deg);
-}
-
-.layout-log .handwritten-note-card {
-  transform: rotate(-.2deg);
-}
-
-.layout-photo .handwritten-note-card {
-  transform: rotate(.35deg);
-}
-
-.print-title {
-  max-width: 620px;
-}
- /* ---- PATCH: phone-friendly pretty pages + book sizes ---- */
-
-.print-shell {
-  max-width: 100%;
-  padding: 12px 8px 50px;
-  overflow-x: hidden;
-}
-
-.print-page {
-  width: min(94vw, 520px);
-  min-height: auto;
-  aspect-ratio: 5 / 7;
-  padding: clamp(22px, 5vw, 42px);
-  margin: 0 auto 22px;
-}
-
-.print-shell.size-5x7 .print-page {
-  width: min(94vw, 500px);
-  aspect-ratio: 5 / 7;
-}
-
-.print-shell.size-8x10 .print-page {
-  width: min(94vw, 640px);
-  aspect-ratio: 4 / 5;
-}
-
-.print-shell.size-phone .print-page {
-  width: min(94vw, 430px);
-  aspect-ratio: 9 / 16;
-}
-
-.print-title {
-  font-size: clamp(31px, 9vw, 48px);
-  line-height: .96;
-  max-width: 78%;
-}
-
-.print-meta {
-  font-size: clamp(11px, 3vw, 13px);
-  line-height: 1.35;
-}
-
-.handwritten-entry {
-  font-family: "Caveat", "Comic Sans MS", cursive;
-  font-size: clamp(24px, 7vw, 32px);
-  line-height: 1.18;
-  color: #3b2d22;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-  word-break: normal;
-}
-
-.handwritten-note-card {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.56), rgba(255,255,255,.24)),
-    repeating-linear-gradient(
-      to bottom,
-      rgba(255,255,255,0),
-      rgba(255,255,255,0) 32px,
-      rgba(47,73,110,.09) 33px
-    );
-  border: 1px solid rgba(185,139,59,.28);
-  box-shadow: 0 8px 20px rgba(62,47,29,.12);
-  padding: clamp(16px, 4vw, 24px);
-  margin: 18px 0;
-  transform: rotate(-.25deg);
-}
-
-.handwritten-note-card.alt-tilt {
-  transform: rotate(.35deg);
-}
-
-.shell-stamp {
-  position: absolute;
-  right: clamp(20px, 6vw, 42px);
-  top: clamp(24px, 6vw, 34px);
-  width: clamp(58px, 16vw, 92px);
-  height: clamp(58px, 16vw, 92px);
-  border: 2px solid rgba(47,73,110,.18);
-  border-radius: 50%;
-  color: rgba(47,73,110,.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(28px, 8vw, 42px);
-  transform: rotate(10deg);
-}
-
-.blank-photo {
-  border: 2px dashed rgba(185,139,59,.35);
-  background:
-    linear-gradient(135deg, rgba(185,139,59,.10), rgba(153,58,48,.06)),
-    rgba(255,255,255,.38);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: "Cormorant Garamond", serif;
-  color: rgba(45,36,29,.45);
-  text-align: center;
-  padding: 14px;
-}
-
-.layout-scrapbook .collage {
-  height: clamp(270px, 72vw, 420px);
-}
-
-.layout-scrapbook .polaroid {
-  height: clamp(170px, 43vw, 245px);
-}
-
-.layout-photo .hero-photo,
-.layout-photo .blank-photo.hero-blank {
-  height: clamp(240px, 72vw, 430px);
-}
-
-.layout-photo .mini-row img,
-.layout-photo .mini-row .blank-photo {
-  height: clamp(90px, 26vw, 150px);
-}
-
-.layout-postcard .photo-area {
-  grid-template-columns: 1fr;
-}
-
-.layout-postcard .side-photos {
-  grid-template-columns: 1fr 1fr;
-  display: grid;
-  gap: 12px;
-}
-
-.layout-postcard .photo-area img:first-child,
-.layout-postcard .blank-photo.main-blank {
-  height: clamp(210px, 62vw, 330px);
-}
-
-.layout-postcard .side-photos img,
-.layout-postcard .side-photos .blank-photo {
-  height: clamp(90px, 26vw, 155px);
-}
-
-@media (min-width: 700px) {
-  .layout-postcard .photo-area {
-    grid-template-columns: 1.2fr .8fr;
-  }
-
-  .layout-postcard .side-photos {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media print {
   @page {
     margin: 0;
   }
@@ -1552,87 +1169,35 @@ button {
   .print-shell.size-5x7 .print-page {
     width: 5in;
     height: 7in;
-    padding: .35in;
+    aspect-ratio: auto;
+    padding: .3in;
   }
 
   .print-shell.size-8x10 .print-page {
     width: 8in;
     height: 10in;
-    padding: .55in;
+    aspect-ratio: auto;
+    padding: .4in;
   }
 
   .print-shell.size-phone .print-page {
     width: 5in;
-    height: 7in;
-    padding: .35in;
-  }
-
-  .print-page {
-    min-height: 0;
+    height: 8.8in;
     aspect-ratio: auto;
-    overflow: hidden;
+    padding: .3in;
   }
-}
-  .shell-stamp svg {
-  width: 72%;
-  height: 72%;
-  display: block;
-}
-.entry-form-heading {
-  text-align: center;
-  margin-bottom: 20px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(45,36,29,.14);
-}
 
-.entry-form-heading h2 {
-  margin: 0;
-  font-family: "Cormorant Garamond", serif;
-  font-size: 34px;
-  line-height: 1;
-  color: var(--ink);
-}
-
-.entry-form-route {
-  margin-top: 6px;
-  font-family: "Courier Prime", monospace;
-  color: var(--blue);
-  font-size: 15px;
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
-} 
-html,
-body {
-  overflow-y: auto;
-  height: auto;
-}
-
-.print-shell {
-  max-width: 100%;
-  width: 100%;
-  overflow-x: hidden;
-  overflow-y: visible;
-}
-
-.print-page {
-  overflow: visible !important;
-  height: auto !important;
-  min-height: auto !important;
-  aspect-ratio: auto !important;
-}
-
-.print-shell.size-phone .print-page,
-.print-shell.size-5x7 .print-page,
-.print-shell.size-8x10 .print-page {
-  aspect-ratio: auto !important;
-  min-height: auto !important;
-}
-
-@media print {
   .print-page {
-    overflow: hidden !important;
+    margin: 0;
+    box-shadow: none;
+    border: none;
+    page-break-after: always;
   }
-}  
+
+  .print-page:last-child {
+    page-break-after: auto;
+  }
+}
 </style>
 </head>
 
@@ -1806,7 +1371,7 @@ let state = {
   travelDraft: null,
   printMode: null,
   printLayout: "mixed",
-  printSize: "phone",
+  printSize: "8x10",
   packingOpen: {},
   pendingPersonPhoto: null,
   pendingPersonName: "",
@@ -3271,18 +2836,27 @@ function layoutFor(entriesToPrint, i, entry) {
 function renderPrint(entriesToPrint, mode) {
   entriesToPrint = entriesToPrint.filter(Boolean);
 
+  // Each entry can produce more than one physical page (a main page plus
+  // continuation pages for any photos that don't fit), so we flatten the
+  // whole book down to one flat list of pages before rendering.
+  const allPages = [];
+  entriesToPrint.forEach((entry, i) => {
+    const pages = printablePages(entry, layoutFor(entriesToPrint, i, entry));
+    pages.forEach(p => allPages.push(p));
+  });
+
   app().innerHTML = `
-    <div class="print-shell size-${escapeHtml(state.printSize || "phone")}">
+    <div class="print-shell size-${escapeHtml(state.printSize || "8x10")}">
       <div class="print-toolbar no-print">
         <button class="back-btn" id="backPrintBtn">‹ Journal</button>
         <h2 class="section-title">${mode === "book" ? "Printable Book" : "Printable Page"}</h2>
-        <p class="panel-sub">Preview it for your phone, or choose a book size before printing or saving as PDF.</p>
+        <p class="panel-sub">8×10 and 5×7 are real book page sizes — everything fits on one page, with extra photos continuing onto a second page just like turning a page in a book. Phone Preview is just for a quick look on your screen.</p>
 
         <div class="choice-row">
           <select class="select" id="pageSizeSelect" style="max-width:220px;">
-            <option value="phone" ${state.printSize === "phone" ? "selected" : ""}>Phone Preview</option>
-            <option value="5x7" ${state.printSize === "5x7" ? "selected" : ""}>5×7 Book Page</option>
             <option value="8x10" ${state.printSize === "8x10" ? "selected" : ""}>8×10 Book Page</option>
+            <option value="5x7" ${state.printSize === "5x7" ? "selected" : ""}>5×7 Book Page</option>
+            <option value="phone" ${state.printSize === "phone" ? "selected" : ""}>Phone Preview</option>
           </select>
 
           <select class="select" id="layoutSelect" style="max-width:260px;">
@@ -3298,7 +2872,7 @@ function renderPrint(entriesToPrint, mode) {
         </div>
       </div>
 
-      ${entriesToPrint.map((entry, i) => printablePage(entry, layoutFor(entriesToPrint, i, entry))).join("")}
+      ${allPages.join("")}
     </div>
   `;
 
@@ -3318,175 +2892,86 @@ function renderPrint(entriesToPrint, mode) {
 
   document.getElementById("printBtn").onclick = () => window.print();
 }
-function printablePage(entry, layout) {
-  const photos = (entry.photos || []).map(p => p.src);
-  const stopPhotos = (entry.stops || []).filter(s => s.photo).map(s => s.photo);
-  const allPhotos = [...photos, ...stopPhotos];
 
-  const p1 = allPhotos[0];
-  const p2 = allPhotos[1];
-  const p3 = allPhotos[2];
-  const p4 = allPhotos[3];
-
-  const title = entryJourneyTitle(entry);
-  const journalText = buildPrettyJournalText(entry);
-
-  const header = `
+function pageHeader(entry, title) {
+  return `
     <div class="shell-stamp">
-  <svg viewBox="0 0 120 120" aria-hidden="true">
-    <g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round">
-      <path d="M60 18v15M36 24l8 13M84 24l-8 13M18 42l14 8M102 42l-14 8" />
-    </g>
-    <path d="M60 30c-13 0-34 16-43 45-3 10 5 20 16 20h54c11 0 19-10 16-20-9-29-30-45-43-45Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" />
-    <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
-      <path d="M60 33v59M48 37l-17 55M72 37l17 55M38 47 25 87M82 47l13 40M30 63h60" />
-    </g>
-    <path d="M60 44c5 7 10 9 16 7-2 6-5 9-11 9 5 8 5 18-5 26-10-8-10-18-5-26-6 0-9-3-11-9 6 2 11 0 16-7Z" fill="#993a30" />
-  </svg>
-</div>
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round">
+          <path d="M60 18v15M36 24l8 13M84 24l-8 13M18 42l14 8M102 42l-14 8" />
+        </g>
+        <path d="M60 30c-13 0-34 16-43 45-3 10 5 20 16 20h54c11 0 19-10 16-20-9-29-30-45-43-45Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" />
+        <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+          <path d="M60 33v59M48 37l-17 55M72 37l17 55M38 47 25 87M82 47l13 40M30 63h60" />
+        </g>
+        <path d="M60 44c5 7 10 9 16 7-2 6-5 9-11 9 5 8 5 18-5 26-10-8-10-18-5-26-6 0-9-3-11-9 6 2 11 0 16-7Z" fill="#993a30" />
+      </svg>
+    </div>
     <div class="print-kicker">${escapeHtml(entry.route || "Camino Journal")}</div>
     <div class="print-title">${escapeHtml(title)}</div>
     <div class="print-meta">${escapeHtml(formatDate(entry.date))}</div>
   `;
+}
 
-  if (layout === 1) {
-    return `
-      <section class="print-page layout-scrapbook">
-        ${header}
+// How many photos can comfortably sit on the main page alongside the
+// journal text, before the rest spill onto continuation pages. This is a
+// reasonable density for a grid — not a hard "only show 1-3 photos" cap
+// like before; ALL of the day's photos are eventually shown, just split
+// across as many pages as needed.
+const MAIN_PAGE_PHOTO_CAP = 6;
+const CONTINUATION_PAGE_PHOTO_CAP = 9;
 
-        <div class="collage">
-          ${
-            p1
-              ? `<div class="scrap-tape" style="left:12%;top:4px;"></div><div class="polaroid p1"><img src="${p1}"></div>`
-              : `<div class="blank-photo" style="position:absolute;left:4%;top:10px;width:44%;height:245px;transform:rotate(-5deg);">photo memory</div>`
-          }
-          ${
-            p2
-              ? `<div class="scrap-tape" style="right:15%;top:28px;transform:rotate(7deg);"></div><div class="polaroid p2"><img src="${p2}"></div>`
-              : `<div class="blank-photo" style="position:absolute;right:5%;top:35px;width:44%;height:245px;transform:rotate(4deg);">the road</div>`
-          }
-          ${
-            p3
-              ? `<div class="polaroid p3"><img src="${p3}"></div>`
-              : `<div class="blank-photo" style="position:absolute;left:28%;bottom:0;width:44%;height:245px;transform:rotate(1deg);">small moments</div>`
-          }
-        </div>
+function printablePages(entry, layout) {
+  const photos = (entry.photos || []).map(p => p.src);
+  const stopPhotos = (entry.stops || []).filter(s => s.photo).map(s => s.photo);
+  const allPhotos = [...photos, ...stopPhotos];
 
-        <div class="handwritten-note-card">
-          <div class="handwritten-entry">${escapeHtml(journalText)}</div>
-        </div>
-      </section>
-    `;
-  }
+  const title = entryJourneyTitle(entry);
+  const journalText = buildPrettyJournalText(entry);
+  const layoutClass = ["layout-postcard", "layout-scrapbook", "layout-log", "layout-photo", "layout-diary"][layout] || "layout-postcard";
 
-  if (layout === 2) {
-    return `
-      <section class="print-page layout-log">
-        ${header}
+  const mainPhotos = allPhotos.slice(0, MAIN_PAGE_PHOTO_CAP);
+  const overflowPhotos = allPhotos.slice(MAIN_PAGE_PHOTO_CAP);
 
-        <div class="log-grid">
-          <div class="log-box">
-            <div class="log-label">From</div>
-            <div class="log-value">${escapeHtml(previousTownForEntry(entry) || "—")}</div>
-          </div>
-          <div class="log-box">
-            <div class="log-label">To</div>
-            <div class="log-value">${escapeHtml(entry.town || "—")}</div>
-          </div>
-          <div class="log-box">
-            <div class="log-label">Distance</div>
-            <div class="log-value">${escapeHtml(distanceText(entry) || "—")}</div>
-          </div>
-          <div class="log-box">
-            <div class="log-label">Tonight</div>
-            <div class="log-value">${escapeHtml(entry.albergue || "—")}</div>
-          </div>
-        </div>
+  const photoGridHtml = (photoList, minCount) => {
+    const cells = [...photoList];
+    while (cells.length < minCount) cells.push(null);
+    return cells.map(src =>
+      src
+        ? `<img src="${src}" alt="">`
+        : `<div class="blank-photo">camino memory</div>`
+    ).join("");
+  };
 
+  const mainPage = `
+    <section class="print-page ${layoutClass}">
+      ${pageHeader(entry, title)}
+      <div class="print-page-body">
+        <div class="print-journal-text">${escapeHtml(journalText)}</div>
         ${
-          p1
-            ? `<img class="print-photo" src="${p1}" style="width:100%;height:275px;">`
-            : `<div class="blank-photo">today’s image</div>`
+          mainPhotos.length
+            ? `<div class="print-photo-grid">${photoGridHtml(mainPhotos, 0)}</div>`
+            : `<div class="print-photo-grid">${photoGridHtml([], 2)}</div>`
         }
-
-        <div class="handwritten-note-card alt-tilt">
-          <div class="handwritten-entry">${escapeHtml(journalText)}</div>
-        </div>
-      </section>
-    `;
-  }
-
-  if (layout === 3) {
-    return `
-      <section class="print-page layout-photo">
-        ${header}
-
-        ${
-          p1
-            ? `<img class="print-photo hero-photo" src="${p1}">`
-            : `<div class="blank-photo hero-blank">Camino photo</div>`
-        }
-
-        <div class="handwritten-note-card">
-          <div class="handwritten-entry">${escapeHtml(journalText)}</div>
-        </div>
-
-        <div class="mini-row">
-          ${
-            [p2, p3, p4].filter(Boolean).length
-              ? [p2, p3, p4].filter(Boolean).map(src => `<img class="print-photo" src="${src}">`).join("")
-              : `<div class="blank-photo">café</div><div class="blank-photo">people</div><div class="blank-photo">view</div>`
-          }
-        </div>
-      </section>
-    `;
-  }
-
-  if (layout === 4) {
-    return `
-      <section class="print-page layout-diary">
-        ${header}
-
-        <div class="diary-panel">
-          <div class="handwritten-entry">${escapeHtml(journalText)}</div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:24px;">
-          ${
-            allPhotos.slice(0,4).length
-              ? allPhotos.slice(0,4).map(src => `<img class="print-photo" src="${src}" style="width:100%;height:190px;">`).join("")
-              : `<div class="blank-photo">morning</div><div class="blank-photo">midday</div><div class="blank-photo">evening</div><div class="blank-photo">tonight</div>`
-          }
-        </div>
-      </section>
-    `;
-  }
-
-  return `
-    <section class="print-page layout-postcard">
-      ${header}
-
-      <div class="photo-area">
-        ${
-          p1
-            ? `<img class="print-photo" src="${p1}" style="width:100%;">`
-            : `<div class="blank-photo main-blank">postcard image</div>`
-        }
-
-        <div class="side-photos">
-          ${
-            [p2, p3].filter(Boolean).length
-              ? [p2, p3].filter(Boolean).map(src => `<img class="print-photo" src="${src}" style="width:100%;">`).join("")
-              : `<div class="blank-photo">stamp</div><div class="blank-photo">memory</div>`
-          }
-        </div>
-      </div>
-
-      <div class="handwritten-note-card alt-tilt">
-        <div class="handwritten-entry">${escapeHtml(journalText)}</div>
       </div>
     </section>
   `;
+
+  const continuationPages = [];
+  for (let i = 0; i < overflowPhotos.length; i += CONTINUATION_PAGE_PHOTO_CAP) {
+    const chunk = overflowPhotos.slice(i, i + CONTINUATION_PAGE_PHOTO_CAP);
+    continuationPages.push(`
+      <section class="print-page ${layoutClass} print-page--continuation">
+        ${pageHeader(entry, title)}
+        <div class="print-page-body">
+          <div class="print-continued-mark">continued — more from this day</div>
+          <div class="print-photo-grid">${photoGridHtml(chunk, 0)}</div>
+        </div>
+      </section>
+    `);
+  }
+
+  return [mainPage, ...continuationPages];
 }
 function backupData() {
   const payload = {
