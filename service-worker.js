@@ -1,76 +1,86 @@
-const CACHE_NAME = "camino-journal-cache-v2";
+/* Camino Journal Service Worker */
 
-const APP_SHELL = [
+const CACHE_NAME = "camino-journal-v4";
+
+const CORE_FILES = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", event => {
+  self.skipWaiting();
+
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(CORE_FILES).catch(() => {
+        return Promise.resolve();
+      });
+    })
   );
 });
 
 self.addEventListener("activate", event => {
   event.waitUntil(
-    caches
-      .keys()
-      .then(keys =>
-        Promise.all(
-          keys.map(key => (key !== CACHE_NAME ? caches.delete(key) : null))
-        )
-      )
-      .then(() => self.clients.claim())
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+      );
+    }).then(() => self.clients.claim())
   );
 });
 
-// IMPORTANT: this app's whole job is to be the source of truth for the
-// user's journal, which lives in localStorage on whatever copy of the page
-// is currently running. If this service worker ever serves a STALE copy of
-// index.html, the page's code can disagree with itself about where data is
-// stored, and make it look like entries vanished even though nothing was
-// actually deleted. To prevent that, navigation requests (the page itself)
-// always try the network FIRST, and only fall back to the cached copy if
-// the network is genuinely unavailable (e.g. offline). Other static assets
-// (fonts, icons, etc.) can still use cache-first for speed, since being
-// stale there is harmless.
 self.addEventListener("fetch", event => {
-  if (event.request.method !== "GET") return;
+  const request = event.request;
 
-  const isNavigation =
-    event.request.mode === "navigate" ||
-    (event.request.method === "GET" &&
-      event.request.headers.get("accept")?.includes("text/html"));
+  if (request.method !== "GET") return;
 
-  if (isNavigation) {
+  const url = new URL(request.url);
+
+  // Always try fresh index/html first, so GitHub updates show up faster.
+  if (
+    request.mode === "navigate" ||
+    url.pathname.endsWith("/") ||
+    url.pathname.endsWith("/index.html")
+  ) {
     event.respondWith(
-      fetch(event.request)
+      fetch(request)
         .then(response => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy)).catch(() => {});
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put("./index.html", copy);
+          });
           return response;
         })
-        .catch(() => caches.match(event.request).then(cached => cached || caches.match("./index.html")))
+        .catch(() => {
+          return caches.match("./index.html").then(cached => {
+            return cached || caches.match("./");
+          });
+        })
     );
     return;
   }
 
+  // App files/icons: use cache, but update in background when possible.
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      return (
-        cached ||
-        fetch(event.request)
-          .then(response => {
+    caches.match(request).then(cached => {
+      const fetchPromise = fetch(request)
+        .then(response => {
+          if (response && response.status === 200) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy)).catch(() => {});
-            return response;
-          })
-          .catch(() => caches.match("./index.html"))
-      );
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, copy);
+            });
+          }
+          return response;
+        })
+        .catch(() => cached);
+
+      return cached || fetchPromise;
     })
   );
 });
