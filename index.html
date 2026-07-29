@@ -1852,6 +1852,108 @@ body {
   }
 }
 
+
+
+/* ---- PATCH: pretty page icon + centered title ---- */
+.print-kicker,
+.print-title,
+.print-meta {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.print-title {
+  max-width: 76%;
+}
+
+.shell-stamp {
+  right: clamp(18px, 5vw, 40px) !important;
+  top: clamp(18px, 5vw, 34px) !important;
+  width: clamp(76px, 19vw, 112px) !important;
+  height: clamp(76px, 19vw, 112px) !important;
+  border: none !important;
+  background: transparent !important;
+  color: inherit !important;
+  transform: rotate(6deg) !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.shell-stamp img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  border-radius: 50%;
+  filter: drop-shadow(0 3px 4px rgba(62,47,29,.20));
+}
+
+@media print {
+  .print-kicker,
+  .print-title,
+  .print-meta {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .print-title {
+    max-width: 6.1in !important;
+  }
+
+  .shell-stamp {
+    right: .36in !important;
+    top: .28in !important;
+    width: .98in !important;
+    height: .98in !important;
+    border: none !important;
+    background: transparent !important;
+    transform: rotate(6deg) !important;
+  }
+
+  .print-shell.size-8x10 .shell-stamp {
+    width: .9in !important;
+    height: .9in !important;
+    right: .32in !important;
+    top: .26in !important;
+  }
+
+  .print-shell.size-5x7 .shell-stamp {
+    width: .66in !important;
+    height: .66in !important;
+    right: .22in !important;
+    top: .18in !important;
+  }
+
+  .print-shell.size-5x7 .print-title {
+    max-width: 3.7in !important;
+  }
+}
+
+
+
+/* ---- PATCH: clearer travel reservation forms ---- */
+.travel-kind-note {
+  border: 1px solid rgba(47,73,110,.16);
+  background: rgba(47,73,110,.06);
+  color: var(--blue);
+  border-radius: 7px;
+  padding: 11px 12px;
+  margin: -7px 0 18px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.travel-kind-note b {
+  display: block;
+  font-family: "Courier Prime", monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
 </style>
 </head>
 
@@ -3304,6 +3406,185 @@ function renderPacking() {
   });
 }
 
+
+function travelFormCopy(type) {
+  const forms = {
+    "Airline Reservation": {
+      screenTitle: "Airline Reservation",
+      helperTitle: "Flight fields",
+      helper: "Use this for airline tickets, flight confirmations, boarding details, and flight screenshots.",
+      titleLabel: "Airline / Trip Name",
+      titlePlaceholder: "Delta to Paris, Alaska to Seattle...",
+      carrierLabel: "Airline",
+      carrierPlaceholder: "Airline name",
+      numberLabel: "Flight # / Confirmation #",
+      numberPlaceholder: "Flight number, record locator, booking code...",
+      fromLabel: "From Airport",
+      fromPlaceholder: "PDX, SEA, Paris CDG...",
+      toLabel: "To Airport",
+      toPlaceholder: "Destination airport",
+      departureLabel: "Departure Date / Time",
+      arrivalLabel: "Arrival Date / Time",
+      photoLabel: "Flight Screenshots / Photos",
+      notesPlaceholder: "Seat, terminal, baggage, layover notes..."
+    },
+    "Train Reservation": {
+      screenTitle: "Train Reservation",
+      helperTitle: "Train fields",
+      helper: "Use this for train tickets, Renfe reservations, station screenshots, and platform notes.",
+      titleLabel: "Train / Route Name",
+      titlePlaceholder: "Madrid to Pamplona, Paris to Bayonne...",
+      carrierLabel: "Train Company",
+      carrierPlaceholder: "Renfe, SNCF, Euskotren...",
+      numberLabel: "Train # / Ticket #",
+      numberPlaceholder: "Train number, ticket number, booking code...",
+      fromLabel: "From Station / City",
+      fromPlaceholder: "Station or city",
+      toLabel: "To Station / City",
+      toPlaceholder: "Station or city",
+      departureLabel: "Departure Date / Time",
+      arrivalLabel: "Arrival Date / Time",
+      photoLabel: "Train Screenshots / Photos",
+      notesPlaceholder: "Platform, carriage, seat, transfer notes..."
+    },
+    "Hotel Reservation": {
+      screenTitle: "Hotel Reservation",
+      helperTitle: "Hotel fields",
+      helper: "Use this for hotels, guesthouses, Booking.com confirmations, and check-in screenshots.",
+      titleLabel: "Hotel Name",
+      titlePlaceholder: "Hotel name",
+      carrierLabel: "Booking Site / Hotel Contact",
+      carrierPlaceholder: "Booking.com, Expedia, hotel phone/email...",
+      numberLabel: "Confirmation #",
+      numberPlaceholder: "Booking confirmation number",
+      fromLabel: "City / Location",
+      fromPlaceholder: "City or neighborhood",
+      toLabel: "Address / Area",
+      toPlaceholder: "Address, area, or nearby landmark",
+      departureLabel: "Check-in Date / Time",
+      arrivalLabel: "Check-out Date / Time",
+      photoLabel: "Hotel Screenshots / Photos",
+      notesPlaceholder: "Door code, breakfast, payment, check-in instructions..."
+    },
+    "Albergue Reservation": {
+      screenTitle: "Albergue Reservation",
+      helperTitle: "Albergue fields",
+      helper: "Use this for Camino albergues, pilgrim hostels, WhatsApp confirmations, and check-in screenshots.",
+      titleLabel: "Albergue Name",
+      titlePlaceholder: "Albergue name",
+      carrierLabel: "Booking Method / Contact",
+      carrierPlaceholder: "WhatsApp, email, phone, website...",
+      numberLabel: "Confirmation #",
+      numberPlaceholder: "Optional reservation number",
+      fromLabel: "Town",
+      fromPlaceholder: "Town where you are staying",
+      toLabel: "Address / Area",
+      toPlaceholder: "Address, street, or nearby landmark",
+      departureLabel: "Check-in Date / Time",
+      arrivalLabel: "Check-out Date / Time",
+      photoLabel: "Albergue Screenshots / Photos",
+      notesPlaceholder: "Bed info, curfew, laundry, dinner, payment notes..."
+    },
+    "Bus Reservation": {
+      screenTitle: "Bus Reservation",
+      helperTitle: "Bus fields",
+      helper: "Use this for bus tickets, shuttle reservations, and bus station screenshots.",
+      titleLabel: "Bus / Route Name",
+      titlePlaceholder: "Bus to Pamplona, shuttle to SJPdP...",
+      carrierLabel: "Bus Company",
+      carrierPlaceholder: "ALSA, FlixBus, local shuttle...",
+      numberLabel: "Bus # / Ticket #",
+      numberPlaceholder: "Ticket number, booking code...",
+      fromLabel: "From Stop / City",
+      fromPlaceholder: "Bus stop, station, or city",
+      toLabel: "To Stop / City",
+      toPlaceholder: "Bus stop, station, or city",
+      departureLabel: "Departure Date / Time",
+      arrivalLabel: "Arrival Date / Time",
+      photoLabel: "Bus Screenshots / Photos",
+      notesPlaceholder: "Station, gate, luggage, pickup notes..."
+    },
+    "Taxi / Rideshare": {
+      screenTitle: "Taxi / Rideshare",
+      helperTitle: "Pickup fields",
+      helper: "Use this for taxi pickups, rideshares, shuttles, and driver screenshots.",
+      titleLabel: "Ride Name",
+      titlePlaceholder: "Taxi to hotel, shuttle to trailhead...",
+      carrierLabel: "Company / Driver",
+      carrierPlaceholder: "Taxi company, driver name, Uber, Bolt...",
+      numberLabel: "Booking # / Phone",
+      numberPlaceholder: "Booking code or phone number",
+      fromLabel: "Pickup Location",
+      fromPlaceholder: "Where they pick you up",
+      toLabel: "Drop-off Location",
+      toPlaceholder: "Where you are going",
+      departureLabel: "Pickup Date / Time",
+      arrivalLabel: "Drop-off Date / Time",
+      photoLabel: "Ride Screenshots / Photos",
+      notesPlaceholder: "Driver, meeting point, price, luggage notes..."
+    },
+    "Ferry": {
+      screenTitle: "Ferry Reservation",
+      helperTitle: "Ferry fields",
+      helper: "Use this for ferry tickets, port information, and ferry confirmation screenshots.",
+      titleLabel: "Ferry / Route Name",
+      titlePlaceholder: "Ferry route name",
+      carrierLabel: "Ferry Company",
+      carrierPlaceholder: "Company name",
+      numberLabel: "Ticket # / Confirmation #",
+      numberPlaceholder: "Ticket or booking code",
+      fromLabel: "From Port",
+      fromPlaceholder: "Departure port",
+      toLabel: "To Port",
+      toPlaceholder: "Arrival port",
+      departureLabel: "Departure Date / Time",
+      arrivalLabel: "Arrival Date / Time",
+      photoLabel: "Ferry Screenshots / Photos",
+      notesPlaceholder: "Dock, boarding time, luggage notes..."
+    },
+    "Screenshot Only": {
+      screenTitle: "Screenshot Only",
+      helperTitle: "Screenshot fields",
+      helper: "Use this when you do not want to type much. Add a title and upload the screenshot.",
+      titleLabel: "What Is This?",
+      titlePlaceholder: "Flight screenshot, hotel confirmation, train ticket...",
+      carrierLabel: "Source / App",
+      carrierPlaceholder: "Email, Booking.com, airline app, website...",
+      numberLabel: "Confirmation #",
+      numberPlaceholder: "Optional",
+      fromLabel: "Location / City",
+      fromPlaceholder: "Optional",
+      toLabel: "Extra Detail",
+      toPlaceholder: "Optional",
+      departureLabel: "Date / Time",
+      arrivalLabel: "End Date / Time",
+      photoLabel: "Screenshots / Photos",
+      notesPlaceholder: "Anything you want to remember..."
+    },
+    "Other": {
+      screenTitle: "Other Reservation",
+      helperTitle: "General fields",
+      helper: "Use this for anything else you want to keep with your Camino travel plans.",
+      titleLabel: "Title / Place",
+      titlePlaceholder: "Reservation name",
+      carrierLabel: "Company / Contact",
+      carrierPlaceholder: "Company, person, website, or contact info",
+      numberLabel: "Confirmation #",
+      numberPlaceholder: "Optional",
+      fromLabel: "From / Location",
+      fromPlaceholder: "Optional",
+      toLabel: "To / Destination",
+      toPlaceholder: "Optional",
+      departureLabel: "Start Date / Time",
+      arrivalLabel: "End Date / Time",
+      photoLabel: "Screenshots / Photos",
+      notesPlaceholder: "Anything you want to remember..."
+    }
+  };
+
+  return forms[type] || forms["Other"];
+}
+
 function renderTravel() {
   if (state.travelDraft) {
     renderTravelForm();
@@ -3413,66 +3694,73 @@ function renderTravelForm() {
   const t = state.travelDraft;
   if (!t.photos) t.photos = [];
 
+  const copy = travelFormCopy(t.type || "Other");
+
   app().innerHTML = `
     <main class="main">
       <button class="back-btn" id="backTravelBtn">‹ Travel & Reservations</button>
 
       <div class="card">
-        <h2 class="section-title">Reservation Details</h2>
+        <h2 class="section-title">${escapeHtml(copy.screenTitle)}</h2>
         <p class="panel-sub">
-          Fill in what you want, or just tap Add Photo and keep the confirmation screenshots here.
+          Choose the reservation type first. The fields below change to match airline, hotel, albergue, train, bus, taxi, ferry, or screenshot-only plans.
         </p>
 
         <div class="field">
-          <label class="field-label">Type</label>
+          <label class="field-label">Reservation Type</label>
           <select class="select" id="travelType">
             ${TRAVEL_TYPES.map(type => `<option ${type === t.type ? "selected" : ""}>${escapeHtml(type)}</option>`).join("")}
           </select>
         </div>
 
+        <div class="travel-kind-note">
+          <b>${escapeHtml(copy.helperTitle)}</b>
+          <span>${escapeHtml(copy.helper)}</span>
+        </div>
+
         <div class="field">
-          <label class="field-label">Title / Place</label>
-          <input class="input" id="travelTitle" placeholder="Hotel name, airline, train, reservation name..." value="${escapeHtml(t.title || "")}">
+          <label class="field-label">${escapeHtml(copy.titleLabel)}</label>
+          <input class="input" id="travelTitle" placeholder="${escapeHtml(copy.titlePlaceholder)}" value="${escapeHtml(t.title || "")}">
         </div>
 
         <div class="field-row">
           <div class="field">
-            <label class="field-label">Company / Carrier</label>
-            <input class="input" id="travelCarrier" placeholder="Airline, hotel, train company, booking site..." value="${escapeHtml(t.carrier || "")}">
+            <label class="field-label">${escapeHtml(copy.carrierLabel)}</label>
+            <input class="input" id="travelCarrier" placeholder="${escapeHtml(copy.carrierPlaceholder)}" value="${escapeHtml(t.carrier || "")}">
           </div>
 
           <div class="field">
-            <label class="field-label">Confirmation #</label>
-            <input class="input" id="travelNumber" placeholder="Booking number, ticket number..." value="${escapeHtml(t.number || "")}">
-          </div>
-        </div>
-
-        <div class="field-row">
-          <div class="field">
-            <label class="field-label">From / Location</label>
-            <input class="input" id="travelFrom" placeholder="Airport, city, hotel city..." value="${escapeHtml(t.from || "")}">
-          </div>
-
-          <div class="field">
-            <label class="field-label">To / Destination</label>
-            <input class="input" id="travelTo" placeholder="Destination, next city..." value="${escapeHtml(t.to || "")}">
+            <label class="field-label">${escapeHtml(copy.numberLabel)}</label>
+            <input class="input" id="travelNumber" placeholder="${escapeHtml(copy.numberPlaceholder)}" value="${escapeHtml(t.number || "")}">
           </div>
         </div>
 
         <div class="field-row">
           <div class="field">
-            <label class="field-label">Departure / Check-in</label>
+            <label class="field-label">${escapeHtml(copy.fromLabel)}</label>
+            <input class="input" id="travelFrom" placeholder="${escapeHtml(copy.fromPlaceholder)}" value="${escapeHtml(t.from || "")}">
+          </div>
+
+          <div class="field">
+            <label class="field-label">${escapeHtml(copy.toLabel)}</label>
+            <input class="input" id="travelTo" placeholder="${escapeHtml(copy.toPlaceholder)}" value="${escapeHtml(t.to || "")}">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">${escapeHtml(copy.departureLabel)}</label>
             <input class="input" type="datetime-local" id="travelDeparture" value="${escapeHtml(t.departure || "")}">
           </div>
 
           <div class="field">
-            <label class="field-label">Arrival / Check-out</label>
+            <label class="field-label">${escapeHtml(copy.arrivalLabel)}</label>
             <input class="input" type="datetime-local" id="travelArrival" value="${escapeHtml(t.arrival || "")}">
           </div>
         </div>
 
         <div class="field">
-          <label class="field-label">Reservation Screenshots / Photos</label>
+          <label class="field-label">${escapeHtml(copy.photoLabel)}</label>
 
           <div class="photo-grid">
             ${t.photos.map(p => `
@@ -3493,7 +3781,7 @@ function renderTravelForm() {
 
         <div class="field">
           <label class="field-label">Notes</label>
-          <textarea class="textarea" id="travelNotes" style="min-height:100px;" placeholder="Anything you want to remember...">${escapeHtml(t.notes || "")}</textarea>
+          <textarea class="textarea" id="travelNotes" style="min-height:100px;" placeholder="${escapeHtml(copy.notesPlaceholder)}">${escapeHtml(t.notes || "")}</textarea>
         </div>
 
         <div class="action-row">
@@ -3503,6 +3791,11 @@ function renderTravelForm() {
       </div>
     </main>
   `;
+
+  document.getElementById("travelType").onchange = () => {
+    syncTravelDraftFromInputs();
+    renderTravelForm();
+  };
 
   document.getElementById("backTravelBtn").onclick = () => {
     syncTravelDraftFromInputs();
@@ -3654,17 +3947,8 @@ function printablePage(entry, layout) {
 
   const header = `
     <div class="shell-stamp">
-  <svg viewBox="0 0 120 120" aria-hidden="true">
-    <g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round">
-      <path d="M60 18v15M36 24l8 13M84 24l-8 13M18 42l14 8M102 42l-14 8" />
-    </g>
-    <path d="M60 30c-13 0-34 16-43 45-3 10 5 20 16 20h54c11 0 19-10 16-20-9-29-30-45-43-45Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" />
-    <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
-      <path d="M60 33v59M48 37l-17 55M72 37l17 55M38 47 25 87M82 47l13 40M30 63h60" />
-    </g>
-    <path d="M60 44c5 7 10 9 16 7-2 6-5 9-11 9 5 8 5 18-5 26-10-8-10-18-5-26-6 0-9-3-11-9 6 2 11 0 16-7Z" fill="#993a30" />
-  </svg>
-</div>
+      <img src="./icon-192.png" alt="Camino shell icon">
+    </div>
     <div class="print-kicker">${escapeHtml(entry.route || "Camino Journal")}</div>
     <div class="print-title">${escapeHtml(title)}</div>
     <div class="print-meta">${escapeHtml(formatDate(entry.date))}</div>
