@@ -1,6 +1,6 @@
 {
   "name": "Camino Journal",
-  "short_name": "My Camino",
+  "short_name": "Camino Journal",
   "description": "A daily journal, travel log, scrapbook, and printable book.",
   "start_url": "./index.html",
   "scope": "./",
