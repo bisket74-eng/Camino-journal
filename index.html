@@ -1881,6 +1881,193 @@ body {
   object-fit: contain;
   border-radius: 50%;
 }
+
+
+/* ---- FINAL FIX: true Letter-page preview (not phone shaped) ---- */
+.print-shell.size-letter .print-page {
+  width: min(94vw, 760px) !important;
+  height: min(calc(94vw * 11 / 8.5), calc(760px * 11 / 8.5)) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: 8.5 / 11 !important;
+  overflow: hidden !important;
+  padding: clamp(18px, 4.6vw, 44px) !important;
+}
+
+.print-shell.size-8x10 .print-page {
+  width: min(94vw, 690px) !important;
+  height: min(calc(94vw * 10 / 8), calc(690px * 10 / 8)) !important;
+  min-height: 0 !important;
+  aspect-ratio: 4 / 5 !important;
+  overflow: hidden !important;
+}
+
+.print-shell.size-5x7 .print-page {
+  width: min(94vw, 500px) !important;
+  height: min(calc(94vw * 7 / 5), calc(500px * 7 / 5)) !important;
+  min-height: 0 !important;
+  aspect-ratio: 5 / 7 !important;
+  overflow: hidden !important;
+}
+
+.print-shell.size-phone .print-page {
+  width: min(94vw, 430px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+  overflow: visible !important;
+}
+
+/* Letter preview gets a paper layout, not the stacked phone layout */
+.print-shell.size-letter .print-kicker {
+  font-size: clamp(9px, 2.3vw, 12px) !important;
+  letter-spacing: clamp(1.4px, .55vw, 2px) !important;
+}
+
+.print-shell.size-letter .print-title {
+  font-size: clamp(31px, 8vw, 48px) !important;
+  line-height: .92 !important;
+  max-width: calc(100% - clamp(62px, 16vw, 108px)) !important;
+  margin: 5px 0 7px !important;
+  text-align: left !important;
+}
+
+.print-shell.size-letter .print-meta {
+  font-size: clamp(10px, 2.6vw, 13px) !important;
+  margin-bottom: clamp(8px, 2.5vw, 18px) !important;
+}
+
+.print-shell.size-letter .shell-stamp {
+  right: clamp(14px, 4vw, 38px) !important;
+  top: clamp(13px, 4vw, 34px) !important;
+  width: clamp(58px, 15vw, 92px) !important;
+  height: clamp(58px, 15vw, 92px) !important;
+  border: none !important;
+  background: transparent !important;
+  transform: rotate(6deg) !important;
+  z-index: 4 !important;
+}
+
+.print-shell.size-letter .blank-photo {
+  min-height: 0 !important;
+  font-size: clamp(22px, 6vw, 34px) !important;
+}
+
+.print-shell.size-letter .layout-postcard .photo-area {
+  display: grid !important;
+  grid-template-columns: 1.25fr .75fr !important;
+  gap: clamp(8px, 2.4vw, 16px) !important;
+  margin: clamp(8px, 2.4vw, 18px) 0 !important;
+}
+
+.print-shell.size-letter .layout-postcard .photo-area img:first-child,
+.print-shell.size-letter .layout-postcard .blank-photo.main-blank {
+  height: clamp(135px, 32vw, 300px) !important;
+}
+
+.print-shell.size-letter .layout-postcard .side-photos {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: clamp(8px, 2.2vw, 14px) !important;
+}
+
+.print-shell.size-letter .layout-postcard .side-photos img,
+.print-shell.size-letter .layout-postcard .side-photos .blank-photo {
+  height: clamp(62px, 15vw, 140px) !important;
+}
+
+.print-shell.size-letter .handwritten-note-card {
+  margin: clamp(8px, 2.4vw, 18px) 0 0 !important;
+  padding: clamp(12px, 3vw, 21px) !important;
+  max-height: clamp(145px, 39vw, 300px) !important;
+  overflow: hidden !important;
+}
+
+.print-shell.size-letter .handwritten-entry {
+  font-size: clamp(20px, 5.2vw, 29px) !important;
+  line-height: 1.12 !important;
+}
+
+.print-shell.size-letter .layout-scrapbook .collage {
+  height: clamp(150px, 38vw, 330px) !important;
+  margin: clamp(8px, 2.4vw, 18px) 0 !important;
+}
+
+.print-shell.size-letter .layout-scrapbook .polaroid {
+  height: clamp(105px, 26vw, 220px) !important;
+}
+
+.print-shell.size-letter .layout-log .log-grid {
+  gap: clamp(7px, 2vw, 14px) !important;
+  margin: clamp(8px, 2.4vw, 18px) 0 !important;
+}
+
+.print-shell.size-letter .log-box {
+  padding: clamp(7px, 2vw, 14px) !important;
+}
+
+.print-shell.size-letter .log-value {
+  font-size: clamp(16px, 4.4vw, 25px) !important;
+}
+
+.print-shell.size-letter .layout-log > img.print-photo,
+.print-shell.size-letter .layout-log > .blank-photo {
+  height: clamp(120px, 30vw, 260px) !important;
+}
+
+.print-shell.size-letter .layout-photo .hero-photo,
+.print-shell.size-letter .layout-photo .blank-photo.hero-blank {
+  height: clamp(135px, 35vw, 310px) !important;
+  margin: clamp(8px, 2.4vw, 18px) 0 !important;
+}
+
+.print-shell.size-letter .layout-photo .mini-row {
+  gap: clamp(7px, 2vw, 12px) !important;
+  margin-top: clamp(8px, 2vw, 14px) !important;
+}
+
+.print-shell.size-letter .layout-photo .mini-row img,
+.print-shell.size-letter .layout-photo .mini-row .blank-photo {
+  height: clamp(55px, 14vw, 115px) !important;
+}
+
+.print-shell.size-letter .layout-diary .diary-panel {
+  max-height: clamp(250px, 70vw, 610px) !important;
+  overflow: hidden !important;
+}
+
+@media print {
+  .print-shell.size-letter .print-page,
+  .print-shell.size-phone .print-page {
+    width: 8.5in !important;
+    height: 11in !important;
+    min-height: 0 !important;
+    aspect-ratio: auto !important;
+    padding: .5in !important;
+    overflow: hidden !important;
+  }
+
+  .print-shell.size-letter .layout-postcard .photo-area {
+    grid-template-columns: 1.3fr .8fr !important;
+    gap: .16in !important;
+    margin: .16in 0 !important;
+  }
+
+  .print-shell.size-letter .layout-postcard .photo-area img:first-child,
+  .print-shell.size-letter .layout-postcard .blank-photo.main-blank {
+    height: 3.05in !important;
+  }
+
+  .print-shell.size-letter .layout-postcard .side-photos img,
+  .print-shell.size-letter .layout-postcard .side-photos .blank-photo {
+    height: 1.44in !important;
+  }
+
+  .print-shell.size-letter .handwritten-note-card {
+    max-height: 3.05in !important;
+  }
+}
+
 </style>
 </head>
 
