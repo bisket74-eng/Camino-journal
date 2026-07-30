@@ -2350,7 +2350,73 @@ body {
     height: 1.08in !important;
   }
 }
+/* ---- PATCH: reorder Travel & Reservations cards ---- */
+.travel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
+.travel-card-row {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.travel-reorder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-right: 1px solid rgba(45,36,29,.12);
+  padding-right: 8px;
+}
+
+.travel-handle {
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.travel-move-btn {
+  border: 1px solid rgba(47,73,110,.22);
+  background: rgba(251,245,232,.85);
+  color: var(--blue);
+  width: 30px;
+  height: 26px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.travel-move-btn:disabled {
+  opacity: .28;
+  cursor: default;
+}
+
+.travel-open-area {
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  width: 100%;
+}
+
+.travel-open-area .travel-title {
+  font-weight: 700;
+}
+
+.travel-open-area .travel-meta {
+  color: var(--blue);
+  font-size: 13px;
+  margin-top: 4px;
+}
 </style>
 </head>
 
