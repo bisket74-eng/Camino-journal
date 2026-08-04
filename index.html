@@ -2796,6 +2796,184 @@ body {
   }
 }
 
+
+/* ---- FINAL PATCH: balanced scrapbook pretty pages + adaptive journal text ---- */
+.print-shell.size-letter .print-page {
+  padding: clamp(14px, 3vw, 24px) !important;
+}
+
+.print-shell.size-letter .shell-stamp {
+  width: clamp(38px, 8.4vw, 54px) !important;
+  height: clamp(38px, 8.4vw, 54px) !important;
+}
+
+.print-shell.size-letter .print-kicker {
+  font-size: clamp(6.5px, 1.45vw, 8.5px) !important;
+  letter-spacing: 1px !important;
+  margin-right: 58px !important;
+}
+
+.print-shell.size-letter .print-title {
+  font-size: clamp(18px, 4.7vw, 27px) !important;
+  line-height: .92 !important;
+  margin: 1px 58px 2px 0 !important;
+  max-width: calc(100% - 62px) !important;
+}
+
+.print-shell.size-letter .print-meta {
+  font-size: clamp(6.5px, 1.45vw, 8.3px) !important;
+  margin-bottom: clamp(4px, 1vw, 7px) !important;
+}
+
+.pretty-body {
+  height: calc(100% - clamp(60px, 14vw, 88px));
+  min-height: 0;
+}
+
+.print-shell.size-letter .pretty-photo-slot {
+  border: clamp(3px, .75vw, 5px) solid white !important;
+  box-shadow: 0 4px 10px rgba(62,47,29,.11) !important;
+}
+
+.print-shell.size-letter .blank-photo.pretty-photo-slot {
+  font-size: clamp(10px, 2.4vw, 16px) !important;
+}
+
+.pretty-note-card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.52), rgba(255,255,255,.18)),
+    repeating-linear-gradient(to bottom, transparent, transparent 19px, rgba(47,73,110,.08) 20px) !important;
+}
+
+.print-shell.size-letter .pretty-note-card {
+  padding: clamp(6px, 1.4vw, 10px) clamp(8px, 1.7vw, 12px) !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  transform: none !important;
+}
+
+.print-shell.size-letter .handwritten-entry.note-short { font-size: clamp(10px, 2.1vw, 13px) !important; line-height: 1.12 !important; }
+.print-shell.size-letter .handwritten-entry.note-medium { font-size: clamp(8.5px, 1.85vw, 11.2px) !important; line-height: 1.08 !important; }
+.print-shell.size-letter .handwritten-entry.note-long { font-size: clamp(7px, 1.55vw, 9.4px) !important; line-height: 1.05 !important; }
+.print-shell.size-letter .handwritten-entry.note-extra { font-size: clamp(5.9px, 1.35vw, 8px) !important; line-height: 1.02 !important; }
+
+/* Layout 1: large portrait with three smaller portraits and note along bottom */
+.layout-postcard-new .pretty-body {
+  display: grid;
+  grid-template-columns: 1.35fr .72fr;
+  grid-template-rows: 1fr 1fr 1fr .72fr;
+  gap: clamp(5px, 1.2vw, 9px);
+}
+.layout-postcard-new .photo-main { grid-row: 1 / 4; }
+.layout-postcard-new .photo-side-1 { grid-column: 2; grid-row: 1; }
+.layout-postcard-new .photo-side-2 { grid-column: 2; grid-row: 2; }
+.layout-postcard-new .photo-side-3 { grid-column: 2; grid-row: 3; }
+.layout-postcard-new .pretty-note-card { grid-column: 1 / 3; grid-row: 4; }
+
+/* Layout 2: crisscross scrapbook, pictures in four corners, note centered */
+.layout-crisscross .pretty-body {
+  display: grid;
+  grid-template-columns: 1fr .9fr 1fr;
+  grid-template-rows: 1fr .88fr 1fr;
+  gap: clamp(5px, 1.2vw, 9px);
+}
+.layout-crisscross .photo-tl { grid-column: 1; grid-row: 1; }
+.layout-crisscross .photo-tr { grid-column: 3; grid-row: 1; }
+.layout-crisscross .photo-bl { grid-column: 1; grid-row: 3; }
+.layout-crisscross .photo-br { grid-column: 3; grid-row: 3; }
+.layout-crisscross .pretty-note-card { grid-column: 2; grid-row: 1 / 4; align-self: stretch; }
+
+/* Layout 3: pilgrim log, details top, two photo columns, note center */
+.layout-logbook-new .pretty-body {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: clamp(5px, 1.2vw, 8px);
+}
+.layout-logbook-new .compact-log-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(4px, 1vw, 6px);
+  margin: 0 !important;
+}
+.layout-logbook-new .log-box { padding: clamp(3px, .8vw, 6px) !important; }
+.layout-logbook-new .log-label { font-size: clamp(4.8px, 1.05vw, 6.5px) !important; letter-spacing: .4px !important; }
+.layout-logbook-new .log-value { font-size: clamp(7px, 1.55vw, 10px) !important; line-height: 1 !important; }
+.layout-logbook-new .logbook-body {
+  display: grid;
+  grid-template-columns: .8fr 1fr .8fr;
+  gap: clamp(5px, 1.2vw, 9px);
+  min-height: 0;
+}
+.layout-logbook-new .logbook-photo-column {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: clamp(5px, 1.2vw, 9px);
+}
+.layout-logbook-new .pretty-note-card { height: 100%; }
+
+/* Layout 4: photo strip around writing, four portraits across top */
+.layout-four-top .pretty-body {
+  display: grid;
+  grid-template-rows: .92fr 1.18fr .58fr;
+  gap: clamp(5px, 1.2vw, 9px);
+}
+.layout-four-top .top-photo-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(5px, 1.2vw, 9px);
+}
+.layout-four-top .pretty-note-card { min-height: 0; }
+.layout-four-top .bottom-memory-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(5px, 1.2vw, 9px);
+}
+
+/* Layout 5: diary card on left, portrait stack on right and bottom */
+.layout-diary-new .pretty-body {
+  display: grid;
+  grid-template-columns: 1.06fr .78fr;
+  grid-template-rows: 1fr 1fr .8fr;
+  gap: clamp(5px, 1.2vw, 9px);
+}
+.layout-diary-new .pretty-note-card {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  border-left: 3px solid var(--red) !important;
+}
+.layout-diary-new .photo-r1 { grid-column: 2; grid-row: 1; }
+.layout-diary-new .photo-r2 { grid-column: 2; grid-row: 2; }
+.layout-diary-new .bottom-photo-row {
+  grid-column: 1 / 3;
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(5px, 1.2vw, 9px);
+}
+
+.layout-postcard-new .pretty-photo-slot,
+.layout-crisscross .pretty-photo-slot,
+.layout-logbook-new .pretty-photo-slot,
+.layout-four-top .pretty-photo-slot,
+.layout-diary-new .pretty-photo-slot {
+  height: 100% !important;
+  aspect-ratio: auto !important;
+}
+
+@media print {
+  .print-shell.size-letter .print-page { padding: .22in !important; }
+  .print-shell.size-letter .shell-stamp { width: .50in !important; height: .50in !important; right: .18in !important; top: .16in !important; }
+  .print-shell.size-letter .print-kicker { font-size: 5.8pt !important; letter-spacing: .8pt !important; margin-right: .58in !important; }
+  .print-shell.size-letter .print-title { font-size: 16pt !important; max-width: 6.95in !important; margin: .01in .6in .02in 0 !important; }
+  .print-shell.size-letter .print-meta { font-size: 5.8pt !important; margin-bottom: .05in !important; }
+  .pretty-body { height: calc(100% - .62in) !important; }
+  .print-shell.size-letter .handwritten-entry.note-short { font-size: 8.1pt !important; }
+  .print-shell.size-letter .handwritten-entry.note-medium { font-size: 7.0pt !important; }
+  .print-shell.size-letter .handwritten-entry.note-long { font-size: 5.9pt !important; }
+  .print-shell.size-letter .handwritten-entry.note-extra { font-size: 5.0pt !important; }
+  .print-shell.size-letter .pretty-note-card { padding: .055in .07in !important; }
+}
+
 </style>
 </head>
 
@@ -3369,7 +3547,7 @@ function postmark(entry, big) {
     <div class="postmark ${big ? "detail-postmark" : ""}">
       <svg viewBox="0 0 140 140">
         <defs>
-          <path id="${id}" d="M 70,70 m -57,0 a 57,57 0 1,1 114,0 a 57,57 0 1,1 -114,0"></path>
+          <path id="${id}" d="M 70,70 m -53,0 a 53,53 0 1,1 106,0 a 53,53 0 1,1 -106,0"></path>
         </defs>
         <circle cx="70" cy="70" r="65" class="pm-ring"></circle>
         <circle cx="70" cy="70" r="47" class="pm-inner"></circle>
@@ -4885,6 +5063,16 @@ function printablePage(entry, layout) {
   const title = entryJourneyTitle(entry);
   const journalText = buildPrettyJournalText(entry);
 
+  function noteSizeClass(text) {
+    const length = (text || "").length;
+    const lines = (text || "").split("\n").length;
+
+    if (length > 900 || lines > 18) return "note-extra";
+    if (length > 600 || lines > 13) return "note-long";
+    if (length > 360 || lines > 8) return "note-medium";
+    return "note-short";
+  }
+
   const header = `
     <div class="shell-stamp">
       <img src="./icon-192.png" alt="Camino shell icon">
@@ -4903,46 +5091,50 @@ function printablePage(entry, layout) {
     return `<div class="blank-photo pretty-photo-slot ${extraClass}">${escapeHtml(label || "photo")}</div>`;
   }
 
-  const note = `
-    <div class="handwritten-note-card pretty-note-card">
-      <div class="handwritten-entry">${escapeHtml(journalText)}</div>
-    </div>
-  `;
+  function note(extraClass = "") {
+    return `
+      <div class="handwritten-note-card pretty-note-card ${extraClass}">
+        <div class="handwritten-entry ${noteSizeClass(journalText)}">${escapeHtml(journalText)}</div>
+      </div>
+    `;
+  }
 
   if (layout === 1) {
     return `
-      <section class="print-page layout-portraits">
+      <section class="print-page layout-crisscross">
         ${header}
-        <div class="portrait-four-grid">
-          ${photoSlot(0, "morning")}
-          ${photoSlot(1, "café")}
-          ${photoSlot(2, "the way")}
-          ${photoSlot(3, "tonight")}
+        <div class="pretty-body">
+          ${photoSlot(0, "morning", "photo-tl")}
+          ${photoSlot(1, "café", "photo-tr")}
+          ${note()}
+          ${photoSlot(2, "the way", "photo-bl")}
+          ${photoSlot(3, "tonight", "photo-br")}
         </div>
-        ${note}
       </section>
     `;
   }
 
   if (layout === 2) {
     return `
-      <section class="print-page layout-logbook">
+      <section class="print-page layout-logbook-new">
         ${header}
-        <div class="compact-log-grid">
-          <div class="log-box"><div class="log-label">From</div><div class="log-value">${escapeHtml(previousTownForEntry(entry) || "—")}</div></div>
-          <div class="log-box"><div class="log-label">To</div><div class="log-value">${escapeHtml(entry.town || "—")}</div></div>
-          <div class="log-box"><div class="log-label">Distance</div><div class="log-value">${escapeHtml(distanceText(entry) || "—")}</div></div>
-          <div class="log-box"><div class="log-label">Tonight</div><div class="log-value">${escapeHtml(entry.albergue || "—")}</div></div>
-        </div>
-        <div class="logbook-body">
-          <div class="logbook-photo-column">
-            ${photoSlot(0, "photo")}
-            ${photoSlot(1, "photo")}
+        <div class="pretty-body">
+          <div class="compact-log-grid">
+            <div class="log-box"><div class="log-label">From</div><div class="log-value">${escapeHtml(previousTownForEntry(entry) || "—")}</div></div>
+            <div class="log-box"><div class="log-label">To</div><div class="log-value">${escapeHtml(entry.town || "—")}</div></div>
+            <div class="log-box"><div class="log-label">Distance</div><div class="log-value">${escapeHtml(distanceText(entry) || "—")}</div></div>
+            <div class="log-box"><div class="log-label">Tonight</div><div class="log-value">${escapeHtml(entry.albergue || "—")}</div></div>
           </div>
-          <div class="logbook-note-column">${note}</div>
-          <div class="logbook-photo-column">
-            ${photoSlot(2, "photo")}
-            ${photoSlot(3, "photo")}
+          <div class="logbook-body">
+            <div class="logbook-photo-column">
+              ${photoSlot(0, "photo")}
+              ${photoSlot(1, "photo")}
+            </div>
+            ${note()}
+            <div class="logbook-photo-column">
+              ${photoSlot(2, "photo")}
+              ${photoSlot(3, "photo")}
+            </div>
           </div>
         </div>
       </section>
@@ -4951,16 +5143,20 @@ function printablePage(entry, layout) {
 
   if (layout === 3) {
     return `
-      <section class="print-page layout-memory-strip">
+      <section class="print-page layout-four-top">
         ${header}
-        <div class="memory-strip-body">
-          <div class="memory-strip-photos">
+        <div class="pretty-body">
+          <div class="top-photo-row">
             ${photoSlot(0, "first view")}
             ${photoSlot(1, "second view")}
             ${photoSlot(2, "third view")}
             ${photoSlot(3, "fourth view")}
           </div>
-          ${note}
+          ${note()}
+          <div class="bottom-memory-row">
+            <div class="blank-photo pretty-photo-slot">stamp space</div>
+            <div class="blank-photo pretty-photo-slot">memory space</div>
+          </div>
         </div>
       </section>
     `;
@@ -4968,31 +5164,31 @@ function printablePage(entry, layout) {
 
   if (layout === 4) {
     return `
-      <section class="print-page layout-diary-four">
+      <section class="print-page layout-diary-new">
         ${header}
-        ${note}
-        <div class="diary-four-grid">
-          ${photoSlot(0, "morning")}
-          ${photoSlot(1, "midday")}
-          ${photoSlot(2, "evening")}
-          ${photoSlot(3, "tonight")}
+        <div class="pretty-body">
+          ${note()}
+          ${photoSlot(0, "morning", "photo-r1")}
+          ${photoSlot(1, "midday", "photo-r2")}
+          <div class="bottom-photo-row">
+            ${photoSlot(2, "evening")}
+            ${photoSlot(3, "tonight")}
+          </div>
         </div>
       </section>
     `;
   }
 
   return `
-    <section class="print-page layout-postcard-four">
+    <section class="print-page layout-postcard-new">
       ${header}
-      <div class="postcard-four-body">
-        <div class="postcard-main-photo">${photoSlot(0, "postcard")}</div>
-        <div class="postcard-side-grid">
-          ${photoSlot(1, "memory")}
-          ${photoSlot(2, "stamp")}
-          ${photoSlot(3, "the road")}
-        </div>
+      <div class="pretty-body">
+        <div class="photo-main">${photoSlot(0, "postcard")}</div>
+        ${photoSlot(1, "memory", "photo-side-1")}
+        ${photoSlot(2, "stamp", "photo-side-2")}
+        ${photoSlot(3, "the road", "photo-side-3")}
+        ${note()}
       </div>
-      ${note}
     </section>
   `;
 }

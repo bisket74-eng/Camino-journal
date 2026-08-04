@@ -1,8 +1,10 @@
-const CACHE_NAME = "camino-journal-cache-v1";
+const CACHE_NAME = "camino-journal-cache-v42";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", event => {
