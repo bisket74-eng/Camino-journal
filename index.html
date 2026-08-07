@@ -3039,6 +3039,114 @@ body {
   .print-shell.size-letter .pretty-note-card { padding: .055in .07in !important; }
 }
 
+
+
+/* ---- FINAL PATCH: stronger zoom viewer for all pop-up photos ---- */
+.lightbox {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0,0,0,.94) !important;
+  z-index: 9999 !important;
+  display: block !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+}
+
+.lightbox.hidden {
+  display: none !important;
+}
+
+.lightbox-zoom-stage {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 78px 12px 74px !important;
+  overflow: hidden !important;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+}
+
+.zoom-lightbox-img {
+  max-width: 94vw !important;
+  max-height: 78vh !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  border-radius: 6px !important;
+  transform-origin: center center !important;
+  will-change: transform !important;
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,.45) !important;
+}
+
+.lightbox-controls {
+  position: fixed !important;
+  top: max(12px, env(safe-area-inset-top)) !important;
+  left: 10px !important;
+  right: 10px !important;
+  z-index: 10001 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  pointer-events: auto !important;
+}
+
+.lightbox-control-group {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+.lightbox-zoom-btn,
+.lightbox-reset,
+.lightbox-close {
+  border: none !important;
+  background: rgba(255,255,255,.96) !important;
+  color: #111 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.26) !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+}
+
+.lightbox-zoom-btn,
+.lightbox-close {
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 50% !important;
+  font-size: 26px !important;
+  line-height: 1 !important;
+}
+
+.lightbox-reset {
+  min-height: 46px !important;
+  border-radius: 999px !important;
+  padding: 0 14px !important;
+  font-size: 14px !important;
+}
+
+.lightbox-help {
+  position: fixed !important;
+  left: 50% !important;
+  bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  transform: translateX(-50%) !important;
+  z-index: 10001 !important;
+  background: rgba(255,255,255,.95) !important;
+  color: #111 !important;
+  border-radius: 999px !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+}
+
 </style>
 </head>
 
@@ -5313,43 +5421,51 @@ function restoreData(file) {
   reader.readAsText(file);
 }
 
+
 function bindLightbox() {
-  document.querySelectorAll(".light-img").forEach(img => {
-    img.onclick = e => {
-      e.preventDefault();
-      e.stopPropagation();
-      openZoomLightbox(img.src);
-    };
-  });
+  // Kept so existing render functions can call it safely.
+  // The real listener below is delegated, so it also works for travel screenshots
+  // that are added after the page renders.
 }
 
 function openZoomLightbox(src) {
   const box = document.getElementById("lightbox");
+  if (!box || !src) return;
 
   box.innerHTML = `
-    <button type="button" class="lightbox-reset" id="lightboxResetBtn">Reset</button>
-    <button type="button" class="lightbox-close" id="lightboxCloseBtn">×</button>
+    <div class="lightbox-controls">
+      <div class="lightbox-control-group">
+        <button type="button" class="lightbox-zoom-btn" id="lightboxZoomOutBtn">−</button>
+        <button type="button" class="lightbox-zoom-btn" id="lightboxZoomInBtn">+</button>
+        <button type="button" class="lightbox-reset" id="lightboxResetBtn">Reset</button>
+      </div>
+      <button type="button" class="lightbox-close" id="lightboxCloseBtn">×</button>
+    </div>
     <div class="lightbox-zoom-stage" id="lightboxZoomStage">
       <img id="zoomLightboxImg" class="zoom-lightbox-img" src="${src}" alt="Zoomed photo">
     </div>
-    <div class="lightbox-help">Pinch to zoom · Drag to move · Double tap to zoom</div>
+    <div class="lightbox-help">Use + / − or pinch · Drag when zoomed</div>
   `;
 
   box.className = "lightbox";
+  document.documentElement.style.overflow = "hidden";
   document.body.style.overflow = "hidden";
 
   const stage = document.getElementById("lightboxZoomStage");
   const zoomImg = document.getElementById("zoomLightboxImg");
   const closeBtn = document.getElementById("lightboxCloseBtn");
   const resetBtn = document.getElementById("lightboxResetBtn");
+  const zoomInBtn = document.getElementById("lightboxZoomInBtn");
+  const zoomOutBtn = document.getElementById("lightboxZoomOutBtn");
 
   let scale = 1;
   let x = 0;
   let y = 0;
-  let panStart = null;
-  let pinchStart = null;
+  let startX = 0;
+  let startY = 0;
+  let startScale = 1;
+  let startDistance = 0;
   let lastTap = 0;
-  let hadPinch = false;
   const pointers = new Map();
 
   function clamp(value, min, max) {
@@ -5364,61 +5480,77 @@ function openZoomLightbox(src) {
     scale = 1;
     x = 0;
     y = 0;
-    panStart = null;
-    pinchStart = null;
+    pointers.clear();
     applyZoom();
   }
 
+  function bumpZoom(amount) {
+    scale = clamp(scale + amount, 1, 7);
+    if (scale <= 1.02) {
+      resetZoom();
+    } else {
+      applyZoom();
+    }
+  }
+
   function closeLightbox() {
+    document.documentElement.style.overflow = "";
     document.body.style.overflow = "";
     box.className = "lightbox hidden";
     box.innerHTML = "";
   }
 
-  function pointerArray() {
+  function pointList() {
     return Array.from(pointers.values());
   }
 
-  function getDistance(points) {
-    if (points.length < 2) return 0;
-    const dx = points[0].clientX - points[1].clientX;
-    const dy = points[0].clientY - points[1].clientY;
+  function touchDistance() {
+    const pts = pointList();
+    if (pts.length < 2) return 0;
+    const dx = pts[0].clientX - pts[1].clientX;
+    const dy = pts[0].clientY - pts[1].clientY;
     return Math.hypot(dx, dy);
   }
 
-  function getMidpoint(points) {
-    return {
-      x: (points[0].clientX + points[1].clientX) / 2,
-      y: (points[0].clientY + points[1].clientY) / 2
-    };
-  }
+  closeBtn.addEventListener("click", e => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeLightbox();
+  });
 
-  function beginPinch() {
-    const pts = pointerArray();
-    if (pts.length < 2) return;
-    const mid = getMidpoint(pts);
-    pinchStart = {
-      distance: getDistance(pts) || 1,
-      scale,
-      x,
-      y,
-      midX: mid.x,
-      midY: mid.y
-    };
-    hadPinch = true;
-  }
+  resetBtn.addEventListener("click", e => {
+    e.preventDefault();
+    e.stopPropagation();
+    resetZoom();
+  });
 
-  function beginPan(point) {
-    panStart = {
-      clientX: point.clientX,
-      clientY: point.clientY,
-      x,
-      y
-    };
-  }
+  zoomInBtn.addEventListener("click", e => {
+    e.preventDefault();
+    e.stopPropagation();
+    bumpZoom(.6);
+  });
 
-  closeBtn.onclick = closeLightbox;
-  resetBtn.onclick = resetZoom;
+  zoomOutBtn.addEventListener("click", e => {
+    e.preventDefault();
+    e.stopPropagation();
+    bumpZoom(-.6);
+  });
+
+  stage.addEventListener("click", e => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  stage.addEventListener("dblclick", e => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (scale <= 1.05) {
+      scale = 2.7;
+      applyZoom();
+    } else {
+      resetZoom();
+    }
+  });
 
   stage.addEventListener("pointerdown", e => {
     e.preventDefault();
@@ -5428,18 +5560,29 @@ function openZoomLightbox(src) {
       stage.setPointerCapture(e.pointerId);
     } catch (err) {}
 
-    pointers.set(e.pointerId, {
-      clientX: e.clientX,
-      clientY: e.clientY
-    });
+    pointers.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
 
     if (pointers.size === 1) {
-      hadPinch = false;
-      beginPan({ clientX: e.clientX, clientY: e.clientY });
+      startX = e.clientX - x;
+      startY = e.clientY - y;
+
+      const now = Date.now();
+      if (now - lastTap < 320) {
+        if (scale <= 1.05) {
+          scale = 2.7;
+          applyZoom();
+        } else {
+          resetZoom();
+        }
+        lastTap = 0;
+      } else {
+        lastTap = now;
+      }
     }
 
     if (pointers.size === 2) {
-      beginPinch();
+      startDistance = touchDistance() || 1;
+      startScale = scale;
     }
   }, { passive: false });
 
@@ -5449,27 +5592,18 @@ function openZoomLightbox(src) {
     e.preventDefault();
     e.stopPropagation();
 
-    pointers.set(e.pointerId, {
-      clientX: e.clientX,
-      clientY: e.clientY
-    });
+    pointers.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
 
-    const pts = pointerArray();
-
-    if (pts.length >= 2 && pinchStart) {
-      const dist = getDistance(pts) || pinchStart.distance;
-      const mid = getMidpoint(pts);
-
-      scale = clamp(pinchStart.scale * (dist / pinchStart.distance), 1, 6);
-      x = pinchStart.x + (mid.x - pinchStart.midX);
-      y = pinchStart.y + (mid.y - pinchStart.midY);
+    if (pointers.size >= 2) {
+      const newDistance = touchDistance() || startDistance || 1;
+      scale = clamp(startScale * (newDistance / startDistance), 1, 7);
       applyZoom();
       return;
     }
 
-    if (pts.length === 1 && panStart && scale > 1) {
-      x = panStart.x + (e.clientX - panStart.clientX);
-      y = panStart.y + (e.clientY - panStart.clientY);
+    if (pointers.size === 1 && scale > 1.02) {
+      x = e.clientX - startX;
+      y = e.clientY - startY;
       applyZoom();
     }
   }, { passive: false });
@@ -5482,53 +5616,53 @@ function openZoomLightbox(src) {
 
     pointers.delete(e.pointerId);
 
-    if (scale <= 1.02) {
-      resetZoom();
+    if (scale <= 1.02) resetZoom();
+
+    const pts = pointList();
+    if (pts.length === 1) {
+      startX = pts[0].clientX - x;
+      startY = pts[0].clientY - y;
     }
-
-    const pts = pointerArray();
-
     if (pts.length >= 2) {
-      beginPinch();
-    } else if (pts.length === 1) {
-      beginPan(pts[0]);
-      pinchStart = null;
-    } else {
-      const now = Date.now();
-      if (!hadPinch && now - lastTap < 330) {
-        if (scale <= 1.05) {
-          scale = 2.4;
-        } else {
-          resetZoom();
-        }
-        applyZoom();
-        lastTap = 0;
-      } else {
-        lastTap = now;
-      }
-      pinchStart = null;
-      panStart = null;
+      startDistance = touchDistance() || 1;
+      startScale = scale;
     }
   }
 
   stage.addEventListener("pointerup", endPointer, { passive: false });
   stage.addEventListener("pointercancel", endPointer, { passive: false });
-  stage.addEventListener("lostpointercapture", e => {
-    pointers.delete(e.pointerId);
-  });
+  stage.addEventListener("lostpointercapture", e => pointers.delete(e.pointerId));
+
+  stage.addEventListener("touchstart", e => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive: false });
+
+  stage.addEventListener("touchmove", e => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive: false });
 
   stage.addEventListener("wheel", e => {
     e.preventDefault();
-    const next = scale + (e.deltaY < 0 ? 0.18 : -0.18);
-    scale = clamp(next, 1, 6);
-    if (scale <= 1.02) resetZoom();
-    else applyZoom();
-  }, { passive: false });
-
-  box.addEventListener("touchmove", e => {
-    e.preventDefault();
+    e.stopPropagation();
+    bumpZoom(e.deltaY < 0 ? .25 : -.25);
   }, { passive: false });
 }
+
+// One delegated listener catches journal photos, people photos, stop photos,
+// and Travel & Reservations screenshots/photos.
+document.addEventListener("click", e => {
+  const img = e.target.closest("img.light-img, .light-img img");
+  if (!img) return;
+
+  const src = img.currentSrc || img.src;
+  if (!src) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+  openZoomLightbox(src);
+}, true);
 
 function closeMenu() {
   document.getElementById("tripMenu").classList.add("hidden");
