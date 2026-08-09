@@ -3146,6 +3146,520 @@ body {
   white-space: nowrap !important;
   pointer-events: none !important;
 }
+  /* =====================================================================
+   PRETTY PAGES v2  —  real 8.5 × 11 scrapbook sheets with book margins
+   Paste at the very end of the stylesheet, just above the closing style tag.
+   Everything scales off --pw (the page width), so the on-screen preview
+   and the printed sheet are the same design, just at different sizes.
+   ===================================================================== */
+
+.print-shell .print-page.pretty-sheet {
+  --pw: min(94vw, 720px);
+  --edge: calc(var(--pw) * .055);
+  --bind: calc(var(--pw) * .100);
+  --gap: calc(var(--pw) * .020);
+
+  position: relative !important;
+  display: block !important;
+  width: var(--pw) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: 8.5 / 11 !important;
+  margin: 0 auto 24px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(45,36,29,.16) !important;
+  box-shadow: 0 12px 30px rgba(62,47,29,.18) !important;
+  background:
+    radial-gradient(circle at 14% 8%, rgba(255,255,255,.85), transparent 34%),
+    radial-gradient(circle at 88% 92%, rgba(153,58,48,.07), transparent 36%),
+    repeating-linear-gradient(114deg, rgba(45,36,29,.020) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(26deg, rgba(45,36,29,.015) 0 1px, transparent 1px 9px),
+    linear-gradient(168deg, #fffaf0, #f0dfc0) !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.print-shell.size-8x10 .print-page.pretty-sheet { --pw: min(94vw, 680px) !important; aspect-ratio: 4 / 5 !important; }
+.print-shell.size-5x7  .print-page.pretty-sheet { --pw: min(94vw, 520px) !important; aspect-ratio: 5 / 7 !important; }
+.print-shell.size-phone .print-page.pretty-sheet { --pw: min(94vw, 420px) !important; aspect-ratio: 9 / 16 !important; }
+
+/* thin decorative frame — it shifts with the binding edge */
+.print-shell .print-page.pretty-sheet::before {
+  content: "" !important;
+  position: absolute !important;
+  top: calc(var(--pw) * .030) !important;
+  bottom: calc(var(--pw) * .030) !important;
+  left: calc(var(--pw) * .030) !important;
+  right: calc(var(--pw) * .030) !important;
+  border: 1px solid rgba(185,139,59,.34) !important;
+  z-index: 1;
+  pointer-events: none;
+}
+.print-shell .print-page.sheet-recto::before { left: calc(var(--bind) - var(--pw) * .026) !important; }
+.print-shell .print-page.sheet-verso::before { right: calc(var(--bind) - var(--pw) * .026) !important; }
+.print-shell.bind-off .print-page.pretty-sheet::before {
+  left: calc(var(--pw) * .030) !important;
+  right: calc(var(--pw) * .030) !important;
+}
+
+/* on screen only: soft shading so you can see which edge binds */
+@media screen {
+  .print-shell .print-page.sheet-recto::after,
+  .print-shell .print-page.sheet-verso::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--bind);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .print-shell .print-page.sheet-recto::after {
+    left: 0;
+    background: linear-gradient(90deg, rgba(45,36,29,.11), transparent);
+  }
+  .print-shell .print-page.sheet-verso::after {
+    right: 0;
+    background: linear-gradient(270deg, rgba(45,36,29,.11), transparent);
+  }
+  .print-shell.bind-off .print-page.pretty-sheet::after { display: none; }
+}
+
+/* ---------- the printable area, with the gutter margin ---------- */
+.pretty-sheet .sheet-inner {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--pw) * .062) var(--edge) calc(var(--pw) * .058) var(--edge);
+}
+.pretty-sheet.sheet-recto .sheet-inner { padding-left: var(--bind); }
+.pretty-sheet.sheet-verso .sheet-inner { padding-right: var(--bind); }
+.print-shell.bind-off .pretty-sheet .sheet-inner {
+  padding-left: var(--edge) !important;
+  padding-right: var(--edge) !important;
+}
+
+/* ---------- masthead ---------- */
+.pretty-sheet .sheet-head {
+  position: relative;
+  flex: 0 0 auto;
+  padding-right: calc(var(--pw) * .135);
+  margin-bottom: var(--gap);
+}
+.pretty-sheet .page-seal {
+  position: absolute;
+  right: 0;
+  top: calc(var(--pw) * -.010);
+  width: calc(var(--pw) * .108);
+  height: calc(var(--pw) * .108);
+  transform: rotate(7deg);
+  opacity: .92;
+}
+.pretty-sheet .page-seal img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 50%;
+}
+.pretty-sheet .page-route {
+  font-family: "Courier Prime", monospace;
+  font-size: calc(var(--pw) * .0126);
+  letter-spacing: calc(var(--pw) * .0017);
+  text-transform: uppercase;
+  color: var(--red);
+}
+.pretty-sheet .page-title {
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 700;
+  font-size: calc(var(--pw) * .0410);
+  line-height: .96;
+  margin: calc(var(--pw) * .006) 0 calc(var(--pw) * .005);
+  color: #3a2a1d;
+}
+.pretty-sheet .page-date {
+  font-family: "Caveat", cursive;
+  font-size: calc(var(--pw) * .0250);
+  line-height: 1;
+  color: var(--blue);
+}
+
+/* ---------- the photo / writing area fills the rest of the sheet ---------- */
+.pretty-sheet .sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  gap: var(--gap);
+}
+.pretty-sheet .sheet-body > *,
+.pretty-sheet .sub-grid > * { min-width: 0; min-height: 0; }
+.pretty-sheet .sub-grid { display: grid; gap: var(--gap); min-height: 0; }
+
+/* ---------- snapshots ---------- */
+.pretty-sheet .snap {
+  position: relative;
+  background: #fffdf7;
+  padding: calc(var(--pw) * .0088);
+  border-radius: 1px;
+  box-shadow: 0 calc(var(--pw) * .0035) calc(var(--pw) * .011) rgba(62,47,29,.24);
+}
+.pretty-sheet .snap-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: #e6dac2;
+}
+.pretty-sheet .snap-blank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  border: 1px dashed rgba(185,139,59,.55);
+  background:
+    linear-gradient(135deg, rgba(185,139,59,.10), rgba(153,58,48,.05)),
+    #fffdf7;
+}
+.pretty-sheet .snap-label {
+  font-family: "Caveat", cursive;
+  font-size: calc(var(--pw) * .0270);
+  line-height: 1.1;
+  text-align: center;
+  color: rgba(45,36,29,.42);
+  padding: 0 6%;
+}
+.pretty-sheet .tape {
+  position: absolute;
+  z-index: 3;
+  top: calc(var(--pw) * -.013);
+  left: 50%;
+  width: calc(var(--pw) * .078);
+  height: calc(var(--pw) * .026);
+  transform: translateX(-50%) rotate(-3.5deg);
+  background: linear-gradient(180deg, rgba(240,226,188,.88), rgba(224,203,150,.72));
+  box-shadow: 0 1px 2px rgba(62,47,29,.18);
+}
+.pretty-sheet .tape.tape-right { left: auto; right: calc(var(--pw) * .012); transform: rotate(4deg); }
+.pretty-sheet .tilt-1 { transform: rotate(-.85deg); }
+.pretty-sheet .tilt-2 { transform: rotate(.70deg); }
+.pretty-sheet .tilt-3 { transform: rotate(-.40deg); }
+.pretty-sheet .tilt-4 { transform: rotate(1.00deg); }
+
+/* ---------- the handwritten page ---------- */
+.pretty-sheet .note-card {
+  --rule: calc(var(--pw) * .0292);
+  --hand: calc(var(--pw) * .0250);
+  position: relative;
+  overflow: hidden;
+  transform: rotate(-.28deg);
+  border: 1px solid rgba(185,139,59,.34);
+  box-shadow: 0 calc(var(--pw) * .0035) calc(var(--pw) * .012) rgba(62,47,29,.14);
+  padding: calc(var(--rule) * .5) calc(var(--pw) * .022) calc(var(--pw) * .014) calc(var(--pw) * .040);
+  background-color: rgba(255,253,246,.72);
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--rule) - 1px),
+      rgba(47,73,110,.17) calc(var(--rule) - 1px),
+      rgba(47,73,110,.17) var(--rule)
+    );
+  background-position: 0 calc(var(--rule) * .5);
+}
+.pretty-sheet .note-card.hs-medium { --rule: calc(var(--pw) * .0256); --hand: calc(var(--pw) * .0218); }
+.pretty-sheet .note-card.hs-long   { --rule: calc(var(--pw) * .0218); --hand: calc(var(--pw) * .0186); }
+.pretty-sheet .note-card.hs-extra  { --rule: calc(var(--pw) * .0188); --hand: calc(var(--pw) * .0160); }
+.pretty-sheet .note-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--pw) * .027);
+  width: 1px;
+  background: rgba(153,58,48,.40);
+}
+.pretty-sheet .note-card .hand-text {
+  font-family: "Caveat", "Comic Sans MS", cursive;
+  font-size: var(--hand);
+  line-height: var(--rule);
+  color: #3b2d22;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* ---------- LAYOUT 1 · Postcard ---------- */
+.sb-postcard .sheet-body {
+  grid-template-columns: 1.5fr .85fr;
+  grid-template-rows: 1fr 1fr 1fr 1.2fr;
+}
+.sb-postcard .slot-a { grid-column: 1; grid-row: 1 / 4; }
+.sb-postcard .slot-b { grid-column: 2; grid-row: 1; }
+.sb-postcard .slot-c { grid-column: 2; grid-row: 2; }
+.sb-postcard .slot-d { grid-column: 2; grid-row: 3; }
+.sb-postcard .note-card { grid-column: 1 / 3; grid-row: 4; }
+
+/* ---------- LAYOUT 2 · Crossroads ---------- */
+.sb-cross .sheet-body {
+  grid-template-columns: 1fr 1.08fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.sb-cross .slot-a { grid-column: 1; grid-row: 1; }
+.sb-cross .slot-b { grid-column: 1; grid-row: 2; }
+.sb-cross .note-card { grid-column: 2; grid-row: 1 / 3; transform: rotate(.22deg); }
+.sb-cross .slot-c { grid-column: 3; grid-row: 1; }
+.sb-cross .slot-d { grid-column: 3; grid-row: 2; }
+
+/* ---------- LAYOUT 3 · Pilgrim log ---------- */
+.sb-log .sheet-body { grid-template-rows: auto 1fr; }
+.sb-log .log-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: calc(var(--gap) * .6);
+}
+.sb-log .log-cell {
+  border: 1px solid rgba(45,36,29,.22);
+  background: rgba(255,255,255,.42);
+  padding: calc(var(--pw) * .008) calc(var(--pw) * .009);
+  min-width: 0;
+}
+.sb-log .log-cell-label {
+  font-family: "Courier Prime", monospace;
+  font-size: calc(var(--pw) * .0092);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+.sb-log .log-cell-value {
+  font-family: "Caveat", cursive;
+  font-size: calc(var(--pw) * .0225);
+  line-height: 1.05;
+  color: #3b2d22;
+  overflow: hidden;
+}
+.sb-log .log-body {
+  display: grid;
+  grid-template-columns: .85fr 1.2fr .85fr;
+  gap: var(--gap);
+  min-height: 0;
+}
+.sb-log .photo-stack {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: var(--gap);
+  min-height: 0;
+}
+.sb-log .photo-stack > * { min-height: 0; }
+.sb-log .log-body > *,
+.sb-log .log-strip > * { min-width: 0; min-height: 0; }
+
+/* ---------- LAYOUT 4 · Photo strip ---------- */
+.sb-strip .sheet-body { grid-template-rows: 1fr 1.45fr .95fr; }
+.sb-strip .strip-top { grid-template-columns: repeat(4, 1fr); }
+.sb-strip .strip-bottom { grid-template-columns: 1fr 1fr; }
+
+/* ---------- LAYOUT 5 · Diary ---------- */
+.sb-diary .sheet-body {
+  grid-template-columns: 1.15fr .8fr;
+  grid-template-rows: 1fr 1fr .9fr;
+}
+.sb-diary .note-card { grid-column: 1; grid-row: 1 / 3; }
+.sb-diary .slot-a { grid-column: 2; grid-row: 1; }
+.sb-diary .slot-b { grid-column: 2; grid-row: 2; }
+.sb-diary .strip-bottom { grid-column: 1 / 3; grid-row: 3; grid-template-columns: 1fr 1fr; }
+
+/* ---------- printing ---------- */
+@media print {
+  @page { size: 8.5in 11in; margin: 0; }
+
+  html, body {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .print-shell {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  .print-shell .print-page.pretty-sheet {
+    --pw: 8.5in !important;
+    width: 8.5in !important;
+    height: 11in !important;
+    aspect-ratio: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+  .print-shell.size-8x10 .print-page.pretty-sheet { --pw: 8in !important; width: 8in !important; height: 10in !important; }
+  .print-shell.size-5x7  .print-page.pretty-sheet { --pw: 5in !important; width: 5in !important; height: 7in !important; }
+  .print-shell.size-phone .print-page.pretty-sheet { --pw: 8.5in !important; width: 8.5in !important; height: 11in !important; }
+
+  .print-shell .print-page.pretty-sheet:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+}
+
+/* =====================================================================
+   ITINERARY
+   ===================================================================== */
+.itin-summary {
+  font-family: "Courier Prime", monospace;
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin: -6px 0 18px;
+}
+.itin-day { margin-bottom: 22px; }
+.itin-day-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.itin-day-head span {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+.itin-day-head::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: repeating-linear-gradient(90deg, rgba(45,36,29,.28) 0 5px, transparent 5px 10px);
+}
+.itin-item {
+  display: grid;
+  grid-template-columns: 68px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 0 0 12px;
+  position: relative;
+}
+.itin-item::before {
+  content: "";
+  position: absolute;
+  left: 76px;
+  top: 6px;
+  bottom: -6px;
+  width: 1px;
+  background: rgba(185,139,59,.45);
+}
+.itin-item:last-child::before { display: none; }
+.itin-time {
+  font-family: "Courier Prime", monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--red);
+  text-align: right;
+  padding-top: 12px;
+  line-height: 1.2;
+}
+.itin-card {
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.5);
+  border-radius: 7px;
+  padding: 11px 12px;
+  margin-left: 14px;
+  position: relative;
+}
+.itin-card::before {
+  content: "";
+  position: absolute;
+  left: -19px;
+  top: 17px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 2px solid var(--gold);
+}
+.itin-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+.itin-action {
+  font-family: "Courier Prime", monospace;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+.itin-name {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.1;
+  flex: 1 1 100%;
+}
+.itin-paid {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--green);
+  border: 1px solid rgba(79,104,79,.45);
+  background: rgba(79,104,79,.12);
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+.itin-line {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: rgba(45,36,29,.82);
+  margin-top: 3px;
+}
+.itin-note {
+  font-family: "Libre Baskerville", serif;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin-top: 6px;
+  padding-left: 9px;
+  border-left: 2px solid rgba(185,139,59,.4);
+}
+.itin-thumb {
+  margin-top: 8px;
+  width: 74px;
+  height: 74px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.itin-undated {
+  margin-top: 8px;
+  border-top: 1px dashed rgba(45,36,29,.28);
+  padding-top: 16px;
+}
+
+@media print {
+  .itin-card, .itin-thumb { break-inside: avoid; page-break-inside: avoid; }
+}
+
 
 </style>
 </head>
