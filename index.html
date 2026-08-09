@@ -3659,6 +3659,42 @@ body {
 @media print {
   .itin-card, .itin-thumb { break-inside: avoid; page-break-inside: avoid; }
 }
+/* =====================================================================
+   PRETTY PAGES v2 — fix-up
+   Add this at the very end of the stylesheet, BELOW the pretty-pages
+   block you already pasted. It corrects printing and removes the tape.
+   ===================================================================== */
+
+/* the sheet content sat in an absolutely positioned layer, which Chrome
+   drops when it prints — put it back into normal flow */
+.print-shell .print-page.pretty-sheet {
+  display: flex !important;
+}
+
+.pretty-sheet .sheet-inner {
+  position: relative !important;
+  inset: auto !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+/* no more tape */
+.pretty-sheet .tape {
+  display: none !important;
+}
+
+/* a sheet exactly as tall as the paper rounds over and makes a blank
+   second page — trim a hair off */
+@media print {
+  .print-shell .print-page.pretty-sheet {
+    height: 10.94in !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .print-shell.size-8x10 .print-page.pretty-sheet { height: 9.94in !important; }
+  .print-shell.size-5x7 .print-page.pretty-sheet { height: 6.96in !important; }
+  .print-shell.size-phone .print-page.pretty-sheet { height: 10.94in !important; }
+}
 
 
 </style>
