@@ -6246,6 +6246,438 @@ if ("serviceWorker" in navigator) {
 
 render();
 rememberAppHistory(true);
+  /* =====================================================================
+   PRETTY PAGES v2 + ITINERARY
+   Paste at the very end of the script, just above the closing script tag,
+   after the existing "render(); rememberAppHistory(true);" lines.
+   It replaces the old pretty-page builder and adds the itinerary screen
+   without touching anything above it.
+   ===================================================================== */
+
+(function caminoPrettyV2() {
+if (window.__caminoPrettyV2) return;
+window.__caminoPrettyV2 = true;
+
+state.printBinding = state.printBinding || "book";
+
+/* ---------- 1. Pretty pages ---------- */
+
+function prettySheetPage(entry, layout, index) {
+  const photos = (entry.photos || []).map(p => p.src);
+  const stopPhotos = (entry.stops || []).filter(s => s.photo).map(s => s.photo);
+  const allPhotos = [...photos, ...stopPhotos];
+
+  const seed = hashLayout(entry.id);
+  const side = index % 2 === 0 ? "sheet-recto" : "sheet-verso";
+  const journalText = buildPrettyJournalText(entry);
+
+  const len = journalText.length;
+  const lineCount = journalText.split("\n").length;
+  const hand =
+    len > 1000 || lineCount > 20 ? "hs-extra" :
+    len > 680 || lineCount > 15 ? "hs-long" :
+    len > 400 || lineCount > 9 ? "hs-medium" : "hs-short";
+
+  function snap(i, label, slotClass) {
+    const src = allPhotos[i];
+    const tilt = "tilt-" + (((seed + i * 3) % 4) + 1);
+    const tape = (seed + i) % 3 === 0
+      ? `<span class="tape ${i % 2 ? "tape-right" : ""}"></span>`
+      : "";
+
+    if (src) {
+      return `<div class="snap ${tilt} ${slotClass || ""}">${tape}<img class="snap-img" src="${src}" alt=""></div>`;
+    }
+    return `<div class="snap snap-blank ${tilt} ${slotClass || ""}">${tape}<span class="snap-label">${escapeHtml(label)}</span></div>`;
+  }
+
+  function note() {
+    return `<div class="note-card ${hand}"><div class="hand-text">${escapeHtml(journalText)}</div></div>`;
+  }
+
+  const head = `
+    <div class="sheet-head">
+      <div class="page-seal"><img src="./icon-192.png" alt=""></div>
+      <div class="page-route">${escapeHtml(entry.route || "Camino Journal")}</div>
+      <div class="page-title">${escapeHtml(entryJourneyTitle(entry))}</div>
+      <div class="page-date">${escapeHtml(formatDate(entry.date))}</div>
+    </div>
+  `;
+
+  let cls = "sb-postcard";
+  let body = "";
+
+  if (layout === 1) {
+    cls = "sb-cross";
+    body = `
+      ${snap(0, "morning", "slot-a")}
+      ${snap(1, "the way", "slot-b")}
+      ${note()}
+      ${snap(2, "a stop", "slot-c")}
+      ${snap(3, "tonight", "slot-d")}
+    `;
+  } else if (layout === 2) {
+    cls = "sb-log";
+    body = `
+      <div class="log-strip">
+        <div class="log-cell"><div class="log-cell-label">From</div><div class="log-cell-value">${escapeHtml(previousTownForEntry(entry) || "—")}</div></div>
+        <div class="log-cell"><div class="log-cell-label">To</div><div class="log-cell-value">${escapeHtml(entry.town || "—")}</div></div>
+        <div class="log-cell"><div class="log-cell-label">Walked</div><div class="log-cell-value">${escapeHtml(distanceText(entry) || "—")}</div></div>
+        <div class="log-cell"><div class="log-cell-label">Slept</div><div class="log-cell-value">${escapeHtml(entry.albergue || "—")}</div></div>
+      </div>
+      <div class="log-body">
+        <div class="photo-stack">${snap(0, "morning")}${snap(1, "midday")}</div>
+        ${note()}
+        <div class="photo-stack">${snap(2, "evening")}${snap(3, "tonight")}</div>
+      </div>
+    `;
+  } else if (layout === 3) {
+    cls = "sb-strip";
+    body = `
+      <div class="sub-grid strip-top">
+        ${snap(0, "first light")}
+        ${snap(1, "the path")}
+        ${snap(2, "a stop")}
+        ${snap(3, "arriving")}
+      </div>
+      ${note()}
+      <div class="sub-grid strip-bottom">
+        ${snap(4, "stamp space")}
+        ${snap(5, "keepsake space")}
+      </div>
+    `;
+  } else if (layout === 4) {
+    cls = "sb-diary";
+    body = `
+      ${note()}
+      ${snap(0, "morning", "slot-a")}
+      ${snap(1, "midday", "slot-b")}
+      <div class="sub-grid strip-bottom">
+        ${snap(2, "evening")}
+        ${snap(3, "tonight")}
+      </div>
+    `;
+  } else {
+    body = `
+      ${snap(0, "the long view", "slot-a")}
+      ${snap(1, "a moment", "slot-b")}
+      ${snap(2, "a stamp", "slot-c")}
+      ${snap(3, "the road", "slot-d")}
+      ${note()}
+    `;
+  }
+
+  return `
+    <section class="print-page pretty-sheet ${cls} ${side}">
+      <div class="sheet-inner">
+        ${head}
+        <div class="sheet-body">${body}</div>
+      </div>
+    </section>
+  `;
+}
+
+printablePage = function (entry, layout, index) {
+  return prettySheetPage(entry, layout, index || 0);
+};
+
+renderPrint = function (entriesToPrint, mode) {
+  entriesToPrint = entriesToPrint.filter(Boolean);
+
+  const bindClass = state.printBinding === "even" ? " bind-off" : "";
+
+  app().innerHTML = `
+    <div class="print-shell size-${escapeHtml(state.printSize || "letter")}${bindClass}">
+      <div class="print-toolbar no-print">
+        <button class="back-btn" id="backPrintBtn">‹ Journal</button>
+        <h2 class="section-title">${mode === "book" ? "Printable Book" : "Printable Page"}</h2>
+        <p class="panel-sub">
+          Letter is sized for normal printer paper. With book margins on, the first page
+          leaves room on the left, the next on the right, so the gutter lands in the spine
+          when you print front and back.
+        </p>
+
+        <div class="choice-row">
+          <select class="select" id="pageSizeSelect" style="max-width:220px;">
+            <option value="letter" ${state.printSize === "letter" ? "selected" : ""}>8.5×11 Letter</option>
+            <option value="8x10" ${state.printSize === "8x10" ? "selected" : ""}>8×10 Book Page</option>
+            <option value="5x7" ${state.printSize === "5x7" ? "selected" : ""}>5×7 Book Page</option>
+            <option value="phone" ${state.printSize === "phone" ? "selected" : ""}>Phone Preview</option>
+          </select>
+
+          <select class="select" id="bindingSelect" style="max-width:230px;">
+            <option value="book" ${state.printBinding === "book" ? "selected" : ""}>Book margins (alternating)</option>
+            <option value="even" ${state.printBinding === "even" ? "selected" : ""}>Even margins</option>
+          </select>
+
+          <select class="select" id="layoutSelect" style="max-width:260px;">
+            <option value="mixed" ${state.printLayout === "mixed" ? "selected" : ""}>Mixed layouts</option>
+            <option value="0" ${state.printLayout === "0" ? "selected" : ""}>Layout 1 — Postcard</option>
+            <option value="1" ${state.printLayout === "1" ? "selected" : ""}>Layout 2 — Crossroads</option>
+            <option value="2" ${state.printLayout === "2" ? "selected" : ""}>Layout 3 — Pilgrim Log</option>
+            <option value="3" ${state.printLayout === "3" ? "selected" : ""}>Layout 4 — Photo Strip</option>
+            <option value="4" ${state.printLayout === "4" ? "selected" : ""}>Layout 5 — Diary</option>
+          </select>
+
+          <button class="btn" id="printBtn">🖨️ Print / Save PDF</button>
+        </div>
+      </div>
+
+      ${entriesToPrint.map((entry, i) => printablePage(entry, layoutFor(entriesToPrint, i, entry), i)).join("")}
+    </div>
+  `;
+
+  document.getElementById("backPrintBtn").onclick = () => {
+    setView(mode === "book" ? "journal" : "entry");
+  };
+
+  document.getElementById("pageSizeSelect").onchange = e => {
+    state.printSize = e.target.value;
+    renderPrint(entriesToPrint, mode);
+  };
+
+  document.getElementById("bindingSelect").onchange = e => {
+    state.printBinding = e.target.value;
+    renderPrint(entriesToPrint, mode);
+  };
+
+  document.getElementById("layoutSelect").onchange = e => {
+    state.printLayout = e.target.value;
+    renderPrint(entriesToPrint, mode);
+  };
+
+  document.getElementById("printBtn").onclick = () => window.print();
+};
+
+/* ---------- 2. Itinerary ---------- */
+
+const ITIN_ICONS = {
+  "Airline Reservation": "✈️",
+  "Train Reservation": "🚆",
+  "Hotel Reservation": "🏨",
+  "Albergue Reservation": "🛏️",
+  "Bus Reservation": "🚌",
+  "Taxi / Rideshare": "🚕",
+  "Ferry": "⛴️",
+  "Screenshot Only": "📷",
+  "Other": "📌"
+};
+
+const ITIN_ACTIONS = {
+  "Airline Reservation": "Fly",
+  "Train Reservation": "Train",
+  "Bus Reservation": "Bus",
+  "Taxi / Rideshare": "Ride",
+  "Ferry": "Ferry",
+  "Screenshot Only": "Plan",
+  "Other": "Plan"
+};
+
+const ITIN_STAYS = ["Hotel Reservation", "Albergue Reservation"];
+
+function itinTime(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+function buildItinerary() {
+  const events = [];
+
+  travel.forEach((t, order) => {
+    const icon = ITIN_ICONS[t.type] || "📌";
+    const name = t.title || t.carrier || t.type || "Reservation";
+    const route = t.from && t.to ? t.from + " → " + t.to : (t.from || t.to || "");
+    const ref = [t.carrier, t.number].filter(Boolean).join(" · ");
+    const thumb = (t.photos || [])[0] ? t.photos[0].src : null;
+
+    if (ITIN_STAYS.includes(t.type)) {
+      events.push({
+        when: t.departure || "",
+        order, icon,
+        action: "Check in",
+        name,
+        lines: [route, ref].filter(Boolean),
+        notes: t.notes || "",
+        paid: !!t.paid,
+        thumb
+      });
+
+      if (t.arrival) {
+        events.push({
+          when: t.arrival,
+          order, icon: "🧳",
+          action: "Check out",
+          name,
+          lines: [t.from].filter(Boolean),
+          notes: "",
+          paid: !!t.paid,
+          thumb: null
+        });
+      }
+      return;
+    }
+
+    events.push({
+      when: t.departure || t.arrival || "",
+      order, icon,
+      action: ITIN_ACTIONS[t.type] || "Plan",
+      name,
+      lines: [
+        route,
+        ref,
+        t.departure && t.arrival ? "Arrives " + formatDateTime(t.arrival) : ""
+      ].filter(Boolean),
+      notes: t.notes || "",
+      paid: !!t.paid,
+      thumb
+    });
+  });
+
+  events.sort((a, b) => {
+    if (!a.when && !b.when) return a.order - b.order;
+    if (!a.when) return 1;
+    if (!b.when) return -1;
+    if (a.when === b.when) return a.order - b.order;
+    return a.when < b.when ? -1 : 1;
+  });
+
+  return events;
+}
+
+function itinItemHtml(ev) {
+  return `
+    <div class="itin-item">
+      <div class="itin-time">${escapeHtml(itinTime(ev.when) || "—")}</div>
+      <div class="itin-card">
+        <div class="itin-head">
+          <span>${ev.icon}</span>
+          <span class="itin-action">${escapeHtml(ev.action)}</span>
+          ${ev.paid ? `<span class="itin-paid">Paid</span>` : ""}
+          <span class="itin-name">${escapeHtml(ev.name)}</span>
+        </div>
+        ${ev.lines.map(l => `<div class="itin-line">${escapeHtml(l)}</div>`).join("")}
+        ${ev.notes ? `<div class="itin-note">${escapeHtml(ev.notes)}</div>` : ""}
+        ${ev.thumb ? `<img class="itin-thumb light-img" src="${ev.thumb}" alt="">` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function renderItinerary() {
+  const events = buildItinerary();
+  const dated = events.filter(e => e.when);
+  const undated = events.filter(e => !e.when);
+
+  const days = [];
+  dated.forEach(ev => {
+    const key = String(ev.when).slice(0, 10);
+    let day = days.find(d => d.key === key);
+    if (!day) {
+      day = { key, items: [] };
+      days.push(day);
+    }
+    day.items.push(ev);
+  });
+
+  const span = days.length
+    ? formatDate(days[0].key) + (days.length > 1 ? " — " + formatDate(days[days.length - 1].key) : "")
+    : "";
+
+  app().innerHTML = `
+    <main class="main">
+      <button class="back-btn no-print" data-view="travel">‹ Travel & Reservations</button>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+          <h2 class="section-title">Itinerary</h2>
+          <button class="btn no-print" id="printItinBtn">🖨️ Print / Save PDF</button>
+        </div>
+
+        ${
+          events.length === 0
+            ? `<div class="empty">
+                <p>Nothing scheduled yet.</p>
+                <p class="soft">Add reservations in Travel & Reservations and they'll line up here by date and time.</p>
+              </div>`
+            : `
+              ${span ? `<div class="itin-summary">${escapeHtml(span)} · ${events.length} step${events.length === 1 ? "" : "s"}</div>` : ""}
+
+              ${days.map(day => `
+                <div class="itin-day">
+                  <div class="itin-day-head"><span>${escapeHtml(formatDate(day.key))}</span></div>
+                  ${day.items.map(itinItemHtml).join("")}
+                </div>
+              `).join("")}
+
+              ${
+                undated.length
+                  ? `<div class="itin-day itin-undated">
+                      <div class="itin-day-head"><span>No date yet</span></div>
+                      ${undated.map(itinItemHtml).join("")}
+                    </div>`
+                  : ""
+              }
+            `
+        }
+      </div>
+    </main>
+  `;
+
+  document.querySelector("[data-view='travel']").onclick = () => setView("travel");
+  const printItin = document.getElementById("printItinBtn");
+  if (printItin) printItin.onclick = () => window.print();
+}
+
+/* ---------- 3. Wire the itinerary into the app ---------- */
+
+const __caminoRender = render;
+render = function () {
+  if (state.view === "itinerary") {
+    closeMenu();
+    renderItinerary();
+    return;
+  }
+  __caminoRender();
+};
+
+const __caminoRenderTravel = renderTravel;
+renderTravel = function () {
+  __caminoRenderTravel();
+
+  const addBtn = document.getElementById("addTravelBtn");
+  if (!addBtn || document.getElementById("openItineraryBtn")) return;
+
+  const itinBtn = document.createElement("button");
+  itinBtn.className = "btn";
+  itinBtn.id = "openItineraryBtn";
+  itinBtn.textContent = "🗺️ Itinerary";
+  itinBtn.onclick = () => setView("itinerary");
+  addBtn.parentNode.insertBefore(itinBtn, addBtn);
+};
+
+(function addItineraryMenuItem() {
+  const menu = document.getElementById("tripMenu");
+  if (!menu || document.getElementById("itineraryMenuBtn")) return;
+
+  const btn = document.createElement("button");
+  btn.id = "itineraryMenuBtn";
+  btn.textContent = "🗺️ Itinerary";
+  btn.onclick = () => setView("itinerary");
+
+  const travelBtn = menu.querySelector("[data-view='travel']");
+  if (travelBtn && travelBtn.nextSibling) {
+    menu.insertBefore(btn, travelBtn.nextSibling);
+  } else {
+    menu.appendChild(btn);
+  }
+})();
+
+render();
+
+})();
+
 </script>
 </body>
 </html>
