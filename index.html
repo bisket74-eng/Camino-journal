@@ -6715,5 +6715,1135 @@ render();
 })();
 
 </script>
+  <!-- =====================================================================
+     CAMINO JOURNAL — ADD-ON BLOCK
+     Paste this whole thing at the very end of the file, on the line
+     just above the closing  </body>  tag. Nothing else changes.
+
+     Adds:  1. Currency Converter (Travel & Reservations + Trip Tools menu)
+            2. Bigger, easier-to-read Trip Tools buttons
+            3. Cleaner Itinerary that prints without splitting cards
+     ===================================================================== -->
+
+<style>
+/* =====================================================================
+   1. TRIP TOOLS — bigger, easier-to-read buttons
+   ===================================================================== */
+
+#tripMenuBtn {
+  font-size: 16px;
+  padding: 12px 18px;
+  min-height: 48px;
+  letter-spacing: .3px;
+}
+
+.menu {
+  min-width: 262px !important;
+  border-radius: 9px !important;
+}
+
+.menu button,
+.menu button#backupMenuBtn,
+.menu button#restoreMenuBtn,
+.menu button#itineraryMenuBtn,
+.menu button#currencyMenuBtn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  font-size: 16.5px !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+  color: var(--ink) !important;
+  padding: 16px 18px !important;
+  min-height: 56px !important;
+  background: rgba(255,255,255,.42) !important;
+}
+
+.menu button:hover,
+.menu button:active {
+  background: rgba(185,139,59,.16) !important;
+}
+
+/* Travel & Reservations action buttons */
+.travel-top-actions .btn,
+#addTravelBtn,
+#openItineraryBtn,
+#openCurrencyBtn {
+  font-size: 15px;
+  padding: 12px 16px;
+  min-height: 48px;
+}
+
+.travel-top-actions {
+  gap: 10px;
+}
+
+/* Dropdowns read a little larger everywhere */
+.select {
+  min-height: 50px;
+  font-size: 16.5px;
+}
+
+/* =====================================================================
+   2. CURRENCY CONVERTER
+   ===================================================================== */
+
+.fx-amount {
+  font-size: 30px !important;
+  font-weight: 700;
+  text-align: center;
+  padding: 14px 12px !important;
+  -moz-appearance: textfield;
+}
+
+.fx-amount::-webkit-outer-spin-button,
+.fx-amount::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.fx-pair {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.fx-pair-field {
+  margin-bottom: 16px;
+  min-width: 0;
+}
+
+.fx-select {
+  width: 100%;
+}
+
+.fx-swap {
+  margin-bottom: 16px;
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+  border: 1px solid rgba(47,73,110,.28);
+  background: rgba(251,245,232,.9);
+  color: var(--blue);
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(62,47,29,.09);
+}
+
+.fx-swap:active {
+  background: var(--blue);
+  color: white;
+}
+
+.fx-result-card {
+  border: 1px solid rgba(185,139,59,.4);
+  background:
+    radial-gradient(circle at 12% 10%, rgba(255,255,255,.7), transparent 42%),
+    rgba(255,255,255,.5);
+  border-radius: 9px;
+  padding: 18px 16px;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.fx-result-label {
+  font-family: "Courier Prime", monospace;
+  font-size: 11.5px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+
+.fx-result {
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(38px, 12vw, 52px);
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--ink);
+  margin: 6px 0 8px;
+  overflow-wrap: break-word;
+}
+
+.fx-rate {
+  font-family: "Courier Prime", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.fx-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px;
+}
+
+.fx-chip {
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.45);
+  border-radius: 6px;
+  padding: 9px 11px;
+}
+
+.fx-chip-from {
+  display: block;
+  font-family: "Courier Prime", monospace;
+  font-size: 11.5px;
+  color: var(--blue);
+}
+
+.fx-chip-to {
+  display: block;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+.fx-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(45,36,29,.12);
+}
+
+.fx-footer .btn {
+  min-height: 48px;
+  font-size: 15px;
+}
+
+.fx-updated {
+  flex: 1;
+  min-width: 150px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+/* =====================================================================
+   3. ITINERARY — clearer on screen, tidy on paper
+   ===================================================================== */
+
+.itin2-screen-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.itin2-screen-head .section-title {
+  margin: 0;
+}
+
+.itin2-screen-head .btn {
+  min-height: 48px;
+  font-size: 15px;
+}
+
+.itin2-summary {
+  font-family: "Courier Prime", monospace;
+  font-size: 11.5px;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin: 10px 0 20px;
+}
+
+.itin2-print-head {
+  display: none;
+}
+
+.itin2-day {
+  margin-bottom: 24px;
+}
+
+.itin2-day:last-child {
+  margin-bottom: 0;
+}
+
+.itin2-day-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(45,36,29,.2);
+}
+
+.itin2-day-date {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.itin2-day-count {
+  margin-left: auto;
+  font-family: "Courier Prime", monospace;
+  font-size: 10.5px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.itin2-item {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.itin2-item:last-child {
+  margin-bottom: 0;
+}
+
+.itin2-time {
+  font-family: "Courier Prime", monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--red);
+  text-align: right;
+  padding-top: 13px;
+  line-height: 1.25;
+}
+
+.itin2-card {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold);
+  background: rgba(255,255,255,.52);
+  border-radius: 7px;
+  padding: 12px 13px;
+  min-width: 0;
+}
+
+.itin2-kicker {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.itin2-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.itin2-action {
+  font-family: "Courier Prime", monospace;
+  font-size: 10.5px;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+
+.itin2-paid {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--green);
+  border: 1px solid rgba(79,104,79,.45);
+  background: rgba(79,104,79,.12);
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+
+.itin2-name {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.12;
+  margin-top: 3px;
+  overflow-wrap: break-word;
+}
+
+.itin2-line {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: rgba(45,36,29,.82);
+  margin-top: 4px;
+  overflow-wrap: break-word;
+}
+
+.itin2-note {
+  font-family: "Libre Baskerville", serif;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-top: 8px;
+  padding-left: 10px;
+  border-left: 2px solid rgba(185,139,59,.45);
+}
+
+.itin2-thumb {
+  display: block;
+  margin-top: 10px;
+  width: 76px;
+  height: 76px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+@media (max-width: 420px) {
+  .itin2-item {
+    grid-template-columns: 58px 1fr;
+    gap: 9px;
+  }
+
+  .itin2-time {
+    font-size: 12px;
+  }
+}
+
+/* ---------- itinerary printing ---------- */
+@media print {
+  body::before {
+    display: none !important;
+  }
+
+  .main.itin2-main {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: .5in .55in !important;
+  }
+
+  .itin2-main .card.itin2-sheet {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+
+  .itin2-print-head {
+    display: block !important;
+    margin-bottom: .22in;
+    padding-bottom: .1in;
+    border-bottom: 1.5px solid rgba(45,36,29,.5);
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  .itin2-print-title {
+    font-family: "Cinzel", "Cormorant Garamond", serif;
+    font-size: 21pt;
+    line-height: 1;
+    color: #2d241d;
+  }
+
+  .itin2-print-sub {
+    font-family: "Courier Prime", monospace;
+    font-size: 8pt;
+    letter-spacing: 1.3pt;
+    text-transform: uppercase;
+    color: #2f496e;
+    margin-top: 5pt;
+  }
+
+  .itin2-day {
+    margin-bottom: .2in !important;
+    break-inside: auto;
+  }
+
+  .itin2-day-head {
+    margin-bottom: .09in !important;
+    padding-bottom: 3pt !important;
+    border-bottom: 1px solid rgba(45,36,29,.45) !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  .itin2-day-date {
+    font-size: 14pt !important;
+  }
+
+  .itin2-day-count {
+    font-size: 6.8pt !important;
+  }
+
+  /* the whole reason for this rewrite — a step never splits across pages */
+  .itin2-item,
+  .itin2-card {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .itin2-item {
+    grid-template-columns: .72in 1fr !important;
+    gap: .1in !important;
+    margin-bottom: .08in !important;
+  }
+
+  .itin2-time {
+    font-size: 8pt !important;
+    padding-top: .07in !important;
+    color: #993a30 !important;
+  }
+
+  .itin2-card {
+    background: none !important;
+    border: 1px solid rgba(45,36,29,.3) !important;
+    border-left: 2.5pt solid rgba(185,139,59,.9) !important;
+    padding: .07in .09in !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .itin2-action {
+    font-size: 6.8pt !important;
+  }
+
+  .itin2-paid {
+    font-size: 6pt !important;
+    padding: 1pt 3pt !important;
+  }
+
+  .itin2-name {
+    font-size: 13pt !important;
+    margin-top: 2pt !important;
+  }
+
+  .itin2-line {
+    font-size: 8.6pt !important;
+    line-height: 1.4 !important;
+    margin-top: 2pt !important;
+    color: #2d241d !important;
+  }
+
+  .itin2-note {
+    font-size: 8pt !important;
+    line-height: 1.45 !important;
+    margin-top: 4pt !important;
+    color: #4a4038 !important;
+  }
+
+  .itin2-thumb {
+    width: .85in !important;
+    height: .85in !important;
+    margin-top: 5pt !important;
+  }
+
+  .itin2-summary {
+    display: none !important;
+  }
+}
+</style>
+
+<script>
+/* =====================================================================
+   CAMINO JOURNAL — Currency Converter + Bigger Trip Tools + Clean Itinerary
+   ===================================================================== */
+
+(function caminoExtrasV3() {
+if (window.__caminoExtrasV3) return;
+window.__caminoExtrasV3 = true;
+
+/* ---------------------------------------------------------------
+   1. CURRENCY CONVERTER
+   --------------------------------------------------------------- */
+
+const FX_KEY = "camino-journal-fx-v1";
+
+const CURRENCIES = [
+  ["EUR", "Euro"],
+  ["USD", "US Dollar"],
+  ["INR", "Indian Rupee"],
+  ["GBP", "British Pound"],
+  ["JPY", "Japanese Yen"],
+  ["CHF", "Swiss Franc"],
+  ["CAD", "Canadian Dollar"],
+  ["AUD", "Australian Dollar"],
+  ["NZD", "New Zealand Dollar"],
+  ["CNY", "Chinese Yuan"],
+  ["HKD", "Hong Kong Dollar"],
+  ["SGD", "Singapore Dollar"],
+  ["KRW", "South Korean Won"],
+  ["TWD", "Taiwan Dollar"],
+  ["THB", "Thai Baht"],
+  ["MYR", "Malaysian Ringgit"],
+  ["IDR", "Indonesian Rupiah"],
+  ["PHP", "Philippine Peso"],
+  ["VND", "Vietnamese Dong"],
+  ["AED", "UAE Dirham"],
+  ["SAR", "Saudi Riyal"],
+  ["QAR", "Qatari Riyal"],
+  ["ILS", "Israeli Shekel"],
+  ["TRY", "Turkish Lira"],
+  ["EGP", "Egyptian Pound"],
+  ["MAD", "Moroccan Dirham"],
+  ["ZAR", "South African Rand"],
+  ["NGN", "Nigerian Naira"],
+  ["KES", "Kenyan Shilling"],
+  ["PKR", "Pakistani Rupee"],
+  ["BDT", "Bangladeshi Taka"],
+  ["LKR", "Sri Lankan Rupee"],
+  ["NPR", "Nepalese Rupee"],
+  ["SEK", "Swedish Krona"],
+  ["NOK", "Norwegian Krone"],
+  ["DKK", "Danish Krone"],
+  ["PLN", "Polish Zloty"],
+  ["CZK", "Czech Koruna"],
+  ["HUF", "Hungarian Forint"],
+  ["RON", "Romanian Leu"],
+  ["BGN", "Bulgarian Lev"],
+  ["ISK", "Icelandic Krona"],
+  ["UAH", "Ukrainian Hryvnia"],
+  ["MXN", "Mexican Peso"],
+  ["BRL", "Brazilian Real"],
+  ["ARS", "Argentine Peso"],
+  ["CLP", "Chilean Peso"],
+  ["COP", "Colombian Peso"],
+  ["PEN", "Peruvian Sol"]
+];
+
+/* Starting rates, per 1 euro. These work with no signal at all.
+   Tap Update rates when you have wifi to replace them with live ones. */
+const OFFLINE_RATES = {
+  EUR: 1, USD: 1.14, INR: 99, GBP: 0.85, JPY: 172, CHF: 0.93,
+  CAD: 1.56, AUD: 1.73, NZD: 1.90, CNY: 8.20, HKD: 8.90, SGD: 1.46,
+  KRW: 1560, TWD: 34.0, THB: 37.0, MYR: 4.80, IDR: 18500, PHP: 65.0,
+  VND: 29500, AED: 4.19, SAR: 4.28, QAR: 4.15, ILS: 3.90, TRY: 46.0,
+  EGP: 55.0, MAD: 10.40, ZAR: 20.50, NGN: 1750, KES: 147, PKR: 320,
+  BDT: 139, LKR: 340, NPR: 158, SEK: 11.00, NOK: 11.60, DKK: 7.46,
+  PLN: 4.25, CZK: 24.50, HUF: 395, RON: 5.08, BGN: 1.9558, ISK: 143,
+  UAH: 47.0, MXN: 21.00, BRL: 6.30, ARS: 1400, CLP: 1080, COP: 4600,
+  PEN: 4.10
+};
+
+const PINNED = ["EUR", "USD", "INR", "GBP"];
+
+let fx = load(FX_KEY, null);
+
+if (!fx || typeof fx !== "object") fx = {};
+fx.rates = Object.assign({}, OFFLINE_RATES, fx.rates || {});
+fx.rates.EUR = 1;
+fx.from = fx.from || "USD";
+fx.to = fx.to || "EUR";
+fx.amount = fx.amount || "20";
+fx.updated = fx.updated || null;
+
+function saveFx() {
+  save(FX_KEY, fx);
+}
+
+function currencyName(code) {
+  const found = CURRENCIES.find(c => c[0] === code);
+  return found ? found[1] : code;
+}
+
+function convert(amount, from, to) {
+  const a = parseFloat(amount);
+  const rf = fx.rates[from];
+  const rt = fx.rates[to];
+  if (isNaN(a) || !rf || !rt) return null;
+  return a * (rt / rf);
+}
+
+function fmtMoney(value, code) {
+  if (value === null || isNaN(value)) return "—";
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: code,
+      currencyDisplay: "narrowSymbol"
+    }).format(value);
+  } catch (e) {
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: code
+      }).format(value);
+    } catch (err) {
+      return value.toFixed(2) + " " + code;
+    }
+  }
+}
+
+function fmtRate(value) {
+  if (value === null || isNaN(value)) return "—";
+  if (value >= 1000) return value.toFixed(0);
+  if (value >= 100) return value.toFixed(1);
+  if (value >= 1) return value.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+  return value.toFixed(5).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function currencyOptions(selected) {
+  const opt = c =>
+    `<option value="${c[0]}" ${c[0] === selected ? "selected" : ""}>${escapeHtml(c[0] + " — " + c[1])}</option>`;
+
+  const top = PINNED
+    .map(code => CURRENCIES.find(c => c[0] === code))
+    .filter(Boolean);
+
+  const rest = CURRENCIES
+    .filter(c => !PINNED.includes(c[0]))
+    .sort((a, b) => a[1].localeCompare(b[1]));
+
+  return `
+    <optgroup label="Most used">${top.map(opt).join("")}</optgroup>
+    <optgroup label="All currencies">${rest.map(opt).join("")}</optgroup>
+  `;
+}
+
+function updateCurrencyResult() {
+  const amountEl = document.getElementById("fxAmount");
+  const fromEl = document.getElementById("fxFrom");
+  const toEl = document.getElementById("fxTo");
+  if (!amountEl || !fromEl || !toEl) return;
+
+  fx.amount = amountEl.value;
+  fx.from = fromEl.value;
+  fx.to = toEl.value;
+
+  const result = convert(fx.amount || "0", fx.from, fx.to);
+  const one = convert(1, fx.from, fx.to);
+  const back = convert(1, fx.to, fx.from);
+
+  const resultEl = document.getElementById("fxResult");
+  const fromLineEl = document.getElementById("fxFromLine");
+  const rateEl = document.getElementById("fxRateLine");
+  const chipsEl = document.getElementById("fxChips");
+
+  if (resultEl) resultEl.textContent = fmtMoney(result, fx.to);
+  if (fromLineEl) {
+    fromLineEl.textContent =
+      fmtMoney(parseFloat(fx.amount || "0") || 0, fx.from) + " in " + currencyName(fx.to);
+  }
+  if (rateEl) {
+    rateEl.textContent =
+      "1 " + fx.from + " = " + fmtRate(one) + " " + fx.to +
+      "  ·  1 " + fx.to + " = " + fmtRate(back) + " " + fx.from;
+  }
+
+  if (chipsEl) {
+    chipsEl.innerHTML = [1, 5, 10, 20, 50, 100].map(n => `
+      <div class="fx-chip">
+        <span class="fx-chip-from">${escapeHtml(fmtMoney(n, fx.from))}</span>
+        <span class="fx-chip-to">${escapeHtml(fmtMoney(convert(n, fx.from, fx.to), fx.to))}</span>
+      </div>
+    `).join("");
+  }
+
+  saveFx();
+}
+
+function ratesUpdatedText() {
+  if (!fx.updated) return "Using built-in starting rates — tap Update rates when you have wifi.";
+  const d = new Date(fx.updated);
+  if (isNaN(d.getTime())) return "Rates updated.";
+  return "Rates updated " + d.toLocaleDateString(undefined, {
+    month: "short", day: "numeric", year: "numeric"
+  }) + ".";
+}
+
+async function fetchRates() {
+  const merge = incoming => {
+    let count = 0;
+    Object.keys(incoming || {}).forEach(code => {
+      const value = Number(incoming[code]);
+      if (fx.rates[code] !== undefined && value > 0) {
+        fx.rates[code] = value;
+        count++;
+      }
+    });
+    fx.rates.EUR = 1;
+    return count;
+  };
+
+  try {
+    const res = await fetch("https://api.frankfurter.app/latest?from=EUR");
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.rates && merge(data.rates) > 5) {
+        fx.updated = new Date().toISOString();
+        saveFx();
+        return true;
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const res2 = await fetch("https://open.er-api.com/v6/latest/EUR");
+    if (res2.ok) {
+      const data2 = await res2.json();
+      if (data2 && data2.rates && merge(data2.rates) > 5) {
+        fx.updated = new Date().toISOString();
+        saveFx();
+        return true;
+      }
+    }
+  } catch (e) {}
+
+  return false;
+}
+
+function renderCurrency() {
+  app().innerHTML = `
+    <main class="main">
+      <button class="back-btn" data-view="travel">‹ Travel &amp; Reservations</button>
+
+      <div class="card fx-card">
+        <h2 class="section-title">Currency Converter</h2>
+        <p class="panel-sub">Works with no signal. Tap Update rates whenever you find wifi.</p>
+
+        <div class="field">
+          <label class="field-label" for="fxAmount">Amount</label>
+          <input class="input fx-amount" id="fxAmount" type="number" inputmode="decimal"
+                 min="0" step="0.01" value="${escapeHtml(fx.amount)}">
+        </div>
+
+        <div class="fx-pair">
+          <div class="field fx-pair-field">
+            <label class="field-label" for="fxFrom">From</label>
+            <select class="select fx-select" id="fxFrom">${currencyOptions(fx.from)}</select>
+          </div>
+
+          <button type="button" class="fx-swap" id="fxSwapBtn" title="Swap currencies">⇅</button>
+
+          <div class="field fx-pair-field">
+            <label class="field-label" for="fxTo">To</label>
+            <select class="select fx-select" id="fxTo">${currencyOptions(fx.to)}</select>
+          </div>
+        </div>
+
+        <div class="fx-result-card">
+          <div class="fx-result-label" id="fxFromLine"></div>
+          <div class="fx-result" id="fxResult"></div>
+          <div class="fx-rate" id="fxRateLine"></div>
+        </div>
+
+        <div class="detail-label" style="margin-top:22px;">Quick amounts</div>
+        <div class="fx-chips" id="fxChips"></div>
+
+        <div class="fx-footer">
+          <button class="btn" id="fxRefreshBtn">↻ Update rates</button>
+          <span class="fx-updated" id="fxUpdated">${escapeHtml(ratesUpdatedText())}</span>
+        </div>
+      </div>
+    </main>
+  `;
+
+  document.querySelector("[data-view='travel']").onclick = () => setView("travel");
+
+  const amountEl = document.getElementById("fxAmount");
+  const fromEl = document.getElementById("fxFrom");
+  const toEl = document.getElementById("fxTo");
+
+  amountEl.oninput = updateCurrencyResult;
+  amountEl.onfocus = () => amountEl.select();
+  fromEl.onchange = updateCurrencyResult;
+  toEl.onchange = updateCurrencyResult;
+
+  document.getElementById("fxSwapBtn").onclick = () => {
+    const a = fromEl.value;
+    fromEl.value = toEl.value;
+    toEl.value = a;
+    updateCurrencyResult();
+  };
+
+  document.getElementById("fxRefreshBtn").onclick = async () => {
+    const btn = document.getElementById("fxRefreshBtn");
+    const label = document.getElementById("fxUpdated");
+    btn.disabled = true;
+    btn.textContent = "Updating…";
+
+    const ok = await fetchRates();
+
+    btn.disabled = false;
+    btn.textContent = "↻ Update rates";
+
+    if (ok) {
+      if (label) label.textContent = ratesUpdatedText();
+      updateCurrencyResult();
+      toast("Rates updated");
+    } else {
+      toast("No connection — keeping saved rates.", true);
+    }
+  };
+
+  updateCurrencyResult();
+}
+
+/* ---------------------------------------------------------------
+   2. ITINERARY — cleaner on screen, clean page breaks in print
+   --------------------------------------------------------------- */
+
+const ITIN2_ICONS = {
+  "Airline Reservation": "✈️",
+  "Train Reservation": "🚆",
+  "Hotel Reservation": "🏨",
+  "Albergue Reservation": "🛏️",
+  "Bus Reservation": "🚌",
+  "Taxi / Rideshare": "🚕",
+  "Ferry": "⛴️",
+  "Screenshot Only": "📷",
+  "Other": "📌"
+};
+
+const ITIN2_ACTIONS = {
+  "Airline Reservation": "Fly",
+  "Train Reservation": "Train",
+  "Bus Reservation": "Bus",
+  "Taxi / Rideshare": "Ride",
+  "Ferry": "Ferry",
+  "Screenshot Only": "Plan",
+  "Other": "Plan"
+};
+
+const ITIN2_STAYS = ["Hotel Reservation", "Albergue Reservation"];
+
+function itin2Time(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+function buildItin2() {
+  const events = [];
+
+  travel.forEach((t, order) => {
+    const icon = ITIN2_ICONS[t.type] || "📌";
+    const name = t.title || t.carrier || t.type || "Reservation";
+    const route = t.from && t.to ? t.from + " → " + t.to : (t.from || t.to || "");
+    const ref = [t.carrier, t.number].filter(Boolean).join(" · ");
+    const thumb = (t.photos || [])[0] ? t.photos[0].src : null;
+
+    if (ITIN2_STAYS.includes(t.type)) {
+      events.push({
+        when: t.departure || "",
+        order,
+        icon,
+        action: "Check in",
+        name,
+        lines: [route, ref].filter(Boolean),
+        notes: t.notes || "",
+        paid: !!t.paid,
+        thumb
+      });
+
+      if (t.arrival) {
+        events.push({
+          when: t.arrival,
+          order,
+          icon: "🧳",
+          action: "Check out",
+          name,
+          lines: [t.from].filter(Boolean),
+          notes: "",
+          paid: !!t.paid,
+          thumb: null
+        });
+      }
+      return;
+    }
+
+    events.push({
+      when: t.departure || t.arrival || "",
+      order,
+      icon,
+      action: ITIN2_ACTIONS[t.type] || "Plan",
+      name,
+      lines: [
+        route,
+        ref,
+        t.departure && t.arrival ? "Arrives " + formatDateTime(t.arrival) : ""
+      ].filter(Boolean),
+      notes: t.notes || "",
+      paid: !!t.paid,
+      thumb
+    });
+  });
+
+  events.sort((a, b) => {
+    if (!a.when && !b.when) return a.order - b.order;
+    if (!a.when) return 1;
+    if (!b.when) return -1;
+    if (a.when === b.when) return a.order - b.order;
+    return a.when < b.when ? -1 : 1;
+  });
+
+  return events;
+}
+
+function itin2ItemHtml(ev) {
+  return `
+    <div class="itin2-item">
+      <div class="itin2-time">${escapeHtml(itin2Time(ev.when) || "—")}</div>
+      <div class="itin2-card">
+        <div class="itin2-kicker">
+          <span class="itin2-icon">${ev.icon}</span>
+          <span class="itin2-action">${escapeHtml(ev.action)}</span>
+          ${ev.paid ? `<span class="itin2-paid">Paid</span>` : ""}
+        </div>
+        <div class="itin2-name">${escapeHtml(ev.name)}</div>
+        ${ev.lines.map(l => `<div class="itin2-line">${escapeHtml(l)}</div>`).join("")}
+        ${ev.notes ? `<div class="itin2-note">${escapeHtml(ev.notes)}</div>` : ""}
+        ${ev.thumb ? `<img class="itin2-thumb light-img" src="${ev.thumb}" alt="">` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function renderItinerary2() {
+  const events = buildItin2();
+  const dated = events.filter(e => e.when);
+  const undated = events.filter(e => !e.when);
+
+  const days = [];
+  dated.forEach(ev => {
+    const key = String(ev.when).slice(0, 10);
+    let day = days.find(d => d.key === key);
+    if (!day) {
+      day = { key, items: [] };
+      days.push(day);
+    }
+    day.items.push(ev);
+  });
+
+  const span = days.length
+    ? formatDate(days[0].key) + (days.length > 1 ? " — " + formatDate(days[days.length - 1].key) : "")
+    : "";
+
+  app().innerHTML = `
+    <main class="main itin2-main">
+      <button class="back-btn no-print" data-view="travel">‹ Travel &amp; Reservations</button>
+
+      <div class="card itin2-sheet">
+        <div class="itin2-print-head">
+          <div class="itin2-print-title">Camino Itinerary</div>
+          <div class="itin2-print-sub">${escapeHtml(settings.currentRoute || "Camino de Santiago")}${span ? " · " + escapeHtml(span) : ""}</div>
+        </div>
+
+        <div class="itin2-screen-head no-print">
+          <h2 class="section-title">Itinerary</h2>
+          <button class="btn" id="printItin2Btn">🖨️ Print / Save PDF</button>
+        </div>
+
+        ${
+          events.length === 0
+            ? `<div class="empty">
+                <p>Nothing scheduled yet.</p>
+                <p class="soft">Add reservations in Travel &amp; Reservations and they line up here by date and time.</p>
+              </div>`
+            : `
+              ${span ? `<div class="itin2-summary no-print">${escapeHtml(span)} · ${events.length} step${events.length === 1 ? "" : "s"}</div>` : ""}
+
+              ${days.map(day => `
+                <section class="itin2-day">
+                  <div class="itin2-day-head">
+                    <span class="itin2-day-date">${escapeHtml(formatDate(day.key))}</span>
+                    <span class="itin2-day-count">${day.items.length} step${day.items.length === 1 ? "" : "s"}</span>
+                  </div>
+                  ${day.items.map(itin2ItemHtml).join("")}
+                </section>
+              `).join("")}
+
+              ${
+                undated.length
+                  ? `<section class="itin2-day">
+                      <div class="itin2-day-head">
+                        <span class="itin2-day-date">No date yet</span>
+                        <span class="itin2-day-count">${undated.length} step${undated.length === 1 ? "" : "s"}</span>
+                      </div>
+                      ${undated.map(itin2ItemHtml).join("")}
+                    </section>`
+                  : ""
+              }
+            `
+        }
+      </div>
+    </main>
+  `;
+
+  document.querySelector("[data-view='travel']").onclick = () => setView("travel");
+
+  const printBtn = document.getElementById("printItin2Btn");
+  if (printBtn) printBtn.onclick = () => window.print();
+}
+
+/* ---------------------------------------------------------------
+   3. Wire the new screens in
+   --------------------------------------------------------------- */
+
+const __caminoRenderV3 = render;
+
+render = function () {
+  if (state.view === "itinerary") {
+    closeMenu();
+    renderItinerary2();
+    return;
+  }
+
+  if (state.view === "currency") {
+    closeMenu();
+    renderCurrency();
+    return;
+  }
+
+  __caminoRenderV3();
+};
+
+const __caminoRenderTravelV3 = renderTravel;
+
+renderTravel = function () {
+  __caminoRenderTravelV3();
+
+  const addBtn = document.getElementById("addTravelBtn");
+  if (!addBtn || document.getElementById("openCurrencyBtn")) return;
+
+  const curBtn = document.createElement("button");
+  curBtn.className = "btn";
+  curBtn.id = "openCurrencyBtn";
+  curBtn.textContent = "💱 Currency";
+  curBtn.onclick = () => setView("currency");
+
+  addBtn.parentNode.insertBefore(curBtn, addBtn);
+};
+
+(function addCurrencyMenuItem() {
+  const menu = document.getElementById("tripMenu");
+  if (!menu || document.getElementById("currencyMenuBtn")) return;
+
+  const btn = document.createElement("button");
+  btn.id = "currencyMenuBtn";
+  btn.textContent = "💱 Currency Converter";
+  btn.onclick = () => setView("currency");
+
+  const itinBtn = document.getElementById("itineraryMenuBtn");
+  if (itinBtn && itinBtn.nextSibling) {
+    menu.insertBefore(btn, itinBtn.nextSibling);
+  } else if (itinBtn) {
+    menu.appendChild(btn);
+  } else {
+    const travelBtn = menu.querySelector("[data-view='travel']");
+    if (travelBtn && travelBtn.nextSibling) {
+      menu.insertBefore(btn, travelBtn.nextSibling);
+    } else {
+      menu.appendChild(btn);
+    }
+  }
+})();
+
+render();
+
+})();
+</script>
+
 </body>
 </html>
