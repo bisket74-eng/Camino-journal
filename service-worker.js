@@ -1,4 +1,4 @@
-const CACHE_NAME = "camino-journal-cache-zoom-buttons-v20260807-1120";
+const CACHE_NAME = "camino-journal-cache-itinerary-levels-v20260818-0900";
 const APP_SHELL = [
   "./",
   "./index.html",
