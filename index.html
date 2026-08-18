@@ -7845,5 +7845,663 @@ render();
 })();
 </script>
 
+<style>
+/* =====================================================================
+   ITINERARY v3 — three reading levels: Dates → Times → Details
+   Overrides the older itinerary screen. Appended patch, safe to remove.
+   ===================================================================== */
+
+:root {
+  --itn-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+              "Helvetica Neue", Arial, sans-serif;
+}
+
+.itn-main .card.itn-sheet {
+  padding-top: 14px;
+}
+
+.itn-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.itn-head .section-title {
+  margin: 0;
+}
+
+.itn-sub {
+  font-family: var(--itn-sans);
+  font-size: 13px;
+  color: var(--muted);
+  margin: -4px 0 12px;
+}
+
+/* ---------- level switcher ---------- */
+
+.itn-levels {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 8px;
+  margin: 0 -4px 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 6px 14px rgba(62,47,29,.10);
+}
+
+.itn-lvl-btn {
+  font-family: var(--itn-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  min-height: 46px;
+  padding: 6px 4px;
+  cursor: pointer;
+  line-height: 1.15;
+}
+
+.itn-lvl-btn small {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 500;
+  opacity: .75;
+  margin-top: 2px;
+}
+
+.itn-lvl-btn.active {
+  color: var(--paper);
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
+/* ---------- day ---------- */
+
+.itn-day {
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+
+.itn-day:last-child {
+  border-bottom: none;
+}
+
+.itn-day-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 8px 2px;
+  min-height: 52px;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.itn-day-date {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.1;
+  flex: 1;
+  min-width: 0;
+}
+
+.itn-day-count {
+  font-family: var(--itn-sans);
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.itn-chev {
+  font-size: 13px;
+  color: var(--muted);
+  transition: transform .15s ease;
+  width: 16px;
+  text-align: center;
+}
+
+.itn-day.open > .itn-day-head .itn-chev,
+.itn-row.open > .itn-row-head .itn-chev {
+  transform: rotate(180deg);
+}
+
+.itn-day-body {
+  display: none;
+  padding-left: 2px;
+}
+
+.itn-day.open > .itn-day-body {
+  display: block;
+}
+
+/* ---------- row (one step) ---------- */
+
+.itn-row {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  background: rgba(255,255,255,.5);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.itn-row-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 10px 11px;
+  min-height: 56px;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.itn-time {
+  font-family: var(--itn-sans);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--red);
+  line-height: 1.25;
+  width: 66px;
+  flex: none;
+}
+
+.itn-time span {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.itn-what {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--itn-sans);
+}
+
+.itn-what b {
+  display: block;
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itn-what i {
+  display: block;
+  font-style: normal;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itn-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  flex: none;
+}
+
+/* ---------- detail body ---------- */
+
+.itn-row-body {
+  display: none;
+  padding: 0 12px 12px 12px;
+  border-top: 1px dashed var(--line);
+  margin-top: 2px;
+  padding-top: 10px;
+}
+
+.itn-row.open > .itn-row-body {
+  display: block;
+}
+
+.itn-line {
+  font-family: var(--itn-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+  margin-top: 4px;
+  overflow-wrap: break-word;
+}
+
+.itn-line b {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  display: block;
+}
+
+.itn-note {
+  font-family: var(--itn-sans);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin-top: 10px;
+  padding-left: 10px;
+  border-left: 2px solid rgba(185,139,59,.5);
+  white-space: pre-wrap;
+}
+
+.itn-thumb {
+  display: block;
+  margin-top: 10px;
+  width: 92px;
+  height: 92px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.itn-empty {
+  font-family: var(--itn-sans);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+@media (max-width: 380px) {
+  .itn-day-date { font-size: 22px; }
+  .itn-time { width: 58px; font-size: 13px; }
+}
+
+/* ---------- print: everything open, nothing split ---------- */
+@media print {
+  body::before { display: none !important; }
+
+  .itn-levels { display: none !important; }
+
+  .main.itn-main {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: .5in .55in !important;
+  }
+
+  .itn-main .card.itn-sheet {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+
+  .itn-print-head {
+    display: block !important;
+    margin-bottom: .2in;
+    padding-bottom: .08in;
+    border-bottom: 1.5px solid rgba(45,36,29,.5);
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  .itn-print-title {
+    font-family: "Cinzel", "Cormorant Garamond", serif;
+    font-size: 20pt;
+    line-height: 1;
+    color: #2d241d;
+  }
+
+  .itn-print-sub {
+    font-family: var(--itn-sans);
+    font-size: 9pt;
+    color: #2f496e;
+    margin-top: 4pt;
+  }
+
+  .itn-day-body,
+  .itn-row-body {
+    display: block !important;
+  }
+
+  .itn-chev,
+  .itn-sub { display: none !important; }
+
+  .itn-day {
+    margin-bottom: .14in !important;
+    padding-bottom: .08in !important;
+  }
+
+  .itn-day-head {
+    min-height: 0 !important;
+    padding: 0 0 3pt 0 !important;
+    border-bottom: 1px solid rgba(45,36,29,.45) !important;
+    margin-bottom: .08in !important;
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  .itn-day-date { font-size: 14pt !important; }
+  .itn-day-count { font-size: 8pt !important; }
+
+  .itn-row {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    background: none !important;
+    border: 1px solid rgba(45,36,29,.3) !important;
+    border-left: 2.5pt solid rgba(185,139,59,.9) !important;
+    margin-bottom: .07in !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .itn-row-head {
+    min-height: 0 !important;
+    padding: .06in .08in !important;
+  }
+
+  .itn-time { font-size: 9pt !important; width: .62in !important; color: #993a30 !important; }
+  .itn-time span { font-size: 8pt !important; }
+  .itn-what b { font-size: 11pt !important; white-space: normal !important; }
+  .itn-what i { font-size: 8.5pt !important; white-space: normal !important; }
+
+  .itn-row-body { padding: .06in .08in .07in !important; }
+  .itn-line { font-size: 9pt !important; margin-top: 2pt !important; }
+  .itn-line b { font-size: 7pt !important; }
+  .itn-note { font-size: 8.5pt !important; margin-top: 4pt !important; }
+  .itn-thumb { width: .9in !important; height: .9in !important; }
+}
+</style>
+
+<script>
+/* =====================================================================
+   ITINERARY v3 — Dates / Times / Details reading levels
+   ===================================================================== */
+(function () {
+
+  const ICONS = {
+    "Airline Reservation": "✈️",
+    "Train Reservation": "🚆",
+    "Hotel Reservation": "🏨",
+    "Albergue Reservation": "🛏️",
+    "Bus Reservation": "🚌",
+    "Taxi / Rideshare": "🚕",
+    "Ferry": "⛴️",
+    "Screenshot Only": "📷",
+    "Other": "📌"
+  };
+
+  const ACTIONS = {
+    "Airline Reservation": "Flight",
+    "Train Reservation": "Train",
+    "Bus Reservation": "Bus",
+    "Taxi / Rideshare": "Ride",
+    "Ferry": "Ferry",
+    "Screenshot Only": "Plan",
+    "Other": "Plan"
+  };
+
+  const STAYS = ["Hotel Reservation", "Albergue Reservation"];
+
+  // 1 = dates only, 2 = dates + times, 3 = everything
+  let itnLevel = 2;
+  try {
+    const saved = Number(localStorage.getItem("caminoItnLevel"));
+    if (saved >= 1 && saved <= 3) itnLevel = saved;
+  } catch (e) {}
+
+  function t(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    let h = d.getHours();
+    const m = String(d.getMinutes()).padStart(2, "0");
+    const ap = h < 12 ? "a" : "p";
+    h = h % 12 || 12;
+    return h + ":" + m + ap;
+  }
+
+  function dayKey(iso) {
+    return String(iso || "").slice(0, 10);
+  }
+
+  function build() {
+    const list = [];
+
+    (typeof travel !== "undefined" ? travel : []).forEach((leg, order) => {
+      const icon = ICONS[leg.type] || "📌";
+      const name = leg.title || leg.carrier || leg.type || "Reservation";
+      const route = leg.from && leg.to ? leg.from + " → " + leg.to
+                  : (leg.from || leg.to || "");
+      const ref = [leg.carrier, leg.number].filter(Boolean).join(" · ");
+      const thumb = (leg.photos || [])[0] ? leg.photos[0].src : null;
+
+      if (STAYS.includes(leg.type)) {
+        list.push({
+          when: leg.departure || "", order, icon,
+          action: "Check in", name, route, ref,
+          endWhen: "", notes: leg.notes || "", paid: !!leg.paid, thumb
+        });
+
+        if (leg.arrival) {
+          list.push({
+            when: leg.arrival, order, icon: "🧳",
+            action: "Check out", name, route: leg.from || "", ref: "",
+            endWhen: "", notes: "", paid: !!leg.paid, thumb: null
+          });
+        }
+        return;
+      }
+
+      list.push({
+        when: leg.departure || leg.arrival || "",
+        order, icon,
+        action: ACTIONS[leg.type] || "Plan",
+        name, route, ref,
+        endWhen: leg.departure && leg.arrival ? leg.arrival : "",
+        notes: leg.notes || "",
+        paid: !!leg.paid,
+        thumb
+      });
+    });
+
+    list.sort((a, b) => {
+      if (!a.when && !b.when) return a.order - b.order;
+      if (!a.when) return 1;
+      if (!b.when) return -1;
+      if (a.when === b.when) return a.order - b.order;
+      return a.when < b.when ? -1 : 1;
+    });
+
+    return list;
+  }
+
+  function timeCell(ev) {
+    const start = t(ev.when);
+    if (!start) return `<div class="itn-time">—</div>`;
+
+    let end = "";
+    if (ev.endWhen) {
+      const plus = dayKey(ev.endWhen) !== dayKey(ev.when) ? " +1" : "";
+      end = `<span>↳ ${t(ev.endWhen)}${plus}</span>`;
+    }
+    return `<div class="itn-time">${start}${end}</div>`;
+  }
+
+  function rowHtml(ev, id) {
+    const details = [
+      ev.route ? `<div class="itn-line"><b>Route</b>${escapeHtml(ev.route)}</div>` : "",
+      ev.ref ? `<div class="itn-line"><b>Booking</b>${escapeHtml(ev.ref)}</div>` : "",
+      ev.endWhen ? `<div class="itn-line"><b>Arrives</b>${escapeHtml(formatDateTime(ev.endWhen))}</div>` : "",
+      ev.paid ? `<div class="itn-line"><b>Status</b>Paid</div>` : "",
+      ev.notes ? `<div class="itn-note">${escapeHtml(ev.notes)}</div>` : "",
+      ev.thumb ? `<img class="itn-thumb light-img" src="${ev.thumb}" alt="">` : ""
+    ].join("");
+
+    const sub = ev.route || ev.ref || "";
+
+    return `
+      <div class="itn-row ${itnLevel >= 3 ? "open" : ""}" data-itn-row="${id}">
+        <button type="button" class="itn-row-head">
+          ${timeCell(ev)}
+          <div class="itn-what">
+            <b>${ev.icon} ${escapeHtml(ev.name)}</b>
+            <i>${escapeHtml(ev.action)}${sub ? " · " + escapeHtml(sub) : ""}</i>
+          </div>
+          ${ev.paid ? `<span class="itn-dot" title="Paid"></span>` : ""}
+          <span class="itn-chev">▼</span>
+        </button>
+        <div class="itn-row-body">
+          ${details || `<div class="itn-empty">No extra details saved.</div>`}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderItinerary3() {
+    const events = build();
+    const dated = events.filter(e => e.when);
+    const undated = events.filter(e => !e.when);
+
+    const days = [];
+    dated.forEach(ev => {
+      const key = dayKey(ev.when);
+      let day = days.find(d => d.key === key);
+      if (!day) { day = { key, items: [] }; days.push(day); }
+      day.items.push(ev);
+    });
+
+    if (undated.length) days.push({ key: "", items: undated, label: "No date yet" });
+
+    const span = days.length && days[0].key
+      ? formatDate(days[0].key) +
+        (dated.length && days.filter(d => d.key).length > 1
+          ? " — " + formatDate(days.filter(d => d.key).slice(-1)[0].key)
+          : "")
+      : "";
+
+    let n = 0;
+
+    app().innerHTML = `
+      <main class="main itn-main">
+        <button class="back-btn no-print" data-view="travel">‹ Travel &amp; Reservations</button>
+
+        <div class="card itn-sheet">
+          <div class="itn-print-head" style="display:none">
+            <div class="itn-print-title">Camino Itinerary</div>
+            <div class="itn-print-sub">${escapeHtml(settings.currentRoute || "Camino de Santiago")}${span ? " · " + escapeHtml(span) : ""}</div>
+          </div>
+
+          <div class="itn-head no-print">
+            <h2 class="section-title">Itinerary</h2>
+            <button class="btn" id="itnPrintBtn">🖨️ Print</button>
+          </div>
+
+          ${events.length === 0 ? `
+            <div class="empty">
+              <p>Nothing scheduled yet.</p>
+              <p class="soft">Add reservations in Travel &amp; Reservations and they line up here.</p>
+            </div>
+          ` : `
+            <div class="itn-sub no-print">${span ? escapeHtml(span) + " · " : ""}${events.length} step${events.length === 1 ? "" : "s"}</div>
+
+            <div class="itn-levels no-print">
+              <button type="button" class="itn-lvl-btn" data-lvl="1">Dates<small>just days</small></button>
+              <button type="button" class="itn-lvl-btn" data-lvl="2">Times<small>+ what &amp; when</small></button>
+              <button type="button" class="itn-lvl-btn" data-lvl="3">Details<small>everything</small></button>
+            </div>
+
+            ${days.map(day => `
+              <section class="itn-day ${itnLevel >= 2 ? "open" : ""}">
+                <button type="button" class="itn-day-head">
+                  <span class="itn-day-date">${escapeHtml(day.label || formatDate(day.key))}</span>
+                  <span class="itn-day-count">${day.items.length} step${day.items.length === 1 ? "" : "s"}</span>
+                  <span class="itn-chev">▼</span>
+                </button>
+                <div class="itn-day-body">
+                  ${day.items.map(ev => rowHtml(ev, n++)).join("")}
+                </div>
+              </section>
+            `).join("")}
+          `}
+        </div>
+      </main>
+    `;
+
+    const root = app();
+
+    root.querySelector("[data-view='travel']").onclick = () => setView("travel");
+
+    const printBtn = document.getElementById("itnPrintBtn");
+    if (printBtn) printBtn.onclick = () => window.print();
+
+    // level buttons: they set every section at once
+    function paintLevel() {
+      root.querySelectorAll(".itn-lvl-btn").forEach(b => {
+        b.classList.toggle("active", Number(b.dataset.lvl) === itnLevel);
+      });
+      root.querySelectorAll(".itn-day").forEach(d => {
+        d.classList.toggle("open", itnLevel >= 2);
+      });
+      root.querySelectorAll(".itn-row").forEach(r => {
+        r.classList.toggle("open", itnLevel >= 3);
+      });
+    }
+
+    root.querySelectorAll(".itn-lvl-btn").forEach(btn => {
+      btn.onclick = () => {
+        itnLevel = Number(btn.dataset.lvl);
+        try { localStorage.setItem("caminoItnLevel", String(itnLevel)); } catch (e) {}
+        paintLevel();
+      };
+    });
+
+    // individual taps still work, for peeking at one thing
+    root.querySelectorAll(".itn-day-head").forEach(head => {
+      head.onclick = () => head.parentElement.classList.toggle("open");
+    });
+
+    root.querySelectorAll(".itn-row-head").forEach(head => {
+      head.onclick = e => {
+        if (e.target.closest("img")) return;
+        head.parentElement.classList.toggle("open");
+      };
+    });
+
+    paintLevel();
+  }
+
+  const prevRender = render;
+
+  render = function () {
+    if (state.view === "itinerary") {
+      if (typeof closeMenu === "function") closeMenu();
+      renderItinerary3();
+      return;
+    }
+    prevRender();
+  };
+
+  if (state.view === "itinerary") render();
+
+})();
+</script>
+
 </body>
 </html>
